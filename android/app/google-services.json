@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "446371293238",
+    "project_id": "meet-christ-app",
+    "storage_bucket": "meet-christ-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:446371293238:android:7694f2f256ead5c1309097",
+        "android_client_info": {
+          "package_name": "com.example.meet_christ"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHpFxhMmpvlfsDChVZ3N-WG5XX3c534IA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:446371293238:android:791f087a632a9621309097",
+        "android_client_info": {
+          "package_name": "de.stefanzindl.meetjesus"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHpFxhMmpvlfsDChVZ3N-WG5XX3c534IA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
