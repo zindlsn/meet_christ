@@ -3,7 +3,7 @@ import 'package:meet_christ/models/community.dart';
 import 'package:meet_christ/models/group.dart';
 
 class GroupCard extends StatefulWidget {
-  final CommunityGroup group;
+  final Group group;
   const GroupCard({super.key, required this.group});
 
   @override

@@ -5,7 +5,7 @@ import 'package:meet_christ/models/user.dart';
 
 class EventDto {
   final String title;
-  final String uid;
+  final String id;
   final String description;
   final DateTime startDate;
   final DateTime endDate;
@@ -13,11 +13,11 @@ class EventDto {
   final String? type;
   String? imageUrl;
   int? pricePerPerson;
-  List<User> attendees = [];
-  List<User> organizers = [];
+  List<String> attendeeIds = []; // Changed from User to String IDs
+  List<String> organizerIds = []; // Changed from User to String IDs
   final int? repeatEveryWeeks;
   final DateTime? repeatEndDate;
-  final CommunityGroup? group;
+  final Group? group;
 
   EventDto({
     required this.title,
@@ -25,54 +25,46 @@ class EventDto {
     required this.startDate,
     required this.endDate,
     required this.location,
-    required this.uid,
+    required this.id,
     this.repeatEveryWeeks,
     this.type,
     this.repeatEndDate,
     this.group,
     this.imageUrl,
     this.pricePerPerson,
-    List<User>? attendees,
-    List<User>? organizers,
+    List<String>? attendeeIds,
+    List<String>? organizerIds,
   }) {
-    if (attendees != null) this.attendees = attendees;
-    if (organizers != null) this.organizers = organizers;
+    if (attendeeIds != null) this.attendeeIds = attendeeIds;
+    if (organizerIds != null) this.organizerIds = organizerIds;
   }
 
-  // Deserialize from Firestore data map (existing)
+  // Deserialize from Firestore data map
   static EventDto fromMap(Map<String, dynamic> data, String id) {
-    return EventDto(
+    var event =  EventDto(
       title: data['title'] ?? '',
       description: data['description'] ?? '',
-      startDate: data['startDate'] as DateTime,
-      endDate: data['endDate'] as DateTime,
+      startDate: data['startDate']?.toDate() ?? DateTime.now(),
+      endDate: data['endDate']?.toDate() ?? DateTime.now(),
       location: data['location'] ?? '',
-      uid: id,
+      id: id,
       type: data['type'],
       imageUrl: data['imageUrl'],
-      pricePerPerson: data['pricePerPerson'] != null
-          ? data['pricePerPerson'] as int
-          : null,
-      repeatEveryWeeks: data['repeatEveryWeeks'] != null
-          ? data['repeatEveryWeeks'] as int
-          : null,
-      repeatEndDate: data['repeatEndDate'] != null
-          ? (data['repeatEndDate']).toDate()
-          : null,
-      attendees: data['attendees'] != null
-          ? (data['attendees'] as List<dynamic>)
-              .map((u) => User.fromMap(u as Map<String, dynamic>, ''))
-              .toList()
+      pricePerPerson: data['pricePerPerson'] as int?,
+      repeatEveryWeeks: data['repeatEveryWeeks'] as int?,
+      repeatEndDate: data['repeatEndDate']?.toDate(),
+      attendeeIds: data['attendeeIds'] != null
+          ? List<String>.from(data['attendeeIds'])
           : [],
-      organizers: data['organizers'] != null
-          ? (data['organizers'] as List<dynamic>)
-              .map((u) => User.fromMap(u as Map<String, dynamic>, ''))
-              .toList()
+      organizerIds: data['organizerIds'] != null
+          ? List<String>.from(data['organizerIds'])
           : [],
     );
+
+    return event;
   }
 
-  // Serialize to Firestore map (existing)
+  // Serialize to Firestore map
   Map<String, dynamic> toMap() {
     return {
       'title': title,
@@ -85,12 +77,13 @@ class EventDto {
       if (pricePerPerson != null) 'pricePerPerson': pricePerPerson,
       if (repeatEveryWeeks != null) 'repeatEveryWeeks': repeatEveryWeeks,
       if (repeatEndDate != null) 'repeatEndDate': repeatEndDate,
-      'attendees': attendees.map((u) => u.toMap()).toList(),
-      'organizers': organizers.map((u) => u.toMap()).toList(),
+      'attendeeIds': attendeeIds,
+      'organizerIds': organizerIds,
+      if (group != null) 'groupId': group!.id,
     };
   }
 
-  // === New: Create DTO from Entity ===
+  // Create DTO from Entity
   factory EventDto.fromEntity(Event event) {
     return EventDto(
       title: event.title,
@@ -98,27 +91,31 @@ class EventDto {
       startDate: event.startDate,
       endDate: event.endDate,
       location: event.location,
-      uid: event.id,
+      id: event.id,
       repeatEveryWeeks: event.repeatEveryWeeks,
       type: event.type,
       repeatEndDate: event.repeatEndDate,
       group: event.group,
       imageUrl: null, // no direct mapping from Uint8List image to url here
       pricePerPerson: event.pricePerPerson,
-      attendees: event.attendees,
-      organizers: event.organizers,
+      attendeeIds: event.attendees.map((u) => u.id).toList(),
+      organizerIds: event.organizers.map((u) => u.id).toList(),
     );
   }
 
-  // === New: Convert back to Entity ===
-  Event toEntity({Uint8List? image}) {
+  // Convert back to Entity (requires fetching User objects separately)
+  Event toEntity({
+    Uint8List? image,
+    required List<User> attendees,
+    required List<User> organizers,
+  }) {
     return Event(
       title: title,
       description: description,
       startDate: startDate,
       endDate: endDate,
       location: location,
-      id: uid,
+      id: id,
       repeatEveryWeeks: repeatEveryWeeks,
       type: type,
       repeatEndDate: repeatEndDate,
@@ -143,9 +140,10 @@ class Event {
   int? pricePerPerson;
   List<User> attendees = [];
   List<User> organizers = [];
+  bool meAttending = false;
   final int? repeatEveryWeeks;
   final DateTime? repeatEndDate;
-  final CommunityGroup? group;
+  final Group? group;
 
   Event({
     required this.title,
@@ -167,27 +165,80 @@ class Event {
     if (organizers != null) this.organizers = organizers;
   }
 
-  // Optional: You can also put a fromDto helper here if you like:
-  factory Event.fromDto(EventDto dto, {Uint8List? image}) {
+  factory Event.fromDto(
+    EventDto dto, {
+    Uint8List? image,
+    required List<User> attendees,
+    required List<User> organizers,
+  }) {
     return Event(
       title: dto.title,
       description: dto.description,
       startDate: dto.startDate,
       endDate: dto.endDate,
       location: dto.location,
-      id: dto.uid,
+      id: dto.id,
       repeatEveryWeeks: dto.repeatEveryWeeks,
       type: dto.type,
       repeatEndDate: dto.repeatEndDate,
       group: dto.group,
       image: image,
       pricePerPerson: dto.pricePerPerson,
-      attendees: dto.attendees,
-      organizers: dto.organizers,
+      attendees: attendees,
+      organizers: organizers,
     );
+  }
+
+  void addAttendees(List<User> newAttendees) {
+    for (var attendee in newAttendees) {
+      if (!attendees.any((a) => a.id == attendee.id)) {
+        attendees.add(attendee);
+      }
+    }
+  }
+
+  void addAttendee(User attendee) {
+    if (!attendees.any((a) => a.id == attendee.id)) {
+      attendees.add(attendee);
+    }
   }
 
   EventDto toDto() {
     return EventDto.fromEntity(this);
+  }
+
+  Event copyWith({
+    String? id,
+    String? title,
+    String? description,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? location,
+    String? type,
+    Uint8List? image,
+    int? pricePerPerson,
+    List<User>? attendees,
+    List<User>? organizers,
+    int? repeatEveryWeeks,
+    DateTime? repeatEndDate,
+    Group? group,
+    bool clearImage = false,
+  }) {
+    return Event(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      location: location ?? this.location,
+      type: type ?? this.type,
+      image: clearImage ? null : (image ?? this.image),
+      pricePerPerson: pricePerPerson ?? this.pricePerPerson,
+      attendees: attendees ?? List<User>.from(this.attendees),
+      organizers: organizers ?? List<User>.from(this.organizers),
+      repeatEveryWeeks: repeatEveryWeeks ?? this.repeatEveryWeeks,
+      repeatEndDate: repeatEndDate ?? this.repeatEndDate,
+      group: group ?? this.group,
+    );
   }
 }

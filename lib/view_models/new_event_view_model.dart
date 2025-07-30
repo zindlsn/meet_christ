@@ -5,30 +5,30 @@ import 'package:meet_christ/models/event.dart';
 import 'package:meet_christ/models/group.dart';
 import 'package:meet_christ/services/community_service.dart';
 import 'package:meet_christ/services/event_service.dart';
+import 'package:meet_christ/services/user_service.dart';
 import 'package:uuid/uuid.dart';
 
 class NewEventViewModel extends ChangeNotifier {
   DateTime selectedStartDate = DateTime.now();
   TimeOfDay _selectedStartTime = TimeOfDay.now();
   CommunityService communitiesRepository;
-
+  UserService userService;
   EventService eventService;
 
   NewEventViewModel({
+    required this.userService,
     required this.communitiesRepository,
     required this.eventService,
   });
 
-  late List<Community> communities = [];
-  List<CommunityGroup> groups = [];
+  List<Community> communities = [];
+  List<Group> groups = [];
 
   void saveEvent() {}
 
-  void loadMyCommunities() async {
-    notifyListeners();
-  }
+  void loadMyCommunities() async {}
 
-  CommunityGroup? selectedGroup;
+  Group? selectedGroup;
   Community? selectedCommunity;
 
   Uint8List? imageAsBytes;
@@ -49,7 +49,7 @@ class NewEventViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setSelectedGroup(CommunityGroup? time) {
+  void setSelectedGroup(Group? time) {
     selectedGroup = time;
     notifyListeners();
   }
@@ -59,7 +59,9 @@ class NewEventViewModel extends ChangeNotifier {
     var event = Event(
       id: Uuid().v4(),
       title: title.isNotEmpty ? title : 'New Event',
-      description: 'Description of the new event',
+      description: '',
+      attendees: [userService.user],
+      organizers: [userService.user],
       startDate: DateTime(
         selectedStartDate.year,
         selectedStartDate.month,
@@ -71,14 +73,14 @@ class NewEventViewModel extends ChangeNotifier {
         selectedStartDate.year,
         selectedStartDate.month,
         selectedStartDate.day,
-        _selectedStartTime.hour + 1, // Assuming the event lasts for 1 hour
+        _selectedStartTime.hour + 1,
         _selectedStartTime.minute,
       ),
       location: 'Event Location',
       image: imageAsBytes,
     );
 
-    eventService.create(event);
+    eventService.createEvent(event: event);
     notifyListeners();
   }
 

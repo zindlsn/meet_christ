@@ -7,18 +7,16 @@ import 'package:meet_christ/models/group.dart';
 
 class Community {
   final String id;
-  final String uid;
   final String name;
   final String description;
   final Address? address;
   final List<Event> events;
   final List<CommunityUser> members;
-  final List<CommunityGroup> groups;
+  late List<Group> groups;
   final Uint8List? profileImage;
 
   Community({
     required this.id,
-    required this.uid,
     required this.name,
     required this.description,
     required this.address,
@@ -29,60 +27,61 @@ class Community {
   });
 
   Community copyWith({
-    String? uid,
+    String? id,
     String? name,
     String? description,
     Address? address,
     List<Event>? events,
     List<CommunityUser>? members,
-    List<CommunityGroup>? groups,
+    List<Group>? groups,
     Uint8List? profileImage,
     Event? addEvent,
     CommunityUser? addMember,
-    CommunityGroup? addGroup,
+    Group? addGroup,
   }) {
+    final newGroups = [
+      ...this.groups,
+      if (addGroup != null) addGroup..community = this,
+      if (groups != null) ...groups.map((g) => g..community = this),
+    ];
+
     return Community(
-      id: id,
-      uid: uid ?? this.uid,
+      id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
       address: address ?? this.address,
       events: [
         ...this.events,
         if (addEvent != null) addEvent,
-        if (events != null) ...events, // overrides additions if both provided
+        if (events != null) ...events,
       ],
       members: [
         ...this.members,
         if (addMember != null) addMember,
         if (members != null) ...members,
       ],
-      groups: [
-        ...this.groups,
-        if (addGroup != null) addGroup,
-        if (groups != null) ...groups,
-      ],
+      groups: newGroups,
       profileImage: profileImage ?? this.profileImage,
     );
   }
 
-  /// Create Community entity from a CommunityDto
   factory Community.fromDto(
     CommunityDto dto, {
     Address? address,
     List<CommunityUser>? members,
-    List<CommunityGroup>? groups,
+    List<Group>? groups,
     Uint8List? profileImage,
   }) {
     return Community(
       id: dto.id,
-      uid: dto.uid,
       name: dto.name,
       description: dto.description,
       address: address,
-      events: dto.events.map((e) => e.toEntity()).toList(),
+      events: dto.events
+          .map((e) => e.toEntity(attendees: [], organizers: []))
+          .toList(),
       members: members ?? [],
-      groups: groups ?? [],
+      groups: [],
       profileImage: profileImage,
     );
   }
@@ -91,7 +90,6 @@ class Community {
   CommunityDto toDto({String? profileImageUrl}) {
     return CommunityDto(
       id: id,
-      uid: uid,
       name: name,
       description: description,
       events: events.map((e) => e.toDto()).toList(),
@@ -103,21 +101,21 @@ class Community {
 
 class CommunityDto {
   final String id;
-  final String uid;
   final String name;
   final String description;
+  List<CommunityUser>? members;
   final List<EventDto> events;
-  List<CommunityGroupDto>? communityGroups = [];
+  List<GroupDto>? communityGroups = [];
   String? profileImageUrls;
 
   CommunityDto({
     required this.id,
-    required this.uid,
     required this.name,
     required this.description,
     this.events = const [],
     this.communityGroups,
     this.profileImageUrls,
+    this.members,
   });
 
   /// Construct CommunityDto from a Firestore Map
@@ -125,7 +123,6 @@ class CommunityDto {
     final eventsData = data['events'] as List<dynamic>? ?? [];
     return CommunityDto(
       id: id,
-      uid: data['uid'] ?? '',
       name: data['name'] ?? '',
       description: data['description'] ?? '',
       events: eventsData
@@ -138,7 +135,6 @@ class CommunityDto {
   /// Convert CommunityDto to a Firestore Map
   Map<String, dynamic> toMap() {
     return {
-      'uid': uid,
       'name': name,
       'description': description,
       'events': events.map((e) => e.toMap()).toList(),
@@ -150,7 +146,6 @@ class CommunityDto {
   CommunityDto copyWith({List<EventDto>? events, String? profileImageUrls}) {
     return CommunityDto(
       id: id,
-      uid: uid,
       name: name,
       description: description,
       events: events ?? this.events,

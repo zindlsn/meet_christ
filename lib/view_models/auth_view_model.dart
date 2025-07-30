@@ -5,7 +5,7 @@ import 'package:meet_christ/models/user_credentails.dart';
 import 'package:meet_christ/services/user_service.dart';
 
 class AuthViewModel extends ChangeNotifier {
-  final UserService2 userService;
+  final UserService userService;
 
   AuthViewModel({required this.userService});
 

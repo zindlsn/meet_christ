@@ -1,382 +1,251 @@
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:meet_christ/models/event.dart';
-import 'package:meet_christ/models/group.dart';
+import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/repositories/events_repository.dart';
-import 'package:meet_christ/repositories/file_repository.dart';
+import 'package:meet_christ/services/user_service.dart';
+import 'package:uuid/uuid.dart';
 
 class EventService {
-  final DatabaseService2<String, EventDto> adapter;
-  final FileRepository fileRepository;
-  EventService({required this.adapter, required this.fileRepository});
+  final IEventRepository _repository;
+  final UserService _userService;
 
-  Future<Event> create(Event data) async {
-    EventDto dto = data.toDto();
+  EventService(this._repository, this._userService);
 
-    EventDto createdDto = await adapter.create(dto);
+  Future<Event> getEvent(String id) => _repository.getEvent(id);
 
-    Event createdEntity = Event.fromDto(createdDto);
-    return createdEntity;
-  }
+  Future<List<Event>> getGroupEvents(String groupId) =>
+      _repository.getEventsByGroup(groupId);
 
-  Future<List<Event>?> getAllById(String id) async {
-    var result = await adapter.getAllById(id);
-    if (result != null) {
-      return result.map((dto) => Event.fromDto(dto)).toList();
-    }
-    return null;
-  }
+  Future<List<Event>> getUserEvents(String userId) =>
+      _repository.getUserEvents(userId);
 
-  Future<bool> update(Event data) async {
-    EventDto dto = data.toDto();
-    bool isUpdated = await adapter.update(dto);
-    return isUpdated;
-  }
+  Future<String> createEvent({required Event event}) async {
+    final id = await _repository.createEvent(event);
 
-  Future<List<Event>> createAll(List<Event> allData) async {
-    List<EventDto> createdDto = await adapter.createAll(
-      allData.map((data) => data.toDto()).toList(),
-    );
-    var savedData = createdDto.map((dto) => Event.fromDto(dto)).toList();
-    return savedData;
-  }
-
-  Future<List<Event>> getAll() async {
-    var retrieved = await adapter.getAll();
-    return retrieved.map((dto) => Event.fromDto(dto)).toList();
-  }
-
-  Future<Event?> getById(String id) async {
-    var result = await adapter.getById(id);
-    if (result != null) {
-      return Event.fromDto(result);
-    }
-    return null;
-  }
-}
-
-class EventRepository implements DatabaseService2<String, EventDto> {
-  final DatabaseService2<String, EventDto> adapter;
-
-  EventRepository({required this.adapter});
-
-  @override
-  Future<EventDto> create(EventDto data) async {
-    return await adapter.create(data);
-  }
-
-  @override
-  Future<List<EventDto>?> getAllById(String id) async {
-    return await adapter.getAllById(id);
-  }
-
-  @override
-  Future<bool> update(EventDto data) async {
-    return await adapter.update(data);
-  }
-
-  @override
-  Future<List<EventDto>> createAll(List<EventDto> allData) async {
-    return await adapter.createAll(allData);
-  }
-
-  @override
-  Future<List<EventDto>> getAll() async {
-    return await adapter.getAll();
-  }
-
-  @override
-  Future<EventDto?> getById(String id) {
-    // TODO: implement getById
-    throw UnimplementedError();
-  }
-}
-
-class EventDataSource implements DatabaseService2<String, EventDto> {
-  final CollectionReference col = FirebaseFirestore.instance.collection(
-    "events",
-  );
-
-  @override
-  Future<List<EventDto>> createAll(List<EventDto> allData) {
-    // TODO: implement createAll
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<List<EventDto>> getAll() async {
-    final QuerySnapshot snapshot = await col.get();
-    return snapshot.docs.map((doc) {
-      final data = doc.data() as Map<String, dynamic>;
-      return EventDto(
-        title: '',
-        description: '',
-        startDate: DateTime.now(),
-        endDate: DateTime.now(),
-        location: '',
-        uid: '',
+    if (event.image != null) {
+      final imageUrl = await _repository.uploadEventImage(id, event.image!);
+      await _repository.updateEvent(
+        event.copyWith(id: id, image: event.image!),
       );
-    }).toList();
-  }
-
-  @override
-  Future<List<EventDto>?> getAllById(String id) async {
-    final doc = await col.doc(id).get();
-    if (!doc.exists) return null;
-    List<EventDto> result = [];
-    return result;
-  }
-
-  @override
-  Future<bool> update(EventDto data) {
-    // TODO: implement update
-    throw UnimplementedError();
-  }
-
-  Future<List<EventDto>?> getAllGroupEventsFromMemberId(String id) async {
-    final doc = await col.doc(id).get();
-    if (!doc.exists) return null;
-    List<EventDto> result = [];
-    return result;
-  }
-
-  @override
-  Future<EventDto?> getById(String id) async {
-    final doc = await col.doc(id).get();
-    if (!doc.exists) return null;
-    var data = doc.data() as Map<String, dynamic>;
-    EventDto.fromMap(data, doc.id);
-  }
-
-  @override
-  Future<EventDto> create(EventDto data) {
-    // TODO: implement create
-    throw UnimplementedError();
-  }
-}
-
-abstract class FirestoreModel<K, T> {
-  Map<String, dynamic> toMap();
-
-  T fromMap(Map<String, dynamic> map);
-
-  String get id;
-}
-
-class DataServiceGeneric<K, T> implements DatabaseService2<K, T> {
-  final DatabaseService2<K, T> adapter;
-
-  DataServiceGeneric({required this.adapter});
-
-  @override
-  Future<T> create(T data) async {
-    return await adapter.create(data);
-  }
-
-  @override
-  Future<List<T>?> getAllById(K id) async {
-    return await adapter.getAllById(id);
-  }
-
-  @override
-  Future<bool> update(T data) async {
-    return await adapter.update(data);
-  }
-
-  @override
-  Future<List<T>> createAll(List<T> allData) async {
-    return await adapter.createAll(allData);
-  }
-
-  @override
-  Future<List<T>> getAll() async {
-    return await adapter.getAll();
-  }
-
-  @override
-  Future<T?> getById(K id) {
-    // TODO: implement getById
-    throw UnimplementedError();
-  }
-}
-
-class CommunityGroupService
-    implements DatabaseService2<String, CommunityGroup> {
-  final DatabaseService2<String, CommunityGroup> adapter;
-
-  CommunityGroupService({required this.adapter});
-
-  @override
-  Future<CommunityGroup> create(CommunityGroup data) async {
-    return await adapter.create(data);
-  }
-
-  @override
-  Future<List<CommunityGroup>?> getAllById(String id) async {
-    return await adapter.getAllById(id);
-  }
-
-  @override
-  Future<bool> update(CommunityGroup data) async {
-    return await adapter.update(data);
-  }
-
-  @override
-  Future<List<CommunityGroup>> createAll(List<CommunityGroup> allData) async {
-    return await adapter.createAll(allData);
-  }
-
-  @override
-  Future<List<CommunityGroup>> getAll() async {
-    return await adapter.getAll();
-  }
-
-  @override
-  Future<CommunityGroup?> getById(String id) {
-    // TODO: implement getById
-    throw UnimplementedError();
-  }
-}
-
-
-/*
-class FirestoreCommunityGroupAdapterGeneric<K, T extends FirestoreModel>
-    implements DatabaseService2<K, T> {
-  late CollectionReference col;
-
-  final String collection;
-
-  FirestoreCommunityGroupAdapterGeneric({required this.collection}) {
-    col = FirebaseFirestore.instance.collection(collection);
-  }
-  @override
-  Future<T> create(T data) async {
-    final docRef = col.doc();
-    await docRef.set(data.toMap());
-    return data;
-  }
-
-  @override
-  Future<List<T>> createAll(List<T> allData) async {
-    final batch = FirebaseFirestore.instance.batch();
-
-    for (final item in allData) {
-      final docRef = col.doc();
-      batch.set(docRef, item.toMap());
     }
 
-    await batch.commit();
-    return allData;
+    return id;
+  }
+
+  Stream<List<Event>> watchGroupEvents(String groupId) =>
+      _repository.watchGroupEvents(groupId);
+
+  Future<void> rsvpToEvent(String eventId, String userId, bool attending) =>
+      _repository.rsvpToEvent(eventId, userId, attending);
+
+  Future<List<Event>> getEventsWithoutGroup() async {
+    var events = await _repository.getEventsWithoutGroup();
+    for (var event in events) {
+      if (event.attendees.any((item) => item.id == _userService.user.id)) {
+        event.meAttending = true;
+      } else {
+        event.meAttending = false;
+      }
+    }
+    return events;
+  }
+
+  // Add other business logic methods here
+}
+
+abstract class IEventRepository {
+  Future<Event> getEvent(String id);
+  Future<List<Event>> getEventsByGroup(String groupId);
+  Future<List<Event>> getUserEvents(String userId);
+  Future<String> createEvent(Event event);
+  Future<void> updateEvent(Event event);
+  Future<void> deleteEvent(String id);
+  Future<String> uploadEventImage(String eventId, Uint8List image);
+  Stream<List<Event>> watchGroupEvents(String groupId);
+  Future<void> rsvpToEvent(String eventId, String userId, bool attending);
+
+  Future<List<Event>> getEventsWithoutGroup();
+}
+
+class FirestoreEventRepository implements IEventRepository {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+  final DatabaseService2<String, User> _userRepository;
+  FirestoreEventRepository(this._userRepository);
+  final _uuid = const Uuid();
+
+  @override
+  Future<Event> getEvent(String id) async {
+    final doc = await _firestore.collection('events').doc(id).get();
+    if (!doc.exists) throw Exception('Event not found');
+    return Event.fromDto(
+      attendees: [],
+      organizers: [],
+      EventDto.fromMap(doc.data()!, doc.id),
+    );
   }
 
   @override
-  Future<List<T>> getAll() async {
-    QuerySnapshot snapshot = await col.get();
-    List<T> result =
-        snapshot.docs
-                .map(
-                  (doc) => CommunityGroup.fromMap(
-                    doc.data() as Map<String, dynamic>,
-                  ),
-                )
-                .toList()
-            as List<T>;
-
-    return result;
-  }
-
-  @override
-  Future<List<T>?> getAllById(K id) async {
-    final snapshot = await col.where('id', isEqualTo: id).get();
-    if (snapshot.docs.isEmpty) return null;
+  Future<List<Event>> getEventsByGroup(String groupId) async {
+    final snapshot = await _firestore
+        .collection('events')
+        .where('groupId', isEqualTo: groupId)
+        .orderBy('startDate')
+        .get();
 
     return snapshot.docs
-            .map(
-              (doc) =>
-                  CommunityGroup.fromMap(doc.data() as Map<String, dynamic>),
-            )
-            .toList()
-        as List<T>;
+        .map(
+          (doc) => Event.fromDto(
+            attendees: [],
+            organizers: [],
+            EventDto.fromMap(doc.data(), doc.id),
+          ),
+        )
+        .toList();
   }
 
   @override
-  Future<bool> update(T data) async {
-    try {
-      await col.doc(data.id).update(data.toMap());
-      return true;
-    } catch (e) {
-      print("Firestore update error: $e");
-      return false;
+  Future<List<Event>> getUserEvents(String userId) async {
+    final snapshot = await _firestore
+        .collection('events')
+        .where('attendeeIds', arrayContains: userId)
+        .get();
+    final events = <Event>[];
+    for (var dataElement in snapshot.docs) {
+      var data = dataElement.data();
+      var attendees = await _userRepository.getAllByUserIds(
+        (data["attendeeIds"] as List<dynamic>)
+            .map((item) => item.toString())
+            .toList(),
+      );
+      var event = Event.fromDto(
+        attendees: attendees,
+        organizers: [],
+        EventDto.fromMap(data, dataElement.id),
+      );
+
+      events.add(event);
     }
+    return Future.value(events);
+  }
+
+  @override
+  Future<String> createEvent(Event event) async {
+    final id = _uuid.v4();
+    final dto = event.toDto();
+
+    await _firestore.collection('events').doc(id).set({
+      ...dto.toMap(),
+      'groupId': event.group?.id,
+      'attendeeIds': event.attendees.map((u) => u.id).toList(),
+      'organizerIds': event.organizers.map((u) => u.id).toList(),
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    return id;
+  }
+
+  @override
+  Future<void> updateEvent(Event event) async {
+    final dto = event.toDto();
+    await _firestore.collection('events').doc(event.id).update({
+      ...dto.toMap(),
+      'groupId': event.group?.id,
+      'attendeeIds': event.attendees.map((u) => u.id).toList(),
+      'organizerIds': event.organizers.map((u) => u.id).toList(),
+    });
+  }
+
+  @override
+  Future<void> deleteEvent(String id) async {
+    await _firestore.collection('events').doc(id).delete();
+  }
+
+  @override
+  Future<String> uploadEventImage(String eventId, Uint8List image) async {
+    final ref = _storage.ref('event_images/$eventId');
+    await ref.putData(image);
+    return await ref.getDownloadURL();
+  }
+
+  @override
+  Stream<List<Event>> watchGroupEvents(String groupId) {
+    return _firestore
+        .collection('events')
+        .where('groupId', isEqualTo: groupId)
+        .orderBy('startDate')
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) => Event.fromDto(
+                  attendees: [],
+                  organizers: [],
+                  EventDto.fromMap(doc.data(), doc.id),
+                ),
+              )
+              .toList(),
+        );
+  }
+
+  @override
+  Future<void> rsvpToEvent(
+    String eventId,
+    String userId,
+    bool attending,
+  ) async {
+    final docRef = _firestore.collection('events').doc(eventId);
+
+    await _firestore.runTransaction((transaction) async {
+      final doc = await transaction.get(docRef);
+      final attendeeIds = List<String>.from(doc['attendeeIds'] ?? []);
+
+      if (attending) {
+        if (!attendeeIds.contains(userId)) {
+          attendeeIds.add(userId);
+        }
+      } else {
+        attendeeIds.remove(userId);
+      }
+
+      transaction.update(docRef, {'attendeeIds': attendeeIds});
+    });
+  }
+
+  @override
+  Future<List<Event>> getEventsWithoutGroup() async {
+    final snapshot = await _firestore
+        .collection('events')
+        .where('groupId', isEqualTo: null)
+        .get();
+
+    final eventFutures = snapshot.docs
+        .map((doc) => _mapDocumentToEvent(doc))
+        .toList();
+
+    return Future.wait(eventFutures);
+  }
+
+  Future<Event> _mapDocumentToEvent(DocumentSnapshot doc) async {
+    // Fetch all attendees in parallel
+    final attendeeIds = List<String>.from(doc['attendeeIds'] ?? []);
+    final attendees = await Future.wait(
+      attendeeIds.map((id) => _userRepository.getById(id)),
+    );
+
+    // Fetch all organizers in parallel
+    final organizerIds = List<String>.from(doc['organizerIds'] ?? []);
+    final organizers = await Future.wait(
+      organizerIds.map((id) => _userRepository.getById(id)),
+    );
+
+    return Event.fromDto(
+      EventDto.fromMap(doc.data()! as Map<String, dynamic>, doc.id),
+      attendees: attendees.whereType<User>().toList(), // Filter out any nulls
+      organizers: organizers.whereType<User>().toList(),
+    );
   }
 }
-
-class FirestoreCommunityGroupAdapter2
-    implements DatabaseService2<String, CommunityGroup> {
-  final CollectionReference col = FirebaseFirestore.instance.collection(
-    "communityGroups",
-  );
-
-  @override
-  Future<CommunityGroup> create(CommunityGroup data) async {
-    final docRef = col.doc();
-    final dataWithId = data.copyWith(id: docRef.id);
-    await docRef.set(dataWithId.toMap());
-    return dataWithId;
-  }
-
-  @override
-  Future<List<CommunityGroup>> createAll(List<CommunityGroup> allData) async {
-    final batch = FirebaseFirestore.instance.batch();
-
-    for (final item in allData) {
-      final docRef = col.doc();
-      final newItem = item.copyWith(id: docRef.id);
-      batch.set(docRef, newItem.toMap());
-    }
-
-    await batch.commit();
-    return allData;
-  }
-
-  @override
-  Future<List<CommunityGroup>> getAll() async {
-    QuerySnapshot snapshot = await col.get();
-    List<CommunityGroup> result =
-        snapshot.docs
-                .map(
-                  (doc) => CommunityGroup.fromMap(
-                    doc.data() as Map<String, dynamic>,
-                  ),
-                )
-                .toList()
-            as List<CommunityGroup>;
-
-    return result;
-  }
-
-  @override
-  Future<List<CommunityGroup>?> getAllById(String id) async {
-    final snapshot = await col.where('id', isEqualTo: id).get();
-    if (snapshot.docs.isEmpty) return null;
-
-    return snapshot.docs
-            .map(
-              (doc) =>
-                  CommunityGroup.fromMap(doc.data() as Map<String, dynamic>),
-            )
-            .toList()
-        as List<CommunityGroup>;
-  }
-
-  @override
-  Future<bool> update(CommunityGroup data) async {
-    try {
-      await col.doc(data.id).update(data.toMap());
-      return true;
-    } catch (e) {
-      print("Firestore update error: $e");
-      return false;
-    }
-  }
-}
-*/

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:meet_christ/models/community.dart';
 import 'package:meet_christ/models/group.dart';
-import 'package:meet_christ/services/community_service.dart';
+import 'package:meet_christ/services/group_service.dart';
 import 'package:meet_christ/services/user_service.dart';
 
 class NewCommunityGroupPageViewModel extends ChangeNotifier {
-  CommunityService communityService;
-  UserService2 userService;
+  GroupService groupService;
+  UserService userService;
   NewCommunityGroupPageViewModel({
-    required this.communityService,
+    required this.groupService,
     required this.userService,
   });
 
@@ -19,15 +19,12 @@ class NewCommunityGroupPageViewModel extends ChangeNotifier {
   }
 
   Future<void> saveConnumityGroup() async {
-    CommunityGroup group = CommunityGroup.newNewGroup(name);
-    group.communityId = community.id;
+    Group group = Group.newNewGroup(name);
+    group.community = community;
     group.createdOn = DateTime.now();
     group.createdBy = userService.loggedInUser!.id;
-    List<CommunityGroup> groups = [];
-    groups.addAll(community.groups);
-    groups.add(group);
-    var updatedCommunity = community.copyWith(groups: groups);
-    await communityService.update(updatedCommunity);
+    group.admins.add(userService.user);
+    await groupService.createGroup(group: group);
   }
 
   late Community community;

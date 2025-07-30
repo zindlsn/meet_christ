@@ -1,19 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:meet_christ/models/community.dart';
 import 'package:meet_christ/services/community_service.dart';
+import 'package:meet_christ/services/group_service.dart';
+import 'package:meet_christ/services/user_service.dart';
 
 class CommunityViewModel extends ChangeNotifier {
   CommunityService communitiesRepository;
+  GroupService groupService;
+  UserService userService;
 
-  CommunityViewModel({required this.communitiesRepository});
+  CommunityViewModel({
+    required this.communitiesRepository,
+    required this.userService,
+    required this.groupService
+  });
   List<Community> communities = [];
   bool isLoading = true;
 
   Future<void> loadCommunities() async {
-    var saved = await communitiesRepository.getAll();
-    isLoading = false;
+    isLoading = true;
     notifyListeners();
-    communities = saved;
+    var savedCommunities = await communitiesRepository.getUserCommunities(userService.user.id);
+    for(Community c in savedCommunities){
+     var  savedGroups = await groupService.getCommunityGroups(c.id);
+      c.groups = savedGroups;
+    }
+    communities = savedCommunities;
+    isLoading = false;
     notifyListeners();
   }
 

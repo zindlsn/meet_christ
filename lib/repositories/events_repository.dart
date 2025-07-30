@@ -1,3 +1,5 @@
+import 'package:meet_christ/models/user.dart';
+
 abstract class DatabaseService2<K, T> {
   Future<List<T>> getAll();
   Future<List<T>?> getAllById(K id);
@@ -5,4 +7,5 @@ abstract class DatabaseService2<K, T> {
   Future<bool> update(T data);
   Future<T> create(T data);
   Future<List<T>> createAll(List<T> allData);
+  Future<List<User>> getAllByUserIds(List<String> userIds);
 }

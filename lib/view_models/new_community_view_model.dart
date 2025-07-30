@@ -14,7 +14,6 @@ class NewCommunityViewModel extends ChangeNotifier {
   void saveCommunity() async{
     final newCommunity = Community(
       id: "",
-      uid: Uuid().v4(),
       name: name,
       description: description,
       address: address,
@@ -22,12 +21,12 @@ class NewCommunityViewModel extends ChangeNotifier {
       events: [],
     );
 
-    await communitiesRepository.create(newCommunity);
+    await communitiesRepository.createCommunity(community: newCommunity);
     notifyListeners();
   }
 
   Future<void> loadCommunities() async {
-    var saved = await communitiesRepository.getAll();
+    var saved = await communitiesRepository.getUserCommunities("");
     communities = saved;
     notifyListeners();
   }

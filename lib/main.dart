@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:meet_christ/firebase_options.dart';
-import 'package:meet_christ/models/community.dart';
-import 'package:meet_christ/models/event.dart';
-import 'package:meet_christ/models/group.dart';
 import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/models/user_credentails.dart';
 import 'package:meet_christ/pages/auth_page.dart';
@@ -12,10 +9,13 @@ import 'package:meet_christ/repositories/auth_repository.dart';
 import 'package:meet_christ/repositories/events_repository.dart';
 import 'package:meet_christ/repositories/file_repository.dart';
 import 'package:meet_christ/services/community_service.dart';
-import 'package:meet_christ/services/event_service.dart' hide CommunityGroupService;
+import 'package:meet_christ/services/event_service.dart';
+import 'package:meet_christ/services/group_service.dart';
 import 'package:meet_christ/services/user_service.dart';
 import 'package:meet_christ/view_models/auth_view_model.dart';
+import 'package:meet_christ/view_models/chat_list_view_model.dart';
 import 'package:meet_christ/view_models/community_view_model.dart';
+import 'package:meet_christ/view_models/event_detail_view_model.dart';
 import 'package:meet_christ/view_models/events_view_model.dart';
 import 'package:meet_christ/view_models/new_community_group_view_model.dart';
 import 'package:meet_christ/view_models/new_community_view_model.dart';
@@ -26,62 +26,68 @@ import 'package:firebase_core/firebase_core.dart';
 
 User? user;
 void main() async {
+  final i = GetIt.I;
   WidgetsFlutterBinding.ensureInitialized();
-  var app = await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.android,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.android);
   var factory = BackendAuthFactory(type: BackendType.firestore);
   GetIt.I.registerSingleton<IAuthRepository>(factory.getRepository());
   GetIt.I.registerSingleton<FileRepository>(FileRepository());
-  GetIt.I.registerSingleton<DatabaseService2<String, EventDto>>(
-    EventDataSource(),
-  );
-
-  GetIt.I.registerSingleton<EventService>(
-    EventService(
-      adapter: GetIt.I.get<DatabaseService2<String, EventDto>>(),
-      fileRepository: GetIt.I.get<FileRepository>(),
-    ),
-  );
-  GetIt.I.registerSingleton<CommunityDataSource>(CommunityDataSource());
   GetIt.I.registerSingleton<DatabaseService2<String, User>>(
     FirestoreUserRepository(),
   );
-
-  GetIt.I.registerSingleton<DatabaseService2<String, CommunityDto>>(
-    CommunityRepository(adapter: GetIt.I.get<CommunityDataSource>()),
-  );
-
-  GetIt.I.registerSingleton<UserService2>(
-    UserService2(
+  GetIt.I.registerSingleton<UserService>(
+    UserService(
       authRepository: GetIt.I.get<IAuthRepository>(),
       userRepository: GetIt.I.get<DatabaseService2<String, User>>(),
     ),
   );
+  GetIt.I.registerSingleton<IEventRepository>(
+    FirestoreEventRepository(GetIt.I.get<DatabaseService2<String, User>>()),
+  );
+  GetIt.I.registerSingleton<IGroupRepository>(FirestoreGroupRepository());
+  GetIt.I.registerSingleton<GroupService>(
+    GroupService(GetIt.I.get<IGroupRepository>()),
+  );
+
+  GetIt.I.registerSingleton<EventService>(
+    EventService(GetIt.I.get<IEventRepository>(), GetIt.I.get<UserService>()),
+  );
+
+  GetIt.I.registerSingleton<ICommunityRepository>(
+    FirestoreCommunityRepository(),
+  );
+
   GetIt.I.registerSingleton<CommunityService>(
-    CommunityService(
-      adapter: GetIt.I.get<DatabaseService2<String, CommunityDto>>(),
-      fileRepository: GetIt.I.get<FileRepository>(),
-    ),
+    CommunityService(GetIt.I.get<ICommunityRepository>()),
   );
 
   GetIt.I.registerSingleton(
     NewCommunityGroupPageViewModel(
-      communityService: GetIt.I.get<CommunityService>(),
-      userService: GetIt.I.get<UserService2>(),
+      groupService: GetIt.I.get<GroupService>(),
+      userService: GetIt.I.get<UserService>(),
     ),
   );
 
   GetIt.I.registerFactory<CommunityViewModel>(
     () => CommunityViewModel(
+      userService: GetIt.I.get<UserService>(),
       communitiesRepository: GetIt.I.get<CommunityService>(),
+      groupService: GetIt.I.get<GroupService>(),
     ),
   );
+
+  GetIt.I.registerFactory<EventDetailViewModel>(
+    () => EventDetailViewModel(
+      userService: GetIt.I.get<UserService>(),
+      eventService: GetIt.I.get<EventService>(),
+    ),
+  );
+
   GetIt.I.registerFactory<ProfilePageViewModel>(
-    () => ProfilePageViewModel(userService: GetIt.I.get<UserService2>()),
+    () => ProfilePageViewModel(userService: GetIt.I.get<UserService>()),
   );
   GetIt.I.registerFactory<AuthViewModel>(
-    () => AuthViewModel(userService: GetIt.I.get<UserService2>()),
+    () => AuthViewModel(userService: GetIt.I.get<UserService>()),
   );
   GetIt.I.registerFactory<NewCommunityViewModel>(
     () => NewCommunityViewModel(
@@ -93,16 +99,23 @@ void main() async {
     () => NewEventViewModel(
       eventService: GetIt.I.get<EventService>(),
       communitiesRepository: GetIt.I<CommunityService>(),
+      userService: GetIt.I.get<UserService>(),
     ),
   );
+  GetIt.I.registerFactory<ChatListViewModel>(() => ChatListViewModel());
+
   GetIt.I.registerFactory<EventsViewModel>(
-    () => EventsViewModel(eventService: GetIt.I<EventService>()),
+    () => EventsViewModel(
+      userService: GetIt.I.get<UserService>(),
+      eventService: GetIt.I<EventService>(),
+      communityService: GetIt.I<CommunityService>(),
+    ),
   );
 
-  var logindata = await GetIt.I.get<UserService2>().loadLogindataLocally();
+  var logindata = await GetIt.I.get<UserService>().loadLogindataLocally();
   user;
   if (logindata != null) {
-    user = await GetIt.I.get<UserService2>().login(
+    user = await i.get<UserService>().login(
       UserCredentials(email: logindata.name, password: logindata.password),
     );
   }
@@ -122,6 +135,14 @@ void main() async {
         ChangeNotifierProvider(
           create: (context) => GetIt.I<NewEventViewModel>(),
         ),
+        ChangeNotifierProvider(
+          create: (context) => GetIt.I<EventDetailViewModel>(),
+        ),
+
+        ChangeNotifierProvider(
+          create: (context) => GetIt.I<ChatListViewModel>(),
+        ),
+
         ChangeNotifierProvider(create: (context) => GetIt.I<AuthViewModel>()),
         ChangeNotifierProvider(
           create: (context) => GetIt.I<ProfilePageViewModel>(),
@@ -143,6 +164,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         // This is the theme of your application.
         //

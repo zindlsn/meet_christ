@@ -1,25 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:meet_christ/models/event.dart';
 import 'package:meet_christ/models/event_types.dart';
+import 'package:meet_christ/services/community_service.dart';
 import 'package:meet_christ/services/event_service.dart';
+import 'package:meet_christ/services/user_service.dart';
 
 class EventsViewModel extends ChangeNotifier {
   final EventService eventService;
-  EventsViewModel({required this.eventService});
+  final CommunityService communityService;
+  final UserService userService;
+  EventsViewModel({
+    required this.eventService,
+    required this.communityService,
+    required this.userService,
+  });
 
   List<Event> events = [];
 
   List<String> filters = ["all"];
   List<String> timeFilter = [];
 
-  bool isLoading = true;
+  bool isLoading = false;
+  bool _isLoaded = false;
+  bool get isLoaded => _isLoaded;
+
+  void setIsLoaded(bool attend) {
+    _isLoaded = attend;
+  }
 
   Future<void> loadEvents() async {
     isLoading = true;
+    setIsLoaded(false);
     notifyListeners();
-    events = await eventService.getAll();
+    events = await eventService.getEventsWithoutGroup();
 
-    if (timeFilter.contains("today")) {
+    /* if (timeFilter.contains("today")) {
       events = events.where((event) {
         return event.startDate.isAfter(
               DateTime.now().subtract(Duration(days: 1)),
@@ -63,8 +78,9 @@ class EventsViewModel extends ChangeNotifier {
       events = events
           .where((event) => event.type == EventTypes.fellowship)
           .toList();
-    }
+    } */
     isLoading = false;
+    setIsLoaded(true);
     notifyListeners();
   }
 
@@ -77,21 +93,29 @@ class EventsViewModel extends ChangeNotifier {
     return events;
   }
 
-  List<Event> getEventsAttending() {
-    return events
-        .where((event) => event.attendees.any((attendee) => attendee.id == "1"))
-        .toList();
+  Future<void> loadAttendingEvents() async {
+    var loadedEvents = await eventService.getUserEvents(userService.user.id);
+    events = loadedEvents;
+    notifyListeners();
   }
 
   void addAttendantToEvent(Event event) {
     final index = events.indexWhere((e) => e.id == event.id);
     if (index != -1) {
-      if (events[index].attendees.any((attendee) => attendee.id == "1")) {
-        events[index].attendees.removeWhere((attendee) => attendee.id == "1");
+      if (events[index].attendees.any(
+        (attendee) => attendee.id == userService.loggedInUser!.id,
+      )) {
+        events[index].attendees.removeWhere(
+          (attendee) => attendee.id == userService.loggedInUser!.id,
+        );
       } else {
-        // events[index].attendees.add();
+        events[index].attendees.add(userService.loggedInUser!);
       }
       notifyListeners();
     }
+  }
+
+  bool isMeAttending(Event event) {
+    return event.attendees.contains(userService.loggedInUser!);
   }
 }

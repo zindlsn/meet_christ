@@ -52,20 +52,18 @@ class _NewEventPageState extends State<NewEventPage> {
                       ? SizedBox(
                           height: 200,
                           width: double.infinity,
-                          child: Placeholder(
-                            child: IconButton(
-                              icon: const Icon(Icons.add_a_photo),
-                              onPressed: () async {
-                                final XFile? image = await picker.pickImage(
-                                  source: ImageSource.gallery,
-                                );
-                                if (image != null) {
-                                  final bytes = await image.readAsBytes();
-                                  model.setImage(bytes);
-                                  text = await getImageToText(image.path);
-                                }
-                              },
-                            ),
+                          child: IconButton(
+                            icon: const Icon(Icons.add_a_photo),
+                            onPressed: () async {
+                              final XFile? image = await picker.pickImage(
+                                source: ImageSource.gallery,
+                              );
+                              if (image != null) {
+                                final bytes = await image.readAsBytes();
+                                model.setImage(bytes);
+                                text = await getImageToText(image.path);
+                              }
+                            },
                           ),
                         )
                       : Image.memory(
@@ -91,14 +89,14 @@ class _NewEventPageState extends State<NewEventPage> {
                       },
                     ),
                   ),
-                  Padding(
+                 model.selectedCommunity != null ? Padding(
                     padding: const EdgeInsets.only(bottom: 16.0),
-                    child: DropdownMenu<CommunityGroup>(
+                    child: DropdownMenu<Group>(
                       width: double.infinity,
                       label: const Text('Select Group'),
                       dropdownMenuEntries: model.selectedCommunity!.groups
                           .map((commnity) {
-                            return DropdownMenuEntry<CommunityGroup>(
+                            return DropdownMenuEntry<Group>(
                               value: commnity,
                               label: commnity.name,
                             );
@@ -108,7 +106,8 @@ class _NewEventPageState extends State<NewEventPage> {
                         // Handle selection
                       },
                     ),
-                  ),
+                  ) : Container(),
+                  
 
                   Form(
                     child: Column(
@@ -126,7 +125,7 @@ class _NewEventPageState extends State<NewEventPage> {
                                       decoration: InputDecoration(
                                         labelText: _selectedDate == null
                                             ? 'Select Date'
-                                            : '${_selectedDate!.toLocal().day}/${_selectedDate!.toLocal().month}/${_selectedDate!.toLocal().year}',
+                                            : '${_selectedDate!.toLocal().day+1}/${_selectedDate!.toLocal().month}/${_selectedDate!.toLocal().year}',
                                       ),
                                     ),
                                   ),
@@ -192,17 +191,20 @@ class _NewEventPageState extends State<NewEventPage> {
                             ),
                           ],
                         ),
-                        TextFormField(
-                          keyboardType: TextInputType.multiline,
-                          minLines: 3,
-                          maxLines: 10,
-                          decoration: InputDecoration(
-                            labelText: 'Beschreibung',
-                            border: OutlineInputBorder(),
+                        Padding(
+                          padding: const EdgeInsets.only(top:8.0),
+                          child: TextFormField(
+                            keyboardType: TextInputType.multiline,
+                            minLines: 3,
+                            maxLines: 10,
+                            decoration: InputDecoration(
+                              labelText: 'Beschreibung',
+                              border: OutlineInputBorder(),
+                            ),
+                            onChanged: (value) {
+                              // Handle location change
+                            },
                           ),
-                          onChanged: (value) {
-                            // Handle location change
-                          },
                         ),
                         TextButton(
                           onPressed: () {

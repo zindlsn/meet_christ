@@ -2,13 +2,14 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:meet_christ/models/address.dart';
+import 'package:meet_christ/models/community.dart';
 import 'package:meet_christ/models/event.dart';
 import 'package:meet_christ/models/user.dart';
 import 'package:uuid/uuid.dart';
 
-class CommunityGroup {
+class Group {
   final String id;
-  String communityId;
+  late Community? community;
   final String name;
   final String description;
   final Address? address;
@@ -19,9 +20,8 @@ class CommunityGroup {
   String? createdBy;
   DateTime? createdOn;
 
-  CommunityGroup({
+  Group({
     required this.id,
-    required this.communityId,
     required this.name,
     required this.description,
     required this.address,
@@ -31,10 +31,40 @@ class CommunityGroup {
     this.createdOn,
   });
 
-  static CommunityGroup newNewGroup(String name) {
-    return CommunityGroup(
+  Group copyWith({
+    String? id,
+    Community? community,
+    String? name,
+    String? description,
+    Address? address,
+    Uint8List? profileImage,
+    List<Event>? events,
+    List<User>? members,
+    List<User>? admins,
+    String? createdBy,
+    DateTime? createdOn,
+    bool clearProfileImage = false,
+  }) {
+    return Group(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        description: description ?? this.description,
+        address: address ?? this.address,
+        events: events ?? List<Event>.from(this.events),
+        profileImage: clearProfileImage
+            ? null
+            : (profileImage ?? this.profileImage),
+        createdBy: createdBy ?? this.createdBy,
+        createdOn: createdOn ?? this.createdOn,
+      )
+      ..members.addAll(members ?? this.members)
+      ..admins.addAll(admins ?? this.admins)
+      ..community = community ?? this.community;
+  }
+
+  static Group newNewGroup(String name) {
+    return Group(
       id: Uuid().v4(),
-      communityId: "",
       name: name,
       description: "",
       address: null,
@@ -43,16 +73,15 @@ class CommunityGroup {
   }
 
   // === Convert from DTO ===
-  factory CommunityGroup.fromDto(
-    CommunityGroupDto dto, {
+  factory Group.fromDto(
+    GroupDto dto, {
     List<Event>? events,
     Uint8List? profileImage,
     List<User>? members,
     List<User>? admins,
   }) {
-    return CommunityGroup(
+    return Group(
         id: dto.id,
-        communityId: dto.communityId,
         name: dto.name,
         description: dto.description,
         address: dto.address,
@@ -65,12 +94,12 @@ class CommunityGroup {
       ..admins.addAll(admins ?? []);
   }
 
-  // === Convert to DTO ===
-  CommunityGroupDto toDto() {
-    return CommunityGroupDto(
+  GroupDto toDto() {
+    return GroupDto(
       id: id,
-      communityId: communityId,
+      communityId: community?.id,
       name: name,
+      events: [],
       description: description,
       address: address,
       profileImage: profileImage,
@@ -80,17 +109,18 @@ class CommunityGroup {
   }
 }
 
-class CommunityGroupDto {
+class GroupDto {
   final String id;
-  String communityId;
+  String? communityId;
   final String name;
   final String description;
   final Address? address;
   final Uint8List? profileImage;
+  List<EventDto> events = [];
   String? createdBy;
   DateTime? createdOn;
 
-  CommunityGroupDto({
+  GroupDto({
     required this.id,
     required this.communityId,
     required this.name,
@@ -98,25 +128,28 @@ class CommunityGroupDto {
     this.address,
     this.profileImage,
     this.createdBy,
+    required this.events,
     this.createdOn,
   });
 
-  static CommunityGroupDto newNewGroup(String name) {
-    return CommunityGroupDto(
+  static GroupDto newNewGroup(String name) {
+    return GroupDto(
       id: Uuid().v4(),
-      communityId: "",
+      communityId: null,
       name: name,
       description: "",
+      events: [],
       address: null,
     );
   }
 
   // === Deserialize (from plain Map, e.g. Firestore) ===
-  factory CommunityGroupDto.fromMap(Map<String, dynamic> map, String id) {
+  factory GroupDto.fromMap(Map<String, dynamic> map, String id) {
     // Note: profileImage usually not stored as Uint8List directly in Firestore,
     // typically stored as image URL or separately
-    return CommunityGroupDto(
+    return GroupDto(
       id: id,
+      events: [],
       communityId: map['communityId'] ?? '',
       name: map['name'] ?? '',
       description: map['description'] ?? '',
@@ -139,5 +172,27 @@ class CommunityGroupDto {
       if (createdOn != null) 'createdOn': createdOn,
       // profileImage represented differently, usually by URL, handle separately
     };
+  }
+
+  Group toEntity({
+    required List<EventDto> events,
+    Uint8List? profileImage,
+    List<User> members = const [],
+    List<User> admins = const [],
+  }) {
+    return Group(
+        id: id,
+        name: name,
+        description: description,
+        address: address,
+        events: events
+            .map((event) => event.toEntity(attendees: [], organizers: []))
+            .toList(),
+        profileImage: profileImage,
+        createdBy: createdBy,
+        createdOn: createdOn,
+      )
+      ..members.addAll(members)
+      ..admins.addAll(admins);
   }
 }

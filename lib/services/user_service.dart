@@ -6,13 +6,14 @@ import 'package:meet_christ/models/user_credentails.dart';
 import 'package:meet_christ/repositories/auth_repository.dart';
 import 'package:meet_christ/repositories/events_repository.dart';
 
-class UserService2 {
-  final DatabaseService2<String, User> userRepository;
+class UserService {
+  final DatabaseService2<String,User> userRepository;
   final IAuthRepository authRepository;
 
   User? loggedInUser;
+  User  get user => loggedInUser!;
 
-  UserService2({required this.userRepository, required this.authRepository});
+  UserService({required this.userRepository, required this.authRepository});
 
   Future<User?> login(UserCredentials userCredentials) async {
     var authUser = await authRepository.loginWithUserCredentials(
@@ -92,6 +93,15 @@ class FirestoreUserRepository extends DatabaseService2<String, User> {
   @override
   Future<List<User>?> getAllById(String id) {
     throw UnimplementedError();
+  }
+
+  @override
+  Future<List<User>> getAllByUserIds(List<String> userIds) async {
+    var col = FirebaseFirestore.instance.collection('users');
+    var snapshot = await col.where(FieldPath.documentId, whereIn: userIds).get();
+    return snapshot.docs
+        .map((doc) => User.fromMap(doc.data(), doc.id))
+        .toList();
   }
 
   @override

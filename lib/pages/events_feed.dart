@@ -1,6 +1,7 @@
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
-import 'package:meet_christ/models/event_types.dart';
+import 'package:group_button/group_button.dart';
+import 'package:meet_christ/pages/event_detail_page.dart';
 import 'package:meet_christ/pages/new_event_page.dart';
 import 'package:meet_christ/view_models/events_view_model.dart';
 import 'package:meet_christ/widgets/event_card.dart';
@@ -17,6 +18,25 @@ class _EventsFeedState extends State<EventsFeed> {
   bool gottesdienstSelected = false;
   int? gottesdienstId;
   Story? selectedStory;
+  final controller = GroupButtonController();
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+   // Provider.of<EventsViewModel>(context, listen: false).setIsLoaded(false);
+    var isLoaded = Provider.of<EventsViewModel>(
+      context,
+      listen: false,
+    ).isLoaded;
+    if (!isLoaded) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Provider.of<EventsViewModel>(context, listen: false).loadEvents();
+        controller.selectIndex(0);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<EventsViewModel>(
@@ -51,10 +71,60 @@ class _EventsFeedState extends State<EventsFeed> {
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
+              /*Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ToggleButtons(
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      // Add padding around the search bar
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      // Use a Material design search bar
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Search...',
+                          // Add a clear button to the search bar
+                          suffixIcon: IconButton(
+                            icon: Icon(Icons.clear),
+                            onPressed: () => _searchController.clear(),
+                          ),
+                          // Add a search icon or button to the search bar
+                          prefixIcon: IconButton(
+                            icon: Icon(Icons.search),
+                            onPressed: () {
+                              // Perform the search here
+                            },
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20.0),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: GroupButton(
+                      isRadio: true,
+                      maxSelected: 1,
+                      controller: controller,
+                      onSelected: (value, index, isSelected) {
+                        print(value);
+                      },
+                      buttons: ['Kommende', 'Heute', 'Morgen', 'Diese Woche'],
+                      options: GroupButtonOptions(
+                        direction: Axis.horizontal,
+                        groupingType: GroupingType.row,
+                        unselectedColor: Colors.grey[200],
+                        selectedColor: Colors.blueAccent,
+                        spacing: 5,
+                        runSpacing: 5,
+                      ),
+                    ),
+                  ),
+                  /* ToggleButtons(
+                    borderRadius: BorderRadius.all(Radius.circular(4)),
                     onPressed: (index) => {
                       if (index == 0)
                         {
@@ -113,7 +183,7 @@ class _EventsFeedState extends State<EventsFeed> {
                         child: Text("Lobpreis"),
                       ),
                     ],
-                  ),
+                  ), */
                   Row(
                     children: [
                       IconButton(
@@ -124,7 +194,7 @@ class _EventsFeedState extends State<EventsFeed> {
                         icon: Icon(Icons.clear),
                       ),
 
-                      ToggleButtons(
+                      /*ToggleButtons(
                         onPressed: (index) => {
                           if (index == 0)
                             {
@@ -164,93 +234,89 @@ class _EventsFeedState extends State<EventsFeed> {
                             child: Text("Diese Woche"),
                           ),
                         ],
-                      ),
+                      ),*/
                     ],
                   ),
                 ],
+              ),*/
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  "All Events",
+                  style: TextStyle(fontSize: 32, color: Colors.blueAccent),
+                ),
               ),
-              Row(
-                children: [
-                  Text("Heutige Gottesdienste"),
-                  selectedStory != null
-                      ? Align(
-                          alignment: Alignment.centerRight,
-                          child: Text("Alle anzeigen"),
-                        )
-                      : Container(),
-                ],
-              ),
-              gottesdienstSelected == false
+
+              /* gottesdienstSelected == false
                   ? Expanded(
                       child: ListView(
                         children: <Widget>[_buildStoryListView()],
                       ),
                     )
                   : Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      DottedBorder(
-                        options: RoundedRectDottedBorderOptions(
-                          dashPattern: [10, 5],
-                          strokeWidth: 2,
-                          radius: Radius.circular(2),
-                          color: Colors.indigo,
-                          padding: EdgeInsets.all(2),
-                        ),
-                        child: Container(
-                          color: Colors.grey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Padding(
-                                padding: const EdgeInsets.all(4.0),
-                                child: Align(
-                                  alignment: Alignment.topLeft,
-                                  child: CircleAvatar(radius: 14.0),
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        DottedBorder(
+                          options: RoundedRectDottedBorderOptions(
+                            dashPattern: [10, 5],
+                            strokeWidth: 2,
+                            radius: Radius.circular(2),
+                            color: Colors.indigo,
+                            padding: EdgeInsets.all(2),
+                          ),
+                          child: Container(
+                            color: Colors.grey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Padding(
+                                  padding: const EdgeInsets.all(4.0),
+                                  child: Align(
+                                    alignment: Alignment.topLeft,
+                                    child: CircleAvatar(radius: 14.0),
+                                  ),
                                 ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  selectedStory!.name,
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Align(
-                                  alignment: Alignment.centerRight,
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
                                   child: Text(
-                                    "Teilnehmen",
+                                    selectedStory!.name,
                                     style: TextStyle(color: Colors.white),
                                   ),
                                 ),
-                              ),
-                            ],
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      "Teilnehmen",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {
-                            setState(() {
-                              if (gottesdienstSelected == true) {
-                                gottesdienstSelected = false;
-                                selectedStory = null;
-                              } else {
-                                gottesdienstSelected = true;
-                                selectedStory = _stories[0];
-                              }
-                            });
-                          },
-                          child: Text("Teilnehmen"),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              setState(() {
+                                if (gottesdienstSelected == true) {
+                                  gottesdienstSelected = false;
+                                  selectedStory = null;
+                                } else {
+                                  gottesdienstSelected = true;
+                                  selectedStory = _stories[0];
+                                }
+                              });
+                            },
+                            child: Text("Teilnehmen"),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),*/
               Expanded(
                 child: ListView.builder(
                   itemCount: model.events.length,
@@ -258,7 +324,25 @@ class _EventsFeedState extends State<EventsFeed> {
                     final event = model.events[index];
                     return Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: EventCard(event: event),
+                      child: GestureDetector(
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  EventDetailpage(event: event),
+                            ),
+                          );
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            Provider.of<EventsViewModel>(
+                              context,
+                              listen: false,
+                            ).loadEvents();
+                          });
+                        },
+
+                        child: EventCard(event: event),
+                      ),
                     );
                   },
                 ),
