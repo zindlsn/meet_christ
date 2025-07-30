@@ -1,7 +1,9 @@
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
+import 'package:get_it/get_it.dart';
 import 'package:meet_christ/models/group.dart';
 import 'package:meet_christ/models/user.dart';
+import 'package:meet_christ/services/user_service.dart';
 
 class EventDto {
   final String title;
@@ -160,6 +162,7 @@ class Event {
     this.pricePerPerson,
     List<User>? attendees,
     List<User>? organizers,
+    this.meAttending = false,
   }) {
     if (attendees != null) this.attendees = attendees;
     if (organizers != null) this.organizers = organizers;
@@ -186,6 +189,9 @@ class Event {
       pricePerPerson: dto.pricePerPerson,
       attendees: attendees,
       organizers: organizers,
+      meAttending: attendees.any(
+        (attendee) => attendee.id == GetIt.I.get<UserService>().user.id,
+      ),
     );
   }
 

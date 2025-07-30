@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get_it/get_it.dart';
 import 'package:meet_christ/pages/chat_list_page.dart';
-import 'package:meet_christ/pages/chat_page.dart';
 import 'package:meet_christ/pages/communities_page.dart';
 import 'package:meet_christ/pages/event_detail_page.dart';
 import 'package:meet_christ/pages/events_feed.dart';
@@ -490,15 +489,15 @@ class _HomeTabPageState extends State<HomeTabPage> {
               ),
               Consumer<EventsViewModel>(
                 builder: (context, model, child) {
-                  return model.events.isNotEmpty
+                  return model.attendingEvents.isNotEmpty
                       ? SizedBox(
                           height: 180,
                           width: MediaQuery.of(context).size.width,
                           child: ListView.builder(
                             scrollDirection: Axis.horizontal,
-                            itemCount: model.events.length,
+                            itemCount: model.attendingEvents.length,
                             itemBuilder: (context, index) {
-                              var attendees = model.events[index].attendees;
+                              var attendees = model.attendingEvents[index].attendees;
                               return SizedBox(
                                 width: MediaQuery.of(context).size.width - 32,
                                 child: GestureDetector(
@@ -507,10 +506,11 @@ class _HomeTabPageState extends State<HomeTabPage> {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => EventDetailpage(
-                                          event: model.events[index],
+                                          event: model.attendingEvents[index],
                                         ),
                                       ),
                                     );
+                                    Provider.of<EventsViewModel>(context, listen: false).loadAttendingEvents();
                                   },
                                   child: Card(
                                     elevation: 10,
@@ -525,7 +525,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
                                         children: [
                                           Text(
                                             formatDateTime(
-                                              model.events[index].startDate,
+                                              model.attendingEvents[index].startDate,
                                             ),
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
@@ -533,7 +533,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
                                             ),
                                           ),
                                           Text(
-                                            model.events[index].title,
+                                            model.attendingEvents[index].title,
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 20,

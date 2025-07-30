@@ -16,6 +16,7 @@ class EventsViewModel extends ChangeNotifier {
   });
 
   List<Event> events = [];
+  List<Event> attendingEvents = [];
 
   List<String> filters = ["all"];
   List<String> timeFilter = [];
@@ -30,55 +31,8 @@ class EventsViewModel extends ChangeNotifier {
 
   Future<void> loadEvents() async {
     isLoading = true;
-    setIsLoaded(false);
     notifyListeners();
     events = await eventService.getEventsWithoutGroup();
-
-    /* if (timeFilter.contains("today")) {
-      events = events.where((event) {
-        return event.startDate.isAfter(
-              DateTime.now().subtract(Duration(days: 1)),
-            ) &&
-            event.startDate.isBefore(DateTime.now().add(Duration(days: 1)));
-      }).toList();
-    } else if (timeFilter.contains("thisweek")) {
-      final startOfWeek = DateTime.now().subtract(
-        Duration(days: DateTime.now().weekday - 1),
-      );
-      final endOfWeek = startOfWeek.add(Duration(days: 6));
-      events = events.where((event) {
-        return event.startDate.isAfter(DateTime.now()) &&
-            event.startDate.isBefore(endOfWeek);
-      }).toList();
-    }
-    if (filters.contains(EventTypes.all)) {
-    } else if (filters.contains(EventTypes.community)) {
-      events = events
-          .where((event) => event.type == EventTypes.community)
-          .toList();
-    } else if (filters.contains(EventTypes.worshipService)) {
-      events = events
-          .where((event) => event.type == EventTypes.worshipService)
-          .toList();
-    } else if (filters.contains(EventTypes.event)) {
-      events = events.where((event) => event.type == EventTypes.event).toList();
-    } else if (filters.contains(EventTypes.bibleStudy)) {
-      events = events
-          .where((event) => event.type == EventTypes.bibleStudy)
-          .toList();
-    } else if (filters.contains(EventTypes.prayerMeeting)) {
-      events = events
-          .where((event) => event.type == EventTypes.prayerMeeting)
-          .toList();
-    } else if (filters.contains(EventTypes.youthGroup)) {
-      events = events
-          .where((event) => event.type == EventTypes.youthGroup)
-          .toList();
-    } else if (filters.contains(EventTypes.fellowship)) {
-      events = events
-          .where((event) => event.type == EventTypes.fellowship)
-          .toList();
-    } */
     isLoading = false;
     setIsLoaded(true);
     notifyListeners();
@@ -95,7 +49,7 @@ class EventsViewModel extends ChangeNotifier {
 
   Future<void> loadAttendingEvents() async {
     var loadedEvents = await eventService.getUserEvents(userService.user.id);
-    events = loadedEvents;
+    attendingEvents = loadedEvents;
     notifyListeners();
   }
 
@@ -113,9 +67,5 @@ class EventsViewModel extends ChangeNotifier {
       }
       notifyListeners();
     }
-  }
-
-  bool isMeAttending(Event event) {
-    return event.attendees.contains(userService.loggedInUser!);
   }
 }
