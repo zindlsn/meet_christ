@@ -24,6 +24,7 @@ class NewCommunityGroupPageViewModel extends ChangeNotifier {
     group.createdOn = DateTime.now();
     group.createdBy = userService.loggedInUser!.id;
     group.admins.add(userService.user);
+    group.members.add(userService.user);
     await groupService.createGroup(group: group);
   }
 

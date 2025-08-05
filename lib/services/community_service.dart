@@ -34,6 +34,10 @@ class CommunityService {
   Stream<List<Community>> watchUserCommunities(String userId) =>
       _repository.watchUserCommunities(userId);
 
+  Future<List<Community>> getAllCommunities() async {
+    return await _repository.getAllCommunities();
+  }
+
   // Add other business logic methods here
 }
 
@@ -45,6 +49,8 @@ abstract class ICommunityRepository {
   Future<void> deleteCommunity(String id);
   Future<String> uploadCommunityImage(String communityId, Uint8List image);
   Stream<List<Community>> watchUserCommunities(String userId);
+
+  Future<List<Community>> getAllCommunities();
 }
 
 class FirestoreCommunityRepository implements ICommunityRepository {
@@ -65,7 +71,7 @@ class FirestoreCommunityRepository implements ICommunityRepository {
   Future<List<Community>> getUserCommunities(String userId) async {
     final snapshot = await _firestore
         .collection('communities')
-        .where('members', arrayContains: userId) 
+        .where('members', arrayContains: userId)
         .get();
 
     return snapshot.docs
@@ -123,5 +129,18 @@ class FirestoreCommunityRepository implements ICommunityRepository {
               )
               .toList(),
         );
+  }
+
+  @override
+  Future<List<Community>> getAllCommunities() async{
+    final snapshot = await _firestore
+        .collection('communities')
+        .get();
+
+    return snapshot.docs
+        .map(
+          (doc) => Community.fromDto(CommunityDto.fromMap(doc.data(), doc.id)),
+        )
+        .toList();
   }
 }

@@ -25,7 +25,7 @@ class _NewCommunityGroupPageState extends State<NewCommunityGroupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.community.name),
+        title: Text("Create Group"),
         actions: [
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -53,6 +53,10 @@ class _NewCommunityGroupPageState extends State<NewCommunityGroupPage> {
                   child: Consumer<NewCommunityGroupPageViewModel>(
                     builder: (context, model, child) {
                       return TextFormField(
+                        decoration: InputDecoration(
+                          labelText: "Group Name",
+                          border: OutlineInputBorder(),
+                        ),
                         onChanged: (text) {
                           model.setName(text);
                         },

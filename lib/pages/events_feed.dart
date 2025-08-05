@@ -70,36 +70,40 @@ class _EventsFeedState extends State<EventsFeed> {
                   style: TextStyle(fontSize: 32, color: Colors.blueAccent),
                 ),
               ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: model.events.length,
-                  itemBuilder: (context, index) {
-                    final event = model.events[index];
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: GestureDetector(
-                        onTap: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  EventDetailpage(event: event),
+              model.isLoading
+                  ? CircularProgressIndicator()
+                  : Expanded(
+                      child: ListView.builder(
+                        itemCount: model.events.length,
+                        itemBuilder: (context, index) {
+                          final event = model.events[index];
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: GestureDetector(
+                              onTap: () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        EventDetailpage(event: event),
+                                  ),
+                                );
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
+                                  Provider.of<EventsViewModel>(
+                                    context,
+                                    listen: false,
+                                  ).loadEvents();
+                                });
+                              },
+
+                              child: EventCard(event: event),
                             ),
                           );
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            Provider.of<EventsViewModel>(
-                              context,
-                              listen: false,
-                            ).loadEvents();
-                          });
                         },
-
-                        child: EventCard(event: event),
                       ),
-                    );
-                  },
-                ),
-              ),
+                    ),
             ],
           ),
         );

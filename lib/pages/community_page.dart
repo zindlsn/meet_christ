@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meet_christ/models/community.dart';
 import 'package:meet_christ/pages/new_community_group_page.dart';
-import 'package:meet_christ/pages/new_event_page.dart';
 import 'package:meet_christ/widgets/event_card.dart';
 import 'package:meet_christ/widgets/group_card.dart';
 
@@ -18,21 +17,17 @@ class _CommunityPageState extends State<CommunityPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.community.name)),
-      floatingActionButton: Column(
-        children: [
-          FloatingActionButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      NewCommunityGroupPage(community: widget.community),
-                ),
-              );
-            },
-            child: Icon(Icons.group_add),
-          ),
-        ],
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  NewCommunityGroupPage(community: widget.community),
+            ),
+          );
+        },
+        child: Icon(Icons.group_add),
       ),
       body: SingleChildScrollView(
         child: Padding(

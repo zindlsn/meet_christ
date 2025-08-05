@@ -20,7 +20,7 @@ class CommunityViewModel extends ChangeNotifier {
   Future<void> loadCommunities() async {
     isLoading = true;
     notifyListeners();
-    var savedCommunities = await communitiesRepository.getUserCommunities(userService.user.id);
+    var savedCommunities = await  communitiesRepository.getAllCommunities(); //communitiesRepository.getUserCommunities(userService.user.id);
     for(Community c in savedCommunities){
      var  savedGroups = await groupService.getCommunityGroups(c.id);
       c.groups = savedGroups;

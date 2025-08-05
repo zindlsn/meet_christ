@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meet_christ/pages/community_page.dart';
 import 'package:meet_christ/pages/new_community_page.dart';
-import 'package:meet_christ/pages/new_event_page.dart';
 import 'package:meet_christ/view_models/community_view_model.dart';
 import 'package:meet_christ/widgets/event_card.dart';
 import 'package:provider/provider.dart';
@@ -17,7 +16,9 @@ class _CommunitiesPageState extends State<CommunitiesPage> {
   @override
   initState() {
     super.initState();
-    Provider.of<CommunityViewModel>(context, listen: false).loadCommunities();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<CommunityViewModel>(context, listen: false).loadCommunities();
+    });
   }
 
   @override
@@ -30,6 +31,16 @@ class _CommunitiesPageState extends State<CommunitiesPage> {
               ? Center(child: CircularProgressIndicator())
               : Column(
                   children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Align(
+                      alignment: Alignment.centerLeft,
+                        child: Text(
+                          'All Communities',
+                          style: TextStyle(fontSize: 32, color: Colors.blueAccent),
+                        ),
+                      ),
+                    ),
                     Expanded(
                       child: ListView.builder(
                         itemCount: model.communities.length,
