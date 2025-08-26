@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meet_christ/pages/communities/widgets/group_card.dart';
 import 'package:meet_christ/pages/community_page.dart';
 import 'package:meet_christ/pages/new_community_page.dart';
 import 'package:meet_christ/view_models/community_view_model.dart';
@@ -34,10 +35,13 @@ class _CommunitiesPageState extends State<CommunitiesPage> {
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Align(
-                      alignment: Alignment.centerLeft,
+                        alignment: Alignment.centerLeft,
                         child: Text(
                           'All Communities',
-                          style: TextStyle(fontSize: 32, color: Colors.blueAccent),
+                          style: TextStyle(
+                            fontSize: 32,
+                            color: Colors.blueAccent,
+                          ),
                         ),
                       ),
                     ),
@@ -46,15 +50,20 @@ class _CommunitiesPageState extends State<CommunitiesPage> {
                         itemCount: model.communities.length,
                         itemBuilder: (context, index) {
                           final event = model.communities[index];
-                          return GestureDetector(
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    CommunityPage(community: event),
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              GestureDetector(
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        CommunityPage(community: event),
+                                  ),
+                                ),
+                                child: CommunityCard(event: event),
                               ),
-                            ),
-                            child: CommunityCard(event: event),
+                            ],
                           );
                         },
                       ),

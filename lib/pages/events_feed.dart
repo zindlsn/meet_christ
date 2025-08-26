@@ -1,10 +1,125 @@
 import 'package:flutter/material.dart';
 import 'package:group_button/group_button.dart';
+import 'package:meet_christ/models/events_filter.dart';
 import 'package:meet_christ/pages/event_detail_page.dart';
 import 'package:meet_christ/pages/new_event_page.dart';
 import 'package:meet_christ/view_models/events_view_model.dart';
 import 'package:meet_christ/widgets/event_card.dart';
 import 'package:provider/provider.dart';
+
+class EventsPage extends StatefulWidget {
+  const EventsPage({super.key});
+
+  @override
+  State<EventsPage> createState() => _EventsPageState();
+}
+
+class _EventsPageState extends State<EventsPage> {
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          bottom: TabBar(
+            onTap: (value) {
+              setState(() {});
+            },
+            isScrollable: true,
+            tabs: [
+              Tab(text: "Upcoming"),
+              Tab(text: "Today"),
+              Tab(text: "Tomorrow"),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            EventsList(
+              filter: EventsFilter()
+                ..startDate = DateTime.now()
+                ..endDate = DateTime.now().add(Duration(days: 30)),
+            ),
+            EventsList(filter: EventsFilter()..startDate = DateTime.now()),
+            EventsList(
+              filter: EventsFilter()
+                ..startDate = DateTime.now().add(Duration(days: 1)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class EventsList extends StatefulWidget {
+  final EventsFilter filter;
+  const EventsList({super.key, required this.filter});
+
+  @override
+  State<EventsList> createState() => _EventsListState();
+}
+
+class _EventsListState extends State<EventsList> {
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<EventsViewModel>(
+        context,
+        listen: false,
+      ).loadEvents(widget.filter);
+    });
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<EventsViewModel>(
+      builder: (context, model, child) {
+        if (model.isLoading) {
+          return Center(child: CircularProgressIndicator());
+        }
+        return Column(
+          children: [
+            model.events.isNotEmpty
+                ? Expanded(
+                    child: ListView.builder(
+                      primary: false,
+                      shrinkWrap: true,
+                      itemCount: model.events.length,
+                      itemBuilder: (context, index) {
+                        final event = model.events[index];
+                        return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: GestureDetector(
+                            onTap: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      EventDetailpage(event: event),
+                                ),
+                              );
+                            },
+
+                            child: EventCard(event: event),
+                          ),
+                        );
+                      },
+                    ),
+                  )
+                : Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text("No upcoming events"),
+                    ),
+                  ),
+          ],
+        );
+      },
+    );
+  }
+}
 
 class EventsFeed extends StatefulWidget {
   const EventsFeed({super.key});
@@ -22,8 +137,11 @@ class _EventsFeedState extends State<EventsFeed> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!Provider.of<EventsViewModel>(context, listen: false).isLoaded) {
-        Provider.of<EventsViewModel>(context, listen: false).loadEvents();
+      if (!Provider.of<EventsViewModel>(context, listen: false).isLoading) {
+        Provider.of<EventsViewModel>(
+          context,
+          listen: false,
+        ).loadEvents(EventsFilter());
       }
       controller.selectIndex(0);
     });
@@ -33,78 +151,82 @@ class _EventsFeedState extends State<EventsFeed> {
   Widget build(BuildContext context) {
     return Consumer<EventsViewModel>(
       builder: (context, model, child) {
-        return Scaffold(
-          floatingActionButton: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              FloatingActionButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => NewEventPage()),
-                  );
-                },
-                child: const Icon(Icons.add_home_rounded),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: FloatingActionButton(
+        return DefaultTabController(
+          length: 3,
+          child: Scaffold(
+            floatingActionButton: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FloatingActionButton(
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => NewEventPage()),
                     );
                   },
-                  child: const Icon(Icons.group_add),
+                  child: const Icon(Icons.add_home_rounded),
                 ),
-              ),
-            ],
-          ),
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  "All Events",
-                  style: TextStyle(fontSize: 32, color: Colors.blueAccent),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => NewEventPage()),
+                      );
+                    },
+                    child: const Icon(Icons.group_add),
+                  ),
                 ),
-              ),
-              model.isLoading
-                  ? CircularProgressIndicator()
-                  : Expanded(
-                      child: ListView.builder(
-                        itemCount: model.events.length,
-                        itemBuilder: (context, index) {
-                          final event = model.events[index];
-                          return Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: GestureDetector(
-                              onTap: () async {
-                                await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        EventDetailpage(event: event),
-                                  ),
-                                );
-                                WidgetsBinding.instance.addPostFrameCallback((
-                                  _,
-                                ) {
-                                  Provider.of<EventsViewModel>(
-                                    context,
-                                    listen: false,
-                                  ).loadEvents();
-                                });
-                              },
+              ],
+            ),
+            body: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: DefaultTabController(
+                length: 3,
+                child: TabBar(
+                  isScrollable: true,
 
-                              child: EventCard(event: event),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-            ],
+                  tabs: [
+                    Tab(text: "Today"),
+                    Tab(text: "This Week"),
+                    Tab(text: "This Month"),
+                  ],
+                ),
+              ),
+            ),
+            /*Expanded(
+                        child: ListView.builder(
+                          itemCount: model.events.length,
+                          itemBuilder: (context, index) {
+                            final event = model.events[index];
+                            return Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: GestureDetector(
+                                onTap: () async {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          EventDetailpage(event: event),
+                                    ),
+                                  );
+                                  WidgetsBinding.instance.addPostFrameCallback((
+                                    _,
+                                  ) {
+                                    Provider.of<EventsViewModel>(
+                                      context,
+                                      listen: false,
+                                    ).loadEvents();
+                                  });
+                                },
+          
+                                child: EventCard(event: event),
+                              ),
+                            );
+                          },
+                        ),
+                      ), */
           ),
         );
       },

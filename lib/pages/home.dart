@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get_it/get_it.dart';
 import 'package:meet_christ/pages/chat_list_page.dart';
-import 'package:meet_christ/pages/communities_page.dart';
+import 'package:meet_christ/pages/communities/communities_page.dart';
 import 'package:meet_christ/pages/event_detail_page.dart';
 import 'package:meet_christ/pages/events_feed.dart';
 import 'package:meet_christ/pages/my_groups_page.dart';
@@ -122,7 +122,7 @@ class _HomePageState extends State<HomePage> {
         builder: (context, model, child) {
           return model.isLoading
               ? Center(child: CircularProgressIndicator())
-              : EventsFeed();
+              : EventsPage();
         },
       );
     } else if (_selectedIndex == 3) {
@@ -489,100 +489,136 @@ class _HomeTabPageState extends State<HomeTabPage> {
               ),
               Consumer<EventsViewModel>(
                 builder: (context, model, child) {
-                  return model.attendingEvents.isNotEmpty
-                      ? SizedBox(
-                          height: 180,
-                          width: MediaQuery.of(context).size.width,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: model.attendingEvents.length,
-                            itemBuilder: (context, index) {
-                              var attendees = model.attendingEvents[index].attendees;
-                              return SizedBox(
-                                width: MediaQuery.of(context).size.width - 32,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => EventDetailpage(
-                                          event: model.attendingEvents[index],
-                                        ),
-                                      ),
-                                    );
-                                    Provider.of<EventsViewModel>(context, listen: false).loadAttendingEvents();
-                                  },
-                                  child: Card(
-                                    elevation: 10,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                        left: 16.0,
-                                        top: 8,
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            formatDateTime(
-                                              model.attendingEvents[index].startDate,
-                                            ),
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.blueGrey,
-                                            ),
-                                          ),
-                                          Text(
-                                            model.attendingEvents[index].title,
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 20,
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Align(
-                                              alignment: Alignment.bottomLeft,
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(
-                                                  bottom: 16.0,
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      model.attendingEvents.isNotEmpty
+                          ? SizedBox(
+                              height: 180,
+                              width: MediaQuery.of(context).size.width,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: model.attendingEvents.length,
+                                itemBuilder: (context, index) {
+                                  var attendees =
+                                      model.attendingEvents[index].attendees;
+                                  return SizedBox(
+                                    width:
+                                        MediaQuery.of(context).size.width - 32,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                EventDetailpage(
+                                                  event: model
+                                                      .attendingEvents[index],
                                                 ),
-                                                child: Row(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Icon(
-                                                      Icons.check_box_rounded,
-                                                      color: Colors.green,
-                                                    ),
-                                                    Text(
-                                                      attendees.length
-                                                          .toString(),
-                                                    ),
-                                                    Text(
-                                                      style: TextStyle(
-                                                        fontSize: 16,
-                                                      ),
-                                                      attendees.length == 1
-                                                          ? " nimmt teil"
-                                                          : attendees.length > 1
-                                                          ? " nehmen teil"
-                                                          : " nimmt niemand teil",
-                                                    ),
-                                                  ],
+                                          ),
+                                        );
+                                        Provider.of<EventsViewModel>(
+                                          context,
+                                          listen: false,
+                                        ).loadAttendingEvents();
+                                      },
+                                      child: Card(
+                                        elevation: 10,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(
+                                            left: 16.0,
+                                            top: 8,
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                formatDateTime(
+                                                  model
+                                                      .attendingEvents[index]
+                                                      .startDate,
+                                                ),
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.blueGrey,
                                                 ),
                                               ),
-                                            ),
+                                              Text(
+                                                model
+                                                    .attendingEvents[index]
+                                                    .title,
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 20,
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: Align(
+                                                  alignment:
+                                                      Alignment.bottomLeft,
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                          bottom: 16.0,
+                                                        ),
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Icon(
+                                                          Icons
+                                                              .check_box_rounded,
+                                                          color: Colors.green,
+                                                        ),
+                                                        Text(
+                                                          attendees.length
+                                                              .toString(),
+                                                        ),
+                                                        Text(
+                                                          style: TextStyle(
+                                                            fontSize: 16,
+                                                          ),
+                                                          attendees.length == 1
+                                                              ? " nimmt teil"
+                                                              : attendees
+                                                                        .length >
+                                                                    1
+                                                              ? " nehmen teil"
+                                                              : " nimmt niemand teil",
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ],
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ),
-                              );
-                            },
+                                  );
+                                },
+                              ),
+                            )
+                          : Text('No events'),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        child: MariaMessageSection(),
+                      ),
+                      Card(
+                        elevation: 10.0,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [],
                           ),
-                        )
-                      : Text('No events');
+                        ),
+                      ),
+                    ],
+                  );
                 },
               ),
               /*  Padding(
@@ -681,5 +717,113 @@ class _HomeTabPageState extends State<HomeTabPage> {
         ),
       ),
     );
+  }
+}
+
+class ExpandableCard extends StatefulWidget {
+  final String previewText;
+  final String fullText;
+  final String title;
+  const ExpandableCard({
+    super.key,
+    required this.previewText,
+    required this.fullText,
+    required this.title,
+  });
+
+  @override
+  State<ExpandableCard> createState() => _ExpandableCardState();
+}
+
+class _ExpandableCardState extends State<ExpandableCard> {
+  bool isExpanded = false;
+  @override
+  Widget build(BuildContext context) {
+    if (isExpanded) {
+      return GestureDetector(
+        onTap: () {
+          setState(() {
+            isExpanded = false;
+          });
+        },
+        child: Column(
+          children: [
+            Text(
+              widget.title,
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            Text(widget.fullText),
+          ],
+        ),
+      );
+    } else {
+      return GestureDetector(
+        onTap: () {
+          setState(() {
+            isExpanded = true;
+          });
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("${widget.previewText}..."),
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text("Ganze Botschaft anzeigen"),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+}
+
+class MariaMessageSection extends StatefulWidget {
+  const MariaMessageSection({super.key});
+
+  @override
+  State<MariaMessageSection> createState() => _MariaMessageSectionState();
+}
+
+class _MariaMessageSectionState extends State<MariaMessageSection> {
+  bool isClosed = false;
+  @override
+  Widget build(BuildContext context) {
+    if (!isClosed) {
+      return Card(
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Letzte Maria Botschaft',
+                  style: TextStyle(fontSize: 32, color: Colors.blueAccent),
+                ),
+                IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () {
+                    setState(() {
+                      isClosed = true;
+                    });
+                  },
+                ),
+              ],
+            ),
+            ExpandableCard(
+              title: "Botschaft vom 25.08.2025",
+              previewText: "Liebe Kinder, meine Kinder, meine Geliebten!",
+              fullText:
+        """Liebe Kinder, meine Kinder, meine Geliebten!
+        Ihr seid auserwählt, weil ihr meinen Weisungen gefolgt seid, sie in die Praxis umgesetzt habt und ihr Gott über alles liebt.
+        Deshalb, meine lieben Kinder, betet von ganzem Herzen, damit meine Worte sich verwirklichen.
+        Fastet, bringt Opfer, liebt aus Liebe zu Gott, der euch erschaffen hat, und meine lieben Kinder, seid meine ausgestreckten Hände für diese Welt, die den Gott der Liebe noch nicht kennengelernt hat.
+        Danke, dass ihr meinem Ruf gefolgt seid""",
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Container();
+    }
   }
 }

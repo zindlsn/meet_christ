@@ -22,23 +22,30 @@ class _AuthPageState extends State<AuthPage> {
             titleTag: "login",
             savedEmail: "szindl@posteo.de",
             savedPassword: "Jesus1000.",
-            onResendCode: (code) {},
+            onResendCode: (code) {
+              return null;
+            },
             onLogin: (loginData) async {
               model.setEmail(loginData.name);
               model.setPassword(loginData.password);
               await model.login();
+              return null;
             },
-            onRecoverPassword: (password) {},
+            onRecoverPassword: (password) {
+              return null;
+            },
             onConfirmSignup: (text, loginData) {
               model.setEmail(loginData.name);
               model.setPassword(loginData.password);
               model.signUp();
+              return null;
             },
             initialAuthMode: AuthMode.login,
             onSignup: (loginData) async {
               model.setEmail(loginData.name ?? "");
               model.setPassword(loginData.password ?? "");
               await model.signUp();
+              return null;
             },
             validateUserImmediately: true,
             loginAfterSignUp: true,

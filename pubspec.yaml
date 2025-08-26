@@ -54,6 +54,7 @@ dependencies:
   google_mlkit_text_recognition: ^0.15.0
   dotted_border: ^3.1.0
   google_generative_ai: ^0.4.7
+  better_polls: ^1.0.8
 
 dev_dependencies:
   flutter_test:

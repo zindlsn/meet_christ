@@ -134,13 +134,25 @@ class _CommunityCardState extends State<CommunityCard> {
   }
 }
 
-String formatDateTime(DateTime dateTime) {
+String formatDateTime(DateTime dateTime, {bool isLong = false}) {
   // Custom weekday abbreviations
   const List<String> weekdayAbbr = ['MO', 'DI', 'MI', 'DO', 'FR', 'SA', 'SO'];
-
-  // Get weekday abbreviation (Note: DateTime.weekday: 1 - Monday, 7 - Sunday)
-  String dayAbbr = weekdayAbbr[dateTime.weekday - 1];
-
+  const List<String> weekdayAbbrLong = [
+    'Montag',
+    'Dienstag',
+    'Mittwoch',
+    'Donnerstag',
+    'Freitag',
+    'Samstag',
+    'Sonntag',
+  ];
+  String dayAbbr = "";
+  if(!isLong) {
+    // Get weekday abbreviation (Note: DateTime.weekday: 1 - Monday, 7 - Sunday)
+    dayAbbr = weekdayAbbr[dateTime.weekday - 1];
+  }else{
+    dayAbbr = weekdayAbbrLong[dateTime.weekday - 1];
+  }
   // Get uppercase month abbreviation
   String monthAbbr = DateFormat.MMM().format(dateTime).toUpperCase();
 

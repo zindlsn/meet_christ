@@ -26,7 +26,10 @@ class NewEventViewModel extends ChangeNotifier {
 
   void saveEvent() {}
 
-  void loadMyCommunities() async {}
+  void loadMyCommunities() async {
+    communities = await communitiesRepository.getAllCommunities();
+    notifyListeners();
+  }
 
   Group? selectedGroup;
   Community? selectedCommunity;
@@ -91,6 +94,18 @@ class NewEventViewModel extends ChangeNotifier {
 
   void setSelectedStartDate(DateTime date) {
     selectedStartDate = date;
+    notifyListeners();
+  }
+
+  Future initCommunity(Community? community) async   {
+    loadMyCommunities();
+    for (Community c in communities) {
+      if (c.id == community?.id) {
+        selectedCommunity = c;
+        notifyListeners();
+        return;
+      }
+    }
     notifyListeners();
   }
 }

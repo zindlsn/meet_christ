@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meet_christ/models/event.dart';
-import 'package:meet_christ/models/event_types.dart';
+import 'package:meet_christ/models/events_filter.dart' show EventsFilter;
 import 'package:meet_christ/services/community_service.dart';
 import 'package:meet_christ/services/event_service.dart';
 import 'package:meet_christ/services/user_service.dart';
@@ -21,20 +21,13 @@ class EventsViewModel extends ChangeNotifier {
   List<String> filters = ["all"];
   List<String> timeFilter = [];
 
-  bool isLoading = false;
-  bool _isLoaded = false;
-  bool get isLoaded => _isLoaded;
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
 
-  void setIsLoaded(bool attend) {
-    _isLoaded = attend;
-  }
-
-  Future<void> loadEvents() async {
-    isLoading = true;
-    notifyListeners();
-    events = await eventService.getEventsWithoutGroup();
-    isLoading = false;
-    setIsLoaded(true);
+  Future<void> loadEvents(EventsFilter filter) async {
+    _isLoading = true;
+    events = await eventService.getEventsWithoutGroup(filter);
+    _isLoading = false;
     notifyListeners();
   }
 

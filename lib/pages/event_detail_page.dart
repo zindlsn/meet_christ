@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:maps_launcher/maps_launcher.dart';
 import 'package:meet_christ/models/event.dart';
 import 'package:meet_christ/view_models/event_detail_view_model.dart';
+import 'package:meet_christ/widgets/event_card.dart';
 import 'package:provider/provider.dart';
 
 class EventDetailpage extends StatefulWidget {
@@ -74,6 +76,7 @@ class _EventDetailpageState extends State<EventDetailpage> {
         return Scaffold(
           appBar: AppBar(title: Text(widget.event.title)),
           body: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
                 height: 200,
@@ -86,12 +89,52 @@ class _EventDetailpageState extends State<EventDetailpage> {
                   ),
                 ),
               ),
-              Column(
-                children: [
-                  Text(model.event.description),
-                  Text('Date: ${model.event.startDate}'),
-                  Text('Location: ${model.event.location}'),
-                  !model.isAttending
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      model.event.title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 32,
+                      ),
+                    ),
+                    Text(model.event.description),
+
+                    InfoSection(
+                      icon: Icon(Icons.calendar_view_day_rounded),
+                      subTitle:
+                          '${model.event.startDate.hour.toString().padLeft(2, '0')}:${model.event.startDate.minute.toString().padLeft(2, '0')}${model.event.endDate.hour.toString().padLeft(2, '0')}:${model.event.endDate.minute.toString().padLeft(2, '0')}',
+                      title:
+                          "${formatDateTime(model.event.startDate, isLong: true)} - ${formatDateTime(model.event.endDate, isLong: true)}",
+                    ),
+                    InfoSection(
+                      icon: Icon(Icons.location_on),
+                      title: "Location",
+                      subTitle: model.event.location,
+                      onTap: () =>
+                          MapsLauncher.launchQuery(model.event.location),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: Text("Description"),
+                    ),
+                    Text(
+                      "Long description goes here, and so an, all infos about it",
+                    ),
+                    Container(height: 16, color: Colors.grey[200]),
+                    Text("Comments"),
+                  ],
+                ),
+              ),
+              Container(
+                color: Colors.redAccent,
+                height: 100,
+                width: double.infinity,
+                child: Card(
+                  color: Colors.blue,
+                  child: !model.isAttending
                       ? InkWell(
                           onTap: () async {
                             model.setIsAttending(true);
@@ -108,12 +151,26 @@ class _EventDetailpageState extends State<EventDetailpage> {
                               );
                             }
                           },
-                          child: Center(
-                            child: Container(
-                              width: double.infinity,
-                              height: 50,
-                              color: Colors.greenAccent,
-                              child: Text('Join Event'),
+                          child: SizedBox(
+                            width: 200,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.zero, // no rounded corners
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 16,
+                                ),
+                              ),
+                              onPressed: () async {
+                                model.setIsAttending(true);
+                                final success = await context
+                                    .read<EventDetailViewModel>()
+                                    .joinEvent(model.event.id);
+                              },
+                              child: Text('Join'),
                             ),
                           ),
                         )
@@ -138,14 +195,46 @@ class _EventDetailpageState extends State<EventDetailpage> {
                               );
                             }
                           },
-                          child: Text('Leave Event'),
+                          child: Text('Cancle'),
                         ),
-                ],
+                ),
               ),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+class InfoSection extends StatelessWidget {
+  final Icon icon;
+  final String title;
+  final String subTitle;
+  final bool withArrow;
+  final VoidCallback? onTap;
+  const InfoSection({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subTitle,
+    this.withArrow = false,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        ListTile(
+          leading: icon,
+          title: Text(title),
+          subtitle: Text(subTitle),
+          onTap: onTap,
+          trailing: onTap != null ? Icon(Icons.arrow_forward) : null,
+        ),
+        Padding(padding: const EdgeInsets.all(8.0), child: Divider()),
+      ],
     );
   }
 }

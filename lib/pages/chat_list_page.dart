@@ -14,14 +14,15 @@ class ChatListPage extends StatefulWidget {
 class _ChatListPageState extends State<ChatListPage> {
 
   @override
-  void initState() {
-    Provider.of<ChatListViewModel>(context, listen: false).fetchChats();
-    super.initState();
+void initState() {
+  super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+     Provider.of<ChatListViewModel>(context, listen: false).fetchChats();
+  });
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chats'),
@@ -36,6 +37,9 @@ class _ChatListPageState extends State<ChatListPage> {
       ),
       body: Consumer<ChatListViewModel>(
         builder: (context, model, child) {
+          if (model.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
           return Column(
             children: [
               SizedBox(

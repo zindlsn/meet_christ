@@ -4,7 +4,13 @@ import 'package:meet_christ/pages/chat_list_page.dart';
 class ChatListViewModel extends ChangeNotifier {
   List<Chat> chats = [];
 
+  bool isLoading = false;
+
+
   Future<void> fetchChats() async {
+    isLoading = true;
+    notifyListeners();
+
     // Simulate fetching chats from a service
     await Future.delayed(Duration(seconds: 1));
     chats = [
@@ -13,6 +19,7 @@ class ChatListViewModel extends ChangeNotifier {
       Chat(name: "Chat 3", lastMessage: "Let's meet", unread: 1),
       Chat(name: "AI Assistant", lastMessage: "Ready to assist!", unread: 0),
     ];
+    isLoading = false;
     notifyListeners();
   }
 }

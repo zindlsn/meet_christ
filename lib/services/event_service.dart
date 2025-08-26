@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:meet_christ/models/event.dart';
+import 'package:meet_christ/models/events_filter.dart';
 import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/repositories/events_repository.dart';
 import 'package:meet_christ/services/user_service.dart';
@@ -41,8 +42,8 @@ class EventService {
   Future<void> rsvpToEvent(String eventId, String userId, bool attending) =>
       _repository.rsvpToEvent(eventId, userId, attending);
 
-  Future<List<Event>> getEventsWithoutGroup() async {
-    var events = await _repository.getEventsWithoutGroup();
+  Future<List<Event>> getEventsWithoutGroup(EventsFilter filter) async {
+    var events = await _repository.getEventsWithoutGroup(filter);
     for (var event in events) {
       if (event.attendees.any((item) => item.id == _userService.user.id)) {
         event.meAttending = true;
@@ -67,7 +68,7 @@ abstract class IEventRepository {
   Stream<List<Event>> watchGroupEvents(String groupId);
   Future<void> rsvpToEvent(String eventId, String userId, bool attending);
 
-  Future<List<Event>> getEventsWithoutGroup();
+  Future<List<Event>> getEventsWithoutGroup(EventsFilter filter);
 }
 
 class FirestoreEventRepository implements IEventRepository {
@@ -216,10 +217,31 @@ class FirestoreEventRepository implements IEventRepository {
   }
 
   @override
-  Future<List<Event>> getEventsWithoutGroup() async {
+  Future<List<Event>> getEventsWithoutGroup(EventsFilter filter) async {
+    DateTime? start;
+    DateTime? endDate;
+    if (filter.startDate != null) {
+      start = DateTime(
+        filter.startDate!.year,
+        filter.startDate!.month,
+        filter.startDate!.day,
+      );
+      endDate = start.add(Duration(days: 1));
+    }
+
+    if (filter.endDate != null) {
+      endDate = DateTime(
+        filter.endDate!.year,
+        filter.endDate!.month,
+        filter.endDate!.day,
+      ).add(const Duration(days: 1));
+    }
+
     final snapshot = await _firestore
         .collection('events')
         .where('groupId', isEqualTo: null)
+        .where("startDate", isGreaterThanOrEqualTo: start)
+        .where("startDate", isLessThanOrEqualTo: endDate)
         .get();
 
     final eventFutures = snapshot.docs

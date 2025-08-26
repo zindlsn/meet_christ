@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_login/flutter_login.dart';
 import 'package:get_it/get_it.dart';
 import 'package:meet_christ/firebase_options.dart';
 import 'package:meet_christ/models/user.dart';
@@ -28,7 +29,7 @@ User? user;
 void main() async {
   final i = GetIt.I;
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.android);
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.web);
   var factory = BackendAuthFactory(type: BackendType.firestore);
   GetIt.I.registerSingleton<IAuthRepository>(factory.getRepository());
   GetIt.I.registerSingleton<FileRepository>(FileRepository());
@@ -112,6 +113,14 @@ void main() async {
     ),
   );
 
+  var user = await GetIt.I.get<UserService>().login(
+    UserCredentials(email: "szindl@posteo.de", password: "Jesus1000."),
+  );
+
+  await GetIt.I.get<UserService>().saveUserdataLocally(
+    LoginData(name: "szindl@posteo.de", password: "Jesus1000."),
+  );
+
   var logindata = await GetIt.I.get<UserService>().loadLogindataLocally();
   user;
   if (logindata != null) {
@@ -183,7 +192,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: user == null ? const AuthPage() : HomePage(indexTab: 0),
+      home: user == null ? const HomePage(indexTab: 0) : HomePage(indexTab: 0),
     );
   }
 }
