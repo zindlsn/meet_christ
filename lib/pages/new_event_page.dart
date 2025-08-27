@@ -141,6 +141,32 @@ class _NewEventPageState extends State<NewEventPage> {
                           CustomTextfield(),
                           Row(
                             children: [
+                              SizedBox(
+                                height: 50,
+                                width: 25,
+                                child: Icon(Icons.location_on),
+                              ),
+                              SizedBox(
+                                height: 50,
+                                width: MediaQuery.of(context).size.width - 100,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 16.0),
+                                  child: TextFormField(
+                                    initialValue: text,
+                                    decoration: InputDecoration(
+                                      labelText: 'Location',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    onChanged: (value) {
+                                      model.setLocation(location: value);
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
                               Expanded(
                                 child: SizedBox(
                                   height: 50,

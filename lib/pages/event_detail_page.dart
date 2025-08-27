@@ -88,8 +88,8 @@ class _EventDetailpageState extends State<EventDetailpage> {
                     children: [
                       SizedBox(
                         height: 200,
-                        child: Hero(
-                          tag: 'dash1001251',
+                        child: HeroMode(
+                          enabled: false,
                           child: Image.asset(
                             "assets/images/placeholder_church.png",
                             fit: BoxFit.fill,
@@ -99,57 +99,55 @@ class _EventDetailpageState extends State<EventDetailpage> {
                       ),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                model.event.title,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 32,
-                                ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              model.event.title,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 32,
                               ),
-                              Text(model.event.description),
-                              InfoSection(
-                                icon: Icon(Icons.calendar_view_day_rounded),
-                                title: eventTitle,
-                                subTitle:
-                                    '${model.event.startDate.hour.toString().padLeft(2, '0')}:${model.event.startDate.minute.toString().padLeft(2, '0')} - ${model.event.endDate.hour.toString().padLeft(2, '0')}:${model.event.endDate.minute.toString().padLeft(2, '0')}',
+                            ),
+                            Text(model.event.description),
+                            InfoSection(
+                              icon: Icon(Icons.calendar_view_day_rounded),
+                              title: eventTitle,
+                              subTitle:
+                                  '${model.event.startDate.hour.toString().padLeft(2, '0')}:${model.event.startDate.minute.toString().padLeft(2, '0')} - ${model.event.endDate.hour.toString().padLeft(2, '0')}:${model.event.endDate.minute.toString().padLeft(2, '0')}',
+                            ),
+                            InfoSection(
+                              icon: Icon(Icons.location_on),
+                              title: "LOCATION",
+                              subTitle: model.event.location,
+                              onTap: () => MapsLauncher.launchQuery(
+                                model.event.location,
                               ),
-                              InfoSection(
-                                icon: Icon(Icons.location_on),
-                                title: "LOCATION",
-                                subTitle: model.event.location,
-                                onTap: () => MapsLauncher.launchQuery(
-                                  model.event.location,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 16.0),
-                                child: Text("DESCRIPTION"),
-                              ),
-                              Text(
-                                "Long description goes here, and so an, all infos about it",
-                              ),
-                              /*  Container(height: 16, color: Colors.grey[200]),
-                              Text("Comments"),
-                              TextFormField(
-                                decoration: InputDecoration(
-                                  suffixIcon: Icon(Icons.send),
-                                  hintText: "Add a comment...",
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    borderSide: BorderSide(
-                                      color: Colors.grey,
-                                      width: 1.0,
-                                    ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 16.0),
+                              child: Text("DESCRIPTION"),
+                            ),
+                            Text(
+                              "Long description goes here, and so an, all infos about it",
+                            ),
+                            /*  Container(height: 16, color: Colors.grey[200]),
+                            Text("Comments"),
+                            TextFormField(
+                              decoration: InputDecoration(
+                                suffixIcon: Icon(Icons.send),
+                                hintText: "Add a comment...",
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8.0),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey,
+                                    width: 1.0,
                                   ),
                                 ),
                               ),
-                              Container(height: 500, color: Colors.red), */
-                            ],
-                          ),
+                            ),
+                            Container(height: 500, color: Colors.red), */
+                          ],
                         ),
                       ),
                     ],

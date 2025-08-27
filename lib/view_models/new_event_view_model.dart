@@ -28,8 +28,6 @@ class NewEventViewModel extends ChangeNotifier {
   List<Community> communities = [];
   List<Group> groups = [];
 
-  void saveEvent() {}
-
   void loadMyCommunities() async {
     communities = await communitiesRepository.getAllCommunities();
     notifyListeners();
@@ -48,6 +46,12 @@ class NewEventViewModel extends ChangeNotifier {
   String title = "";
   void setTitle({required String title}) {
     this.title = title;
+    notifyListeners();
+  }
+
+  String location = "";
+  void setLocation({required String location}) {
+    this.location = location;
     notifyListeners();
   }
 
@@ -84,7 +88,7 @@ class NewEventViewModel extends ChangeNotifier {
         _selectedEndTime.hour,
         _selectedEndTime.minute,
       ),
-      location: 'Event Location',
+      location: location,
       image: imageAsBytes,
     );
 
