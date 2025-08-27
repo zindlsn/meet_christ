@@ -20,7 +20,7 @@ class KathAIService {
 
     return OllamaResponse(
       response: result2!.response,
-      suggestions: result2!.suggestions,
+      suggestions: result2.suggestions,
       model: OllamaModel(name: "", model: "", modifiedAt: "", size: 0),
       metrics: {},
       createdAt: DateTime.now(),

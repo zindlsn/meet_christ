@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meet_christ/models/event.dart';
 import 'package:meet_christ/models/events_filter.dart' show EventsFilter;
+import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/services/community_service.dart';
 import 'package:meet_christ/services/event_service.dart';
 import 'package:meet_christ/services/user_service.dart';
@@ -25,6 +26,7 @@ class EventsViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   Future<void> loadEvents(EventsFilter filter) async {
+    events = [];
     _isLoading = true;
     events = await eventService.getEventsWithoutGroup(filter);
     _isLoading = false;
@@ -41,6 +43,7 @@ class EventsViewModel extends ChangeNotifier {
   }
 
   Future<void> loadAttendingEvents() async {
+    print("Loading attending events for user ${userService.user.id}");
     var loadedEvents = await eventService.getUserEvents(userService.user.id);
     attendingEvents = loadedEvents;
     notifyListeners();
@@ -50,13 +53,15 @@ class EventsViewModel extends ChangeNotifier {
     final index = events.indexWhere((e) => e.id == event.id);
     if (index != -1) {
       if (events[index].attendees.any(
-        (attendee) => attendee.id == userService.loggedInUser!.id,
+        (attendee) => attendee.userId == userService.loggedInUser!.id,
       )) {
         events[index].attendees.removeWhere(
-          (attendee) => attendee.id == userService.loggedInUser!.id,
+          (attendee) => attendee.userId == userService.loggedInUser!.id,
         );
       } else {
-        events[index].attendees.add(userService.loggedInUser!);
+        events[index].attendees.add(
+          EventUser.attendee(userService.loggedInUser!.id, event.id),
+        );
       }
       notifyListeners();
     }

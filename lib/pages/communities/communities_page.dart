@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:meet_christ/pages/communities/widgets/group_card.dart';
 import 'package:meet_christ/pages/community_page.dart';
 import 'package:meet_christ/pages/new_community_page.dart';
 import 'package:meet_christ/view_models/community_view_model.dart';

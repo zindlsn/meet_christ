@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meet_christ/models/event.dart';
+import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/services/event_service.dart';
 import 'package:meet_christ/services/user_service.dart';
 
@@ -29,7 +30,7 @@ class EventDetailViewModel extends ChangeNotifier {
   Future<bool> joinEvent(String eventId) async {
     try {
       await eventService.rsvpToEvent(eventId, userService.user.id, isAttending);
-      event.addAttendee(userService.user);
+      event.addAttendee(EventUser.attendee(userService.user.id, eventId));
       notifyListeners();
     } catch (e) {
       print('Error joining event: $e');

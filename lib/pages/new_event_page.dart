@@ -16,8 +16,10 @@ class NewEventPage extends StatefulWidget {
 class _NewEventPageState extends State<NewEventPage> {
   final ImagePicker picker = ImagePicker();
   String text = "";
-  DateTime? _selectedDate = DateTime.now();
-  TimeOfDay? _selectedTime = TimeOfDay.now();
+  DateTime _selecteStartdDate = DateTime.now().add(const Duration(days: 1));
+  TimeOfDay _selectedStartTime = TimeOfDay(hour: 18, minute: 0);
+  DateTime _selecteEnddDate = DateTime.now().add(const Duration(days: 1));
+  TimeOfDay _selectedEndTime = TimeOfDay(hour: 20, minute: 0);
 
   @override
   void initState() {
@@ -26,6 +28,23 @@ class _NewEventPageState extends State<NewEventPage> {
       context,
       listen: false,
     ).initCommunity(widget.community);
+
+    Provider.of<NewEventViewModel>(
+      context,
+      listen: false,
+    ).setSelectedStartDate(_selecteStartdDate);
+    Provider.of<NewEventViewModel>(
+      context,
+      listen: false,
+    ).setSelectedStartTime(_selectedStartTime);
+    Provider.of<NewEventViewModel>(
+      context,
+      listen: false,
+    ).setSelectedEndDate(_selecteEnddDate);
+    Provider.of<NewEventViewModel>(
+      context,
+      listen: false,
+    ).setSelectedEndTime(_selectedEndTime);
   }
 
   @override
@@ -95,7 +114,7 @@ class _NewEventPageState extends State<NewEventPage> {
                         },
                       ),
                     ),
-          
+
                     /*  model.selectedCommunity != null
                         ? Padding(
                             padding: const EdgeInsets.only(bottom: 16.0),
@@ -130,9 +149,9 @@ class _NewEventPageState extends State<NewEventPage> {
                                     child: AbsorbPointer(
                                       child: TextFormField(
                                         decoration: InputDecoration(
-                                          labelText: _selectedDate == null
+                                          labelText: _selecteStartdDate == null
                                               ? 'Select Date'
-                                              : '${_selectedDate!.toLocal().day + 1}/${_selectedDate!.toLocal().month}/${_selectedDate!.toLocal().year}',
+                                              : '${_selecteStartdDate!.toLocal().day}/${_selecteStartdDate!.toLocal().month}/${_selecteStartdDate!.toLocal().year}',
                                         ),
                                       ),
                                     ),
@@ -144,13 +163,13 @@ class _NewEventPageState extends State<NewEventPage> {
                                 child: SizedBox(
                                   height: 50,
                                   child: GestureDetector(
-                                    onTap: () => _selectTime(context),
+                                    onTap: () => _selectStartTime(context),
                                     child: AbsorbPointer(
                                       child: TextFormField(
                                         decoration: InputDecoration(
-                                          labelText: _selectedDate == null
+                                          labelText: _selecteStartdDate == null
                                               ? 'Select Date'
-                                              : '${_selectedTime!.hour}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
+                                              : '${_selectedStartTime!.hour}:${_selectedStartTime!.minute.toString().padLeft(2, '0')}',
                                         ),
                                       ),
                                     ),
@@ -165,13 +184,13 @@ class _NewEventPageState extends State<NewEventPage> {
                                 child: SizedBox(
                                   height: 50,
                                   child: GestureDetector(
-                                    onTap: () => _selectDate(context),
+                                    onTap: () => _selectEndDate(context),
                                     child: AbsorbPointer(
                                       child: TextFormField(
                                         decoration: InputDecoration(
-                                          labelText: _selectedDate == null
+                                          labelText: _selecteEnddDate == null
                                               ? 'Select Date'
-                                              : '${_selectedDate!.toLocal().day}/${_selectedDate!.toLocal().month}/${_selectedDate!.toLocal().year}',
+                                              : '${_selecteEnddDate!.toLocal().day}/${_selecteEnddDate!.toLocal().month}/${_selecteEnddDate!.toLocal().year}',
                                         ),
                                       ),
                                     ),
@@ -183,13 +202,13 @@ class _NewEventPageState extends State<NewEventPage> {
                                 child: SizedBox(
                                   height: 50,
                                   child: GestureDetector(
-                                    onTap: () => _selectTime(context),
+                                    onTap: () => _selectEndTime(context),
                                     child: AbsorbPointer(
                                       child: TextFormField(
                                         decoration: InputDecoration(
-                                          labelText: _selectedDate == null
-                                              ? 'Select Date'
-                                              : '${_selectedTime!.hour}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
+                                          labelText: _selectedStartTime == null
+                                              ? 'Select End Time'
+                                              : '${_selectedEndTime!.hour}:${_selectedEndTime!.minute.toString().padLeft(2, '0')}',
                                         ),
                                       ),
                                     ),
@@ -215,7 +234,7 @@ class _NewEventPageState extends State<NewEventPage> {
                           ),
                           TextButton(
                             onPressed: () {
-                              model.saveEvent();
+                              model.saveNewEvent();
                               Navigator.pop(context);
                             },
                             child: Text("Create Event"),
@@ -236,13 +255,18 @@ class _NewEventPageState extends State<NewEventPage> {
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
+      helpText: "Select Start Date",
+      initialDate: DateTime.now().add(const Duration(days: 1)),
+      firstDate: DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+      ),
+      lastDate: DateTime(2101, 12, 31),
     );
-    if (picked != null && picked != _selectedDate) {
+    if (picked != null && picked != _selecteStartdDate) {
       setState(() {
-        _selectedDate = picked;
+        _selecteStartdDate = picked;
         Provider.of<NewEventViewModel>(
           context,
           listen: false,
@@ -251,19 +275,38 @@ class _NewEventPageState extends State<NewEventPage> {
     }
   }
 
-  Future<void> _selectTime(BuildContext context) async {
+  Future<void> _selectStartTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
+      helpText: "Select Start Time",
       initialTime: TimeOfDay.now(),
       initialEntryMode: TimePickerEntryMode.dial,
     );
-    if (picked != null && picked != _selectedTime) {
+    if (picked != null && picked != _selectedStartTime) {
       setState(() {
-        _selectedTime = picked;
+        _selectedStartTime = picked;
         Provider.of<NewEventViewModel>(
           context,
           listen: false,
         ).setSelectedStartTime(picked);
+      });
+    }
+  }
+
+  Future<void> _selectEndTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      initialEntryMode: TimePickerEntryMode.dial,
+      helpText: "Select End Time",
+    );
+    if (picked != null && picked != _selectedEndTime) {
+      setState(() {
+        _selectedEndTime = picked;
+        Provider.of<NewEventViewModel>(
+          context,
+          listen: false,
+        ).setSelectedEndTime(picked);
       });
     }
   }
@@ -275,6 +318,29 @@ class _NewEventPageState extends State<NewEventPage> {
     );
     String text = recognizedText.text.toString();
     return text;
+  }
+
+  void _selectEndDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      helpText: "Select End Date",
+      initialDate: DateTime.now().add(const Duration(days: 1)),
+      firstDate: DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+      ),
+      lastDate: DateTime(2101, 12, 31),
+    );
+    if (picked != null && picked != _selecteEnddDate) {
+      setState(() {
+        _selecteEnddDate = picked;
+        Provider.of<NewEventViewModel>(
+          context,
+          listen: false,
+        ).setSelectedEndDate(picked);
+      });
+    }
   }
 }
 
@@ -290,10 +356,10 @@ class _CustomTextfieldState extends State<CustomTextfield> {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        SizedBox(height: 50, width: 25, child: Icon(Icons.title)),
+        SizedBox(height: 50, width: 25, child: Icon(Icons.topic)),
         SizedBox(
           height: 50,
-          width: 300,
+          width: MediaQuery.of(context).size.width - 100,
           child: Padding(
             padding: const EdgeInsets.only(left: 16.0),
             child: TextFormField(

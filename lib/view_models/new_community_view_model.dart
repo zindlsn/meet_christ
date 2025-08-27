@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:meet_christ/models/address.dart';
 import 'package:meet_christ/models/community.dart';
 import 'package:meet_christ/services/community_service.dart';
-import 'package:uuid/uuid.dart';
 
 class NewCommunityViewModel extends ChangeNotifier {
   CommunityService communitiesRepository;

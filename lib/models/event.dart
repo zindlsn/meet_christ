@@ -100,16 +100,16 @@ class EventDto {
       group: event.group,
       imageUrl: null, // no direct mapping from Uint8List image to url here
       pricePerPerson: event.pricePerPerson,
-      attendeeIds: event.attendees.map((u) => u.id).toList(),
-      organizerIds: event.organizers.map((u) => u.id).toList(),
+      attendeeIds: event.attendees.map((u) => u.userId).toList(),
+      organizerIds: event.organizers.map((u) => u.userId).toList(),
     );
   }
 
   // Convert back to Entity (requires fetching User objects separately)
   Event toEntity({
     Uint8List? image,
-    required List<User> attendees,
-    required List<User> organizers,
+    required List<EventUser> attendees,
+    required List<EventUser> organizers,
   }) {
     return Event(
       title: title,
@@ -140,8 +140,8 @@ class Event {
   final String? type;
   Uint8List? image;
   int? pricePerPerson;
-  List<User> attendees = [];
-  List<User> organizers = [];
+  List<EventUser> attendees = [];
+  List<EventUser> organizers = [];
   bool meAttending = false;
   final int? repeatEveryWeeks;
   final DateTime? repeatEndDate;
@@ -160,8 +160,8 @@ class Event {
     this.group,
     this.image,
     this.pricePerPerson,
-    List<User>? attendees,
-    List<User>? organizers,
+    List<EventUser>? attendees,
+    List<EventUser>? organizers,
     this.meAttending = false,
   }) {
     if (attendees != null) this.attendees = attendees;
@@ -171,8 +171,8 @@ class Event {
   factory Event.fromDto(
     EventDto dto, {
     Uint8List? image,
-    required List<User> attendees,
-    required List<User> organizers,
+    required List<EventUser> attendees,
+    required List<EventUser> organizers,
   }) {
     return Event(
       title: dto.title,
@@ -190,21 +190,21 @@ class Event {
       attendees: attendees,
       organizers: organizers,
       meAttending: attendees.any(
-        (attendee) => attendee.id == GetIt.I.get<UserService>().user.id,
+        (attendee) => attendee.userId == GetIt.I.get<UserService>().user.id,
       ),
     );
   }
 
-  void addAttendees(List<User> newAttendees) {
+  void addAttendees(List<EventUser> newAttendees) {
     for (var attendee in newAttendees) {
-      if (!attendees.any((a) => a.id == attendee.id)) {
+      if (!attendees.any((a) => a.userId == attendee.userId)) {
         attendees.add(attendee);
       }
     }
   }
 
-  void addAttendee(User attendee) {
-    if (!attendees.any((a) => a.id == attendee.id)) {
+  void addAttendee(EventUser attendee) {
+    if (!attendees.any((a) => a.userId == attendee.userId)) {
       attendees.add(attendee);
     }
   }
@@ -223,8 +223,8 @@ class Event {
     String? type,
     Uint8List? image,
     int? pricePerPerson,
-    List<User>? attendees,
-    List<User>? organizers,
+    List<EventUser>? attendees,
+    List<EventUser>? organizers,
     int? repeatEveryWeeks,
     DateTime? repeatEndDate,
     Group? group,
@@ -240,8 +240,8 @@ class Event {
       type: type ?? this.type,
       image: clearImage ? null : (image ?? this.image),
       pricePerPerson: pricePerPerson ?? this.pricePerPerson,
-      attendees: attendees ?? List<User>.from(this.attendees),
-      organizers: organizers ?? List<User>.from(this.organizers),
+      attendees: attendees ?? List<EventUser>.from(this.attendees),
+      organizers: organizers ?? List<EventUser>.from(this.organizers),
       repeatEveryWeeks: repeatEveryWeeks ?? this.repeatEveryWeeks,
       repeatEndDate: repeatEndDate ?? this.repeatEndDate,
       group: group ?? this.group,

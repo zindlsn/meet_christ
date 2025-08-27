@@ -21,7 +21,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 3;
 
   @override
   void initState() {
@@ -78,8 +78,8 @@ class _HomePageState extends State<HomePage> {
                 padding: EdgeInsets.zero,
                 children: [
                   DrawerHeader(
-                    child: Text('Meet Christ'),
                     decoration: BoxDecoration(color: Colors.blue),
+                    child: Text('Meet Christ'),
                   ),
                   ListTile(
                     title: Text('Settings'),
@@ -494,7 +494,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
                     children: [
                       model.attendingEvents.isNotEmpty
                           ? SizedBox(
-                              height: 180,
+                              height: 100,
                               width: MediaQuery.of(context).size.width,
                               child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
@@ -506,8 +506,8 @@ class _HomeTabPageState extends State<HomeTabPage> {
                                     width:
                                         MediaQuery.of(context).size.width - 32,
                                     child: GestureDetector(
-                                      onTap: () {
-                                        Navigator.push(
+                                      onTap: () async {
+                                        var result = await Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) =>
@@ -517,18 +517,19 @@ class _HomeTabPageState extends State<HomeTabPage> {
                                                 ),
                                           ),
                                         );
-                                        Provider.of<EventsViewModel>(
-                                          context,
-                                          listen: false,
-                                        ).loadAttendingEvents();
+
+                                        /*TODO: why null? */
+                                        if (result == null) {
+                                          Provider.of<EventsViewModel>(
+                                            context,
+                                            listen: false,
+                                          ).loadAttendingEvents();
+                                        }
                                       },
                                       child: Card(
                                         elevation: 10,
                                         child: Padding(
-                                          padding: const EdgeInsets.only(
-                                            left: 16.0,
-                                            top: 8,
-                                          ),
+                                          padding: const EdgeInsets.all(8.0),
                                           child: Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
@@ -553,44 +554,31 @@ class _HomeTabPageState extends State<HomeTabPage> {
                                                   fontSize: 20,
                                                 ),
                                               ),
-                                              Expanded(
-                                                child: Align(
-                                                  alignment:
-                                                      Alignment.bottomLeft,
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                          bottom: 16.0,
-                                                        ),
-                                                    child: Row(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Icon(
-                                                          Icons
-                                                              .check_box_rounded,
-                                                          color: Colors.green,
-                                                        ),
-                                                        Text(
-                                                          attendees.length
-                                                              .toString(),
-                                                        ),
-                                                        Text(
-                                                          style: TextStyle(
-                                                            fontSize: 16,
-                                                          ),
-                                                          attendees.length == 1
-                                                              ? " nimmt teil"
-                                                              : attendees
-                                                                        .length >
-                                                                    1
-                                                              ? " nehmen teil"
-                                                              : " nimmt niemand teil",
-                                                        ),
-                                                      ],
+                                              Align(
+                                                alignment: Alignment.bottomLeft,
+                                                child: Row(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.check_box_rounded,
+                                                      color: Colors.green,
                                                     ),
-                                                  ),
+                                                    Text(
+                                                      attendees.length
+                                                          .toString(),
+                                                    ),
+                                                    Text(
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                      ),
+                                                      attendees.length == 1
+                                                          ? " nimmt teil"
+                                                          : attendees.length > 1
+                                                          ? " nehmen teil"
+                                                          : " nimmt niemand teil",
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
                                             ],
@@ -602,20 +590,15 @@ class _HomeTabPageState extends State<HomeTabPage> {
                                 },
                               ),
                             )
-                          : Text('No events'),
+                          : GestureDetector(
+                              onTap: () {
+
+                              },
+                              child: Center(child: Text('Find an event for you click on 🔎 tab')),
+                            ),
                       Padding(
                         padding: const EdgeInsets.only(top: 16.0),
                         child: MariaMessageSection(),
-                      ),
-                      Card(
-                        elevation: 10.0,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [],
-                          ),
-                        ),
                       ),
                     ],
                   );
@@ -746,14 +729,18 @@ class _ExpandableCardState extends State<ExpandableCard> {
             isExpanded = false;
           });
         },
-        child: Column(
-          children: [
-            Text(
-              widget.title,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            Text(widget.fullText),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.title,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              Text(widget.fullText),
+            ],
+          ),
         ),
       );
     } else {
@@ -765,12 +752,14 @@ class _ExpandableCardState extends State<ExpandableCard> {
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Text("${widget.previewText}..."),
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
-              child: Text("Ganze Botschaft anzeigen"),
+              child: Center(child: Text("Ganze Botschaft anzeigen")),
             ),
+            Center(child: Icon(Icons.arrow_downward)),
           ],
         ),
       );
@@ -791,35 +780,39 @@ class _MariaMessageSectionState extends State<MariaMessageSection> {
   Widget build(BuildContext context) {
     if (!isClosed) {
       return Card(
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Text(
-                  'Letzte Maria Botschaft',
-                  style: TextStyle(fontSize: 32, color: Colors.blueAccent),
-                ),
-                IconButton(
-                  icon: Icon(Icons.close),
-                  onPressed: () {
-                    setState(() {
-                      isClosed = true;
-                    });
-                  },
-                ),
-              ],
-            ),
-            ExpandableCard(
-              title: "Botschaft vom 25.08.2025",
-              previewText: "Liebe Kinder, meine Kinder, meine Geliebten!",
-              fullText:
-        """Liebe Kinder, meine Kinder, meine Geliebten!
-        Ihr seid auserwählt, weil ihr meinen Weisungen gefolgt seid, sie in die Praxis umgesetzt habt und ihr Gott über alles liebt.
-        Deshalb, meine lieben Kinder, betet von ganzem Herzen, damit meine Worte sich verwirklichen.
-        Fastet, bringt Opfer, liebt aus Liebe zu Gott, der euch erschaffen hat, und meine lieben Kinder, seid meine ausgestreckten Hände für diese Welt, die den Gott der Liebe noch nicht kennengelernt hat.
-        Danke, dass ihr meinem Ruf gefolgt seid""",
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Letzte Maria Botschaft',
+                      style: TextStyle(fontSize: 32, color: Colors.blueAccent),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close),
+                    onPressed: () {
+                      setState(() {
+                        isClosed = true;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              ExpandableCard(
+                title: "Botschaft vom 25.08.2025",
+                previewText: "Liebe Kinder, meine Kinder, meine Geliebten!",
+                fullText: """Liebe Kinder, meine Kinder, meine Geliebten!
+Ihr seid auserwählt, weil ihr meinen Weisungen gefolgt seid, sie in die Praxis umgesetzt habt und ihr Gott über alles liebt.
+Deshalb, meine lieben Kinder, betet von ganzem Herzen, damit meine Worte sich verwirklichen.
+Fastet, bringt Opfer, liebt aus Liebe zu Gott, der euch erschaffen hat, und meine lieben Kinder, seid meine ausgestreckten Hände für diese Welt, die den Gott der Liebe noch nicht kennengelernt hat.
+Danke, dass ihr meinem Ruf gefolgt seid""",
+              ),
+            ],
+          ),
         ),
       );
     } else {

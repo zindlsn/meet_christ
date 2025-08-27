@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_generative_ai/google_generative_ai.dart';
 

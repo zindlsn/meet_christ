@@ -71,11 +71,10 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDp6CcU_L3X-jj11DRDCRNsWeMDPC3BE3U',
-    appId: '1:931105313146:web:1aa30415c174e540d246c3',
-    messagingSenderId: '931105313146',
-    projectId: 'drone-match-5469f',
-    authDomain: 'drone-match-5469f.firebaseapp.com',
-    storageBucket: 'drone-match-5469f.appspot.com',
+    apiKey: 'AIzaSyAHpFxhMmpvlfsDChVZ3N-WG5XX3c534IA',
+    appId: '1:446371293238:android:7694f2f256ead5c1309097',
+    messagingSenderId: '446371293238',
+    projectId: 'meet-christ-app',
+    storageBucket: 'meet-christ-app.firebasestorage.app',
   );
 }

@@ -45,7 +45,7 @@ class EventService {
   Future<List<Event>> getEventsWithoutGroup(EventsFilter filter) async {
     var events = await _repository.getEventsWithoutGroup(filter);
     for (var event in events) {
-      if (event.attendees.any((item) => item.id == _userService.user.id)) {
+      if (event.attendees.any((item) => item.userId == _userService.user.id)) {
         event.meAttending = true;
       } else {
         event.meAttending = false;
@@ -113,6 +113,7 @@ class FirestoreEventRepository implements IEventRepository {
     final snapshot = await _firestore
         .collection('events')
         .where('attendeeIds', arrayContains: userId)
+        .where('endDate', isGreaterThanOrEqualTo: DateTime(DateTime.now().year,DateTime.now().month, DateTime.now().day))
         .get();
     final events = <Event>[];
     for (var dataElement in snapshot.docs) {
@@ -122,8 +123,11 @@ class FirestoreEventRepository implements IEventRepository {
             .map((item) => item.toString())
             .toList(),
       );
+      var eventUsers = attendees
+          .map((user) => EventUser.attendee(user.id, dataElement.id))
+          .toList();
       var event = Event.fromDto(
-        attendees: attendees,
+        attendees: eventUsers,
         organizers: [],
         EventDto.fromMap(data, dataElement.id),
       );
@@ -141,8 +145,8 @@ class FirestoreEventRepository implements IEventRepository {
     await _firestore.collection('events').doc(id).set({
       ...dto.toMap(),
       'groupId': event.group?.id,
-      'attendeeIds': event.attendees.map((u) => u.id).toList(),
-      'organizerIds': event.organizers.map((u) => u.id).toList(),
+      'attendeeIds': event.attendees.map((u) => u.userId).toList(),
+      'organizerIds': event.organizers.map((u) => u.userId).toList(),
       'createdAt': FieldValue.serverTimestamp(),
     });
 
@@ -155,8 +159,8 @@ class FirestoreEventRepository implements IEventRepository {
     await _firestore.collection('events').doc(event.id).update({
       ...dto.toMap(),
       'groupId': event.group?.id,
-      'attendeeIds': event.attendees.map((u) => u.id).toList(),
-      'organizerIds': event.organizers.map((u) => u.id).toList(),
+      'attendeeIds': event.attendees.map((u) => u.userId).toList(),
+      'organizerIds': event.organizers.map((u) => u.userId).toList(),
     });
   }
 
@@ -266,8 +270,8 @@ class FirestoreEventRepository implements IEventRepository {
 
     return Event.fromDto(
       EventDto.fromMap(doc.data()! as Map<String, dynamic>, doc.id),
-      attendees: attendees.whereType<User>().toList(), // Filter out any nulls
-      organizers: organizers.whereType<User>().toList(),
+      attendees: attendees.map((item) => EventUser.attendee(item!.id,doc.id)).toList(),
+      organizers: organizers.whereType<EventUser>().toList(),
     );
   }
 }

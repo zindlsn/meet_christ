@@ -73,133 +73,184 @@ class _EventDetailpageState extends State<EventDetailpage> {
   Widget build(BuildContext context) {
     return Consumer<EventDetailViewModel>(
       builder: (context, model, child) {
+        var eventTitle = formatDateTime(model.event.startDate, isLong: true);
+        if (model.event.endDate.day != model.event.startDate.day) {
+          eventTitle +=
+              " - ${formatDateTime(model.event.endDate, isLong: false)}";
+        }
         return Scaffold(
           appBar: AppBar(title: Text(widget.event.title)),
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                height: 200,
-                child: Hero(
-                  tag: 'dash1001251',
-                  child: Image.asset(
-                    "assets/images/placeholder_church.png",
-                    fit: BoxFit.fill,
-                    width: double.infinity,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      model.event.title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 32,
+          body: SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: ListView(
+                    children: [
+                      SizedBox(
+                        height: 200,
+                        child: Hero(
+                          tag: 'dash1001251',
+                          child: Image.asset(
+                            "assets/images/placeholder_church.png",
+                            fit: BoxFit.fill,
+                            width: double.infinity,
+                          ),
+                        ),
                       ),
-                    ),
-                    Text(model.event.description),
-
-                    InfoSection(
-                      icon: Icon(Icons.calendar_view_day_rounded),
-                      subTitle:
-                          '${model.event.startDate.hour.toString().padLeft(2, '0')}:${model.event.startDate.minute.toString().padLeft(2, '0')}${model.event.endDate.hour.toString().padLeft(2, '0')}:${model.event.endDate.minute.toString().padLeft(2, '0')}',
-                      title:
-                          "${formatDateTime(model.event.startDate, isLong: true)} - ${formatDateTime(model.event.endDate, isLong: true)}",
-                    ),
-                    InfoSection(
-                      icon: Icon(Icons.location_on),
-                      title: "Location",
-                      subTitle: model.event.location,
-                      onTap: () =>
-                          MapsLauncher.launchQuery(model.event.location),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16.0),
-                      child: Text("Description"),
-                    ),
-                    Text(
-                      "Long description goes here, and so an, all infos about it",
-                    ),
-                    Container(height: 16, color: Colors.grey[200]),
-                    Text("Comments"),
-                  ],
-                ),
-              ),
-              Container(
-                color: Colors.redAccent,
-                height: 100,
-                width: double.infinity,
-                child: Card(
-                  color: Colors.blue,
-                  child: !model.isAttending
-                      ? InkWell(
-                          onTap: () async {
-                            model.setIsAttending(true);
-                            final success = await model.joinEvent(
-                              model.event.id,
-                            );
-                            if (success) {
-                              show(context);
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Failed to join event.'),
-                                ),
-                              );
-                            }
-                          },
-                          child: SizedBox(
-                            width: 200,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.zero, // no rounded corners
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 16,
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                model.event.title,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 32,
                                 ),
                               ),
-                              onPressed: () async {
-                                model.setIsAttending(true);
-                                final success = await context
-                                    .read<EventDetailViewModel>()
-                                    .joinEvent(model.event.id);
-                              },
-                              child: Text('Join'),
-                            ),
+                              Text(model.event.description),
+                              InfoSection(
+                                icon: Icon(Icons.calendar_view_day_rounded),
+                                title: eventTitle,
+                                subTitle:
+                                    '${model.event.startDate.hour.toString().padLeft(2, '0')}:${model.event.startDate.minute.toString().padLeft(2, '0')} - ${model.event.endDate.hour.toString().padLeft(2, '0')}:${model.event.endDate.minute.toString().padLeft(2, '0')}',
+                              ),
+                              InfoSection(
+                                icon: Icon(Icons.location_on),
+                                title: "LOCATION",
+                                subTitle: model.event.location,
+                                onTap: () => MapsLauncher.launchQuery(
+                                  model.event.location,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(top: 16.0),
+                                child: Text("DESCRIPTION"),
+                              ),
+                              Text(
+                                "Long description goes here, and so an, all infos about it",
+                              ),
+                              /*  Container(height: 16, color: Colors.grey[200]),
+                              Text("Comments"),
+                              TextFormField(
+                                decoration: InputDecoration(
+                                  suffixIcon: Icon(Icons.send),
+                                  hintText: "Add a comment...",
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                    borderSide: BorderSide(
+                                      color: Colors.grey,
+                                      width: 1.0,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Container(height: 500, color: Colors.red), */
+                            ],
                           ),
-                        )
-                      : ElevatedButton(
-                          onPressed: () async {
-                            model.setIsAttending(false);
-                            final success = await context
-                                .read<EventDetailViewModel>()
-                                .joinEvent(model.event.id);
-                            if (!mounted) return;
-                            if (success) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Left event successfully!'),
-                                ),
-                              );
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Failed to leave event.'),
-                                ),
-                              );
-                            }
-                          },
-                          child: Text('Cancle'),
                         ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(80),
+                          offset: Offset(
+                            0,
+                            -4,
+                          ), // Negative Y-value for top shadow
+                          blurRadius: 12,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    width: double.infinity,
+                    child: !model.isAttending
+                        ? Row(
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Expanded(child: SizedBox()),
+                              Expanded(
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    shape: const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.zero,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                      vertical: 16,
+                                    ),
+                                  ),
+                                  onPressed: () async {
+                                    model.setIsAttending(true);
+                                    final success = await context
+                                        .read<EventDetailViewModel>()
+                                        .joinEvent(model.event.id);
+                                  },
+                                  child: Text('Join'),
+                                ),
+                              ),
+                            ],
+                          )
+                        : Row(
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Expanded(child: SizedBox()),
+                              Expanded(
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    shape: const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.zero,
+                                    ),
+                                  ),
+                                  onPressed: () async {
+                                    model.setIsAttending(false);
+                                    final success = await context
+                                        .read<EventDetailViewModel>()
+                                        .joinEvent(model.event.id);
+                                    if (!mounted) return;
+                                    if (success) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Left event successfully!',
+                                          ),
+                                        ),
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Failed to leave event.',
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  child: Text('Cancle'),
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -233,7 +284,10 @@ class InfoSection extends StatelessWidget {
           onTap: onTap,
           trailing: onTap != null ? Icon(Icons.arrow_forward) : null,
         ),
-        Padding(padding: const EdgeInsets.all(8.0), child: Divider()),
+        Padding(
+          padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+          child: Divider(),
+        ),
       ],
     );
   }

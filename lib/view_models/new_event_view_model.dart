@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:meet_christ/models/community.dart';
 import 'package:meet_christ/models/event.dart';
 import 'package:meet_christ/models/group.dart';
+import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/services/community_service.dart';
 import 'package:meet_christ/services/event_service.dart';
 import 'package:meet_christ/services/user_service.dart';
@@ -11,6 +12,9 @@ import 'package:uuid/uuid.dart';
 class NewEventViewModel extends ChangeNotifier {
   DateTime selectedStartDate = DateTime.now();
   TimeOfDay _selectedStartTime = TimeOfDay.now();
+  DateTime _selecteEnddDate = DateTime.now();
+  TimeOfDay _selectedEndTime = TimeOfDay.now();
+
   CommunityService communitiesRepository;
   UserService userService;
   EventService eventService;
@@ -59,12 +63,13 @@ class NewEventViewModel extends ChangeNotifier {
 
   /// saves a new event
   Future<void> saveNewEvent() async {
+    var eventId = Uuid().v4();
     var event = Event(
-      id: Uuid().v4(),
+      id: eventId,
       title: title.isNotEmpty ? title : 'New Event',
       description: '',
-      attendees: [userService.user],
-      organizers: [userService.user],
+      attendees: [],
+      organizers: [EventUser.host(userService.user.id, eventId)],
       startDate: DateTime(
         selectedStartDate.year,
         selectedStartDate.month,
@@ -73,11 +78,11 @@ class NewEventViewModel extends ChangeNotifier {
         _selectedStartTime.minute,
       ),
       endDate: DateTime(
-        selectedStartDate.year,
-        selectedStartDate.month,
-        selectedStartDate.day,
-        _selectedStartTime.hour + 1,
-        _selectedStartTime.minute,
+        _selecteEnddDate.year,
+        _selecteEnddDate.month,
+        _selecteEnddDate.day,
+        _selectedEndTime.hour,
+        _selectedEndTime.minute,
       ),
       location: 'Event Location',
       image: imageAsBytes,
@@ -92,12 +97,17 @@ class NewEventViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setSelectedEndTime(TimeOfDay time) {
+    _selectedEndTime = time;
+    notifyListeners();
+  }
+
   void setSelectedStartDate(DateTime date) {
     selectedStartDate = date;
     notifyListeners();
   }
 
-  Future initCommunity(Community? community) async   {
+  Future initCommunity(Community? community) async {
     loadMyCommunities();
     for (Community c in communities) {
       if (c.id == community?.id) {
@@ -106,6 +116,11 @@ class NewEventViewModel extends ChangeNotifier {
         return;
       }
     }
+    notifyListeners();
+  }
+
+  void setSelectedEndDate(DateTime picked) {
+    _selecteEnddDate = picked;
     notifyListeners();
   }
 }

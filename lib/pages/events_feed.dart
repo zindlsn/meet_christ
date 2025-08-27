@@ -101,7 +101,6 @@ class _EventsListState extends State<EventsList> {
                                 ),
                               );
                             },
-
                             child: EventCard(event: event),
                           ),
                         );
