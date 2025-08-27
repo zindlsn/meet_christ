@@ -131,6 +131,67 @@ class _EventDetailpageState extends State<EventDetailpage> {
                             Text(
                               "Long description goes here, and so an, all infos about it",
                             ),
+                            Text('People'),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Organizers'),
+                                      Column(
+                                        children: model.event.organizers.map((e) {
+                                          return Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Column(
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 24,
+                                                  backgroundImage: NetworkImage(
+                                                    e.photoUrl ??
+                                                        'https://www.gravatar.com/avatar/placeholder',
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(e.name),
+                                              ],
+                                            ),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Attendees'),
+                                    Column(
+                                      children: model.event.attendees.map((e) {
+                                        return Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Column(
+                                            children: [
+                                              CircleAvatar(
+                                                radius: 24,
+                                                backgroundImage: NetworkImage(
+                                                  e.photoUrl ??
+                                                      'https://www.gravatar.com/avatar/placeholder',
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(e.name),
+                                            ],
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                             /*  Container(height: 16, color: Colors.grey[200]),
                             Text("Comments"),
                             TextFormField(

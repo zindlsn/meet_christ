@@ -44,12 +44,14 @@ class User {
 class EventUser {
   final String userId;
   final String eventId;
-  final String role; 
+  final String role;
   final String status; // Consider making this an enum for clarity
   final bool canComment;
+  String photoUrl;
   final List<String> eventPermissions;
   final List<String> commentPermissions;
-  
+  final String name = "Name";
+
   /// Use enum for better type safety:
   /// 0 - Not Attending
   /// 1 - Attending
@@ -65,35 +67,37 @@ class EventUser {
     required this.eventPermissions,
     required this.attendingStatus,
     this.commentPermissions = const [CommentPermissions.canAdd],
+    this.photoUrl = '',
   });
 
+
   static EventUser host(String userId, String eventId) => EventUser(
-        userId: userId,
-        eventId: eventId,
-        role: Roles.organizer,
-        status: '',
-        canComment: true,
-        eventPermissions: [EventPermissions.canEdit, EventPermissions.canDelete],
-        commentPermissions: [CommentPermissions.canAdd],
-        attendingStatus: AttendingStatus.attending,
-      );
+    userId: userId,
+    eventId: eventId,
+    role: Roles.organizer,
+    status: '',
+    canComment: true,
+    eventPermissions: [EventPermissions.canEdit, EventPermissions.canDelete],
+    commentPermissions: [CommentPermissions.canAdd],
+    attendingStatus: AttendingStatus.attending,
+  );
 
   static EventUser attendee(String userId, String eventId) => EventUser(
-        userId: userId,
-        eventId: eventId,
-        role: Roles.attendee,
-        status: '',
-        canComment: true,
-        eventPermissions: [],
-        commentPermissions: [CommentPermissions.canAdd],
-        attendingStatus: AttendingStatus.attending,
-      );
+    userId: userId,
+    eventId: eventId,
+    role: Roles.attendee,
+    status: '',
+    canComment: true,
+    eventPermissions: [],
+    commentPermissions: [CommentPermissions.canAdd],
+    attendingStatus: AttendingStatus.attending,
+  );
 }
 
 enum AttendingStatus {
   notAttending, // 0
-  attending,    // 1
-  maybe,        // 2
+  attending, // 1
+  maybe, // 2
 }
 
 class EventPermissions {

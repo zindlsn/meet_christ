@@ -113,7 +113,14 @@ class FirestoreEventRepository implements IEventRepository {
     final snapshot = await _firestore
         .collection('events')
         .where('attendeeIds', arrayContains: userId)
-        .where('endDate', isGreaterThanOrEqualTo: DateTime(DateTime.now().year,DateTime.now().month, DateTime.now().day))
+        .where(
+          'endDate',
+          isGreaterThanOrEqualTo: DateTime(
+            DateTime.now().year,
+            DateTime.now().month,
+            DateTime.now().day,
+          ),
+        )
         .get();
     final events = <Event>[];
     for (var dataElement in snapshot.docs) {
@@ -123,12 +130,19 @@ class FirestoreEventRepository implements IEventRepository {
             .map((item) => item.toString())
             .toList(),
       );
+      var organizers = await _userRepository.getAllByUserIds(
+        (data["attendeeIds"] as List<dynamic>)
+            .map((item) => item.toString())
+            .toList(),
+      );
       var eventUsers = attendees
           .map((user) => EventUser.attendee(user.id, dataElement.id))
           .toList();
       var event = Event.fromDto(
         attendees: eventUsers,
-        organizers: [],
+        organizers: organizers
+            .map((user) => EventUser.host(user.id, dataElement.id))
+            .toList(),
         EventDto.fromMap(data, dataElement.id),
       );
 
@@ -270,7 +284,9 @@ class FirestoreEventRepository implements IEventRepository {
 
     return Event.fromDto(
       EventDto.fromMap(doc.data()! as Map<String, dynamic>, doc.id),
-      attendees: attendees.map((item) => EventUser.attendee(item!.id,doc.id)).toList(),
+      attendees: attendees
+          .map((item) => EventUser.attendee(item!.id, doc.id))
+          .toList(),
       organizers: organizers.whereType<EventUser>().toList(),
     );
   }
