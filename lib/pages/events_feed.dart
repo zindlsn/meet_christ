@@ -93,6 +93,10 @@ class _EventsListState extends State<EventsList> {
                           padding: const EdgeInsets.all(8.0),
                           child: GestureDetector(
                             onTap: () async {
+                              Provider.of<EventsViewModel>(
+                                context,
+                                listen: false,
+                              ).setFilter(widget.filter);
                               await Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -100,6 +104,11 @@ class _EventsListState extends State<EventsList> {
                                       EventDetailpage(event: event),
                                 ),
                               );
+
+                             await Provider.of<EventsViewModel>(
+                                context,
+                                listen: false,
+                              ).reload();
                             },
                             child: EventCard(event: event),
                           ),

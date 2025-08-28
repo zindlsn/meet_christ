@@ -66,4 +66,14 @@ class EventsViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> reload() async{
+   await loadEvents(filter);
+  }
+
+  EventsFilter filter = EventsFilter();
+
+  void setFilter(EventsFilter filter) {
+    this.filter = filter;
+  }
 }

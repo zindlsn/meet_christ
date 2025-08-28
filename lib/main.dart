@@ -114,16 +114,14 @@ void main() async {
     ),
   );
 
-  if (kIsWeb) {
-    var user = await GetIt.I.get<UserService>().login(
+  /*  var user = await GetIt.I.get<UserService>().login(
       UserCredentials(email: "szindl@posteo.de", password: "Jesus1000."),
     );
 
     await GetIt.I.get<UserService>().saveUserdataLocally(
       LoginData(name: "szindl@posteo.de", password: "Jesus1000."),
     );
-  }
-
+*/
   var logindata = await GetIt.I.get<UserService>().loadLogindataLocally();
   user;
   if (logindata != null) {
@@ -195,7 +193,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: user == null ? const AuthPage() : HomePage(indexTab: 0),
+      home: user == null ? const HomePage(indexTab: 3,) : HomePage(indexTab: 0),
     );
   }
 }
