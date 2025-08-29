@@ -25,15 +25,12 @@ class EventDetailViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-
-
   Future<bool> joinEvent(String eventId) async {
     try {
       await eventService.rsvpToEvent(eventId, userService.user.id, isAttending);
       event.addAttendee(EventUser.attendee(userService.user.id, eventId));
       notifyListeners();
     } catch (e) {
-      print('Error joining event: $e');
       return false;
     }
     return true;

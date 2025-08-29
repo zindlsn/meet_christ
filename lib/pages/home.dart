@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get_it/get_it.dart';
@@ -223,8 +225,8 @@ class Prayer {
 }
 
 class PrayerPage extends StatefulWidget {
-  Prayer prayer;
-  PrayerPage({super.key, required this.prayer});
+  final Prayer prayer;
+  const PrayerPage({super.key, required this.prayer});
 
   @override
   State<PrayerPage> createState() => _PrayerPageState();
@@ -345,7 +347,7 @@ class GlaubensbekenntnisVorlesen extends StatefulWidget {
   const GlaubensbekenntnisVorlesen({super.key});
 
   @override
-  _GlaubensbekenntnisVorlesenState createState() =>
+  State<GlaubensbekenntnisVorlesen> createState() =>
       _GlaubensbekenntnisVorlesenState();
 }
 
@@ -371,21 +373,6 @@ class _GlaubensbekenntnisVorlesenState
     setState(() {
       isSpeaking = false;
     });
-  }
-
-  Future<void> _speak() async {
-    await flutterTts.setVolume(1);
-    await flutterTts.setSpeechRate(1);
-    await flutterTts.setPitch(1);
-    for (var zeile in grossesGlaubensbekenntnis) {
-      if (!isSpeaking) break;
-      if (zeile.trim().isNotEmpty) {
-        // Überspringe Leerzeilen
-        await flutterTts.speak(zeile);
-        // Warte bis zu Ende gesprochen.
-        await _waitUntilDone();
-      }
-    }
   }
 
   Future<void> _waitUntilDone() async {
@@ -507,7 +494,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
                                         MediaQuery.of(context).size.width - 32,
                                     child: GestureDetector(
                                       onTap: () async {
-                                        var result = await Navigator.push(
+                                        await Navigator.push<bool>(
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) =>
@@ -517,14 +504,11 @@ class _HomeTabPageState extends State<HomeTabPage> {
                                                 ),
                                           ),
                                         );
-
-                                        /*TODO: why null? */
-                                        if (result == null) {
-                                          Provider.of<EventsViewModel>(
-                                            context,
-                                            listen: false,
-                                          ).loadAttendingEvents();
-                                        }
+                                        // TODO: out of curisity check check
+                                        Provider.of<EventsViewModel>(
+                                          context,
+                                          listen: false,
+                                        ).loadAttendingEvents();
                                       },
                                       child: Card(
                                         elevation: 10,
@@ -591,10 +575,12 @@ class _HomeTabPageState extends State<HomeTabPage> {
                               ),
                             )
                           : GestureDetector(
-                              onTap: () {
-
-                              },
-                              child: Center(child: Text('Find an event for you click on 🔎 tab')),
+                              onTap: () {},
+                              child: Center(
+                                child: Text(
+                                  'Find an event for you click on 🔎 tab',
+                                ),
+                              ),
                             ),
                       Padding(
                         padding: const EdgeInsets.only(top: 16.0),

@@ -1,8 +1,11 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:maps_launcher/maps_launcher.dart';
 import 'package:meet_christ/models/event.dart';
+import 'package:meet_christ/view_models/event_comments_view_model.dart';
 import 'package:meet_christ/view_models/event_detail_view_model.dart';
 import 'package:meet_christ/widgets/event_card.dart';
 import 'package:provider/provider.dart';
@@ -23,6 +26,10 @@ class _EventDetailpageState extends State<EventDetailpage> {
       context,
       listen: false,
     ).setEvent(widget.event);
+    Provider.of<EventCommentsViewModel>(context, listen: false).event =
+        widget.event;
+
+    Provider.of<EventCommentsViewModel>(context, listen: false).loadComments();
     WidgetsBinding.instance.addPostFrameCallback((_) {});
   }
 
@@ -138,11 +145,14 @@ class _EventDetailpageState extends State<EventDetailpage> {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text('Organizers'),
                                       Column(
-                                        children: model.event.organizers.map((e) {
+                                        children: model.event.organizers.map((
+                                          e,
+                                        ) {
                                           return Padding(
                                             padding: const EdgeInsets.all(8.0),
                                             child: Column(
@@ -192,6 +202,7 @@ class _EventDetailpageState extends State<EventDetailpage> {
                                 ),
                               ],
                             ),
+                            SizedBox(height: 500, child: EventCommentSection()),
                             /*  Container(height: 16, color: Colors.grey[200]),
                             Text("Comments"),
                             TextFormField(
@@ -252,7 +263,7 @@ class _EventDetailpageState extends State<EventDetailpage> {
                                   ),
                                   onPressed: () async {
                                     model.setIsAttending(true);
-                                    final success = await context
+                                    await context
                                         .read<EventDetailViewModel>()
                                         .joinEvent(model.event.id);
                                   },
@@ -351,3 +362,76 @@ class InfoSection extends StatelessWidget {
     );
   }
 }
+
+class EventCommentSection extends StatefulWidget {
+  const EventCommentSection({super.key});
+
+  @override
+  State<EventCommentSection> createState() => _EventCommentSectionState();
+}
+
+class _EventCommentSectionState extends State<EventCommentSection> {
+  final TextEditingController _textController = TextEditingController();
+
+  @override
+  void initState() {
+    Provider.of<EventCommentsViewModel>(context, listen: false).loadComments();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<EventCommentsViewModel>(
+      builder: (context, model, child) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Comments'),
+            Expanded(
+              child: Column(
+                children: [
+                  ...model.comments.map((comment) {
+                    return ListTile(title: Text(comment.content));
+                  }),
+                  TextFormField(
+                    controller: _textController,
+                    decoration: InputDecoration(
+                      suffixIcon: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            model.setComment(_textController.text);
+                            model.saveComment();
+                            Provider.of<EventCommentsViewModel>(
+                              context,
+                              listen: false,
+                            ).loadComments();
+                          });
+                        },
+                        child: Icon(Icons.send),
+                      ),
+                      hintText: "Add a comment...",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+/*
+Usecases:
+1. Event users with privilege to write comments can write a comment, so that
+everyone who can read the comments will be shown in the Event Detail Page the new comment.
+
+2. In Homescreen, users can see a summary of the event comments?
+
+3. in Homescreen, users can see if there is a new comment, which are not read yet
+
+*/

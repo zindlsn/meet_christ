@@ -55,6 +55,7 @@ dependencies:
   dotted_border: ^3.1.0
   google_generative_ai: ^0.4.7
   better_polls: ^1.0.8
+  cryptography: ^2.7.0
 
 dev_dependencies:
   flutter_test:

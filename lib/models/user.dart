@@ -47,7 +47,7 @@ class EventUser {
   final String role;
   final String status; // Consider making this an enum for clarity
   final bool canComment;
-  String photoUrl;
+  String? photoUrl;
   final List<String> eventPermissions;
   final List<String> commentPermissions;
   final String name = "Name";

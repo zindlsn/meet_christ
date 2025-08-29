@@ -25,11 +25,11 @@ class FileRepository {
     if (response.statusCode == 200) {
       return response.bodyBytes;
     } else {
-      print('Failed to download image. Status: ${response.statusCode}');
+     // print('Failed to download image. Status: ${response.statusCode}');
       return null;
     }
   } catch (e) {
-    print('Error downloading image: $e');
+    // print('Error downloading image: $e');
     return null;
   }
 }

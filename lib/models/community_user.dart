@@ -58,14 +58,14 @@ class CommunityUser extends User {
     };
   }
 
-  /// Convert List<Map> to List<CommunityUser>
+  /// Convert List<Map> to list
   static List<CommunityUser> listFromMapList(List<Map<String, dynamic>> docs) {
     return docs
         .map((map) => CommunityUser.fromMap(map, map['id'] ?? '')) // assumes ID is inside map for batch
         .toList();
   }
 
-  /// Convert List<CommunityUser> to List<Map>
+  /// Convert to List<Map>
   static List<Map<String, dynamic>> listToMapList(List<CommunityUser> users) {
     return users.map((user) {
       final map = user.toMap();

@@ -131,6 +131,7 @@ class EventDto {
 }
 
 class Event {
+  String publicCommentsKey = "";
   final String title;
   final String id;
   final String description;
@@ -146,6 +147,7 @@ class Event {
   final int? repeatEveryWeeks;
   final DateTime? repeatEndDate;
   final Group? group;
+  List<String> comments = [];
 
   Event({
     required this.title,

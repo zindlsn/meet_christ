@@ -53,7 +53,7 @@ class OllamaService {
 
       return responseData;
     } catch (e) {
-      print("Error generating or parsing content: $e");
+     // print("Error generating or parsing content: $e");
       return null;
     }
   }
@@ -93,7 +93,7 @@ class OllamaService {
 
       return responseData;
     } catch (e) {
-      print("Error generating or parsing content: $e");
+     // print("Error generating or parsing content: $e");
       return null;
     }
   }
@@ -129,12 +129,7 @@ class OllamaService {
 
     final uri = Uri.parse('$baseUrl/api/generate');
     final selectedModel = model ?? defaultModel;
-    String requestBody = jsonEncode({
-      'model': selectedModel,
-      'prompt': fullPrompt,
-      'stream': stream,
-      'options': options ?? {},
-    });
+
     try {
       final response = await http
           .post(

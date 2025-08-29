@@ -23,10 +23,7 @@ class GroupService {
     final id = await _repository.createGroup(group);
 
     if (group.profileImage != null) {
-      final imageUrl = await _repository.uploadGroupImage(
-        id,
-        group.profileImage!,
-      );
+      await _repository.uploadGroupImage(id, group.profileImage!);
       await _repository.updateGroup(
         group.copyWith(id: id, profileImage: group.profileImage),
       );

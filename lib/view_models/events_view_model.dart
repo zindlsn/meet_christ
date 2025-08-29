@@ -33,17 +33,12 @@ class EventsViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void removeEvent(EventDto event) {
-    events.remove(event);
-    notifyListeners();
-  }
-
   List<Event> getEvents() {
     return events;
   }
 
   Future<void> loadAttendingEvents() async {
-    print("Loading attending events for user ${userService.user.id}");
+    //print("Loading attending events for user ${userService.user.id}");
     var loadedEvents = await eventService.getUserEvents(userService.user.id);
     attendingEvents = loadedEvents;
     notifyListeners();

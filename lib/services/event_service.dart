@@ -27,7 +27,7 @@ class EventService {
     final id = await _repository.createEvent(event);
 
     if (event.image != null) {
-      final imageUrl = await _repository.uploadEventImage(id, event.image!);
+      await _repository.uploadEventImage(id, event.image!);
       await _repository.updateEvent(
         event.copyWith(id: id, image: event.image!),
       );
@@ -52,6 +52,10 @@ class EventService {
       }
     }
     return events;
+  }
+
+  void updateEvent(Event event) {
+    _repository.updateEvent(event);
   }
 
   // Add other business logic methods here

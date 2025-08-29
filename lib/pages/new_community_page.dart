@@ -18,8 +18,6 @@ class NewCommunityPage extends StatefulWidget {
 class _NewCommunityPageState extends State<NewCommunityPage> {
   final ImagePicker picker = ImagePicker();
   String text = "";
-  DateTime? _selectedDate = DateTime.now();
-  TimeOfDay? _selectedTime = TimeOfDay.now();
 
   @override
   void initState() {
@@ -219,41 +217,6 @@ class _NewCommunityPageState extends State<NewCommunityPage> {
         ),
       ),
     );
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-        Provider.of<NewEventViewModel>(
-          context,
-          listen: false,
-        ).setSelectedStartDate(picked);
-      });
-    }
-  }
-
-  Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-      initialEntryMode: TimePickerEntryMode.dial,
-    );
-    if (picked != null && picked != _selectedTime) {
-      setState(() {
-        _selectedTime = picked;
-        Provider.of<NewEventViewModel>(
-          context,
-          listen: false,
-        ).setSelectedStartTime(picked);
-      });
-    }
   }
 
   Future getImageToText(final imagePath) async {

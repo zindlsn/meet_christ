@@ -43,11 +43,6 @@ class CommunityViewModel extends ChangeNotifier {
     notifyListeners(); // Notify listeners that the state has changed
   }
 
-  void removeEvent(String event) {
-    communities.remove(event);
-    notifyListeners(); // Notify listeners that the state has changed
-  }
-
   List<Community> getEvents() {
     return communities; // Return the current list of events
   }

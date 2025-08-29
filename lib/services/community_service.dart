@@ -22,7 +22,7 @@ class CommunityService {
     final id = await _repository.createCommunity(community);
 
     if (image != null) {
-      final imageUrl = await _repository.uploadCommunityImage(id, image);
+      await _repository.uploadCommunityImage(id, image);
       await _repository.updateCommunity(
         community.copyWith(id: id, profileImage: image),
       );

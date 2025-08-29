@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:group_button/group_button.dart';
 import 'package:meet_christ/models/events_filter.dart';
@@ -81,8 +83,7 @@ class _EventsListState extends State<EventsList> {
         }
         return Column(
           children: [
-            model.events.isNotEmpty
-                ? Expanded(
+            if (model.events.isNotEmpty) Expanded(
                     child: ListView.builder(
                       primary: false,
                       shrinkWrap: true,
@@ -115,8 +116,7 @@ class _EventsListState extends State<EventsList> {
                         );
                       },
                     ),
-                  )
-                : Center(
+                  ) else Center(
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text("No upcoming events"),

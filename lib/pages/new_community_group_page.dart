@@ -14,7 +14,6 @@ class NewCommunityGroupPage extends StatefulWidget {
 class _NewCommunityGroupPageState extends State<NewCommunityGroupPage> {
   @override
   void initState() {
-    print("Debug: ${widget.community.name}");
     Provider.of<NewCommunityGroupPageViewModel>(
       context,
       listen: false,

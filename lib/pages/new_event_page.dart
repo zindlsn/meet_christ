@@ -175,9 +175,8 @@ class _NewEventPageState extends State<NewEventPage> {
                                     child: AbsorbPointer(
                                       child: TextFormField(
                                         decoration: InputDecoration(
-                                          labelText: _selecteStartdDate == null
-                                              ? 'Select Date'
-                                              : '${_selecteStartdDate!.toLocal().day}/${_selecteStartdDate!.toLocal().month}/${_selecteStartdDate!.toLocal().year}',
+                                          labelText:
+                                              '${_selecteStartdDate.toLocal().day}/${_selecteStartdDate.toLocal().month}/${_selecteStartdDate.toLocal().year}',
                                         ),
                                       ),
                                     ),
@@ -193,9 +192,8 @@ class _NewEventPageState extends State<NewEventPage> {
                                     child: AbsorbPointer(
                                       child: TextFormField(
                                         decoration: InputDecoration(
-                                          labelText: _selecteStartdDate == null
-                                              ? 'Select Date'
-                                              : '${_selectedStartTime!.hour}:${_selectedStartTime!.minute.toString().padLeft(2, '0')}',
+                                          labelText:
+                                              '${_selectedStartTime.hour}:${_selectedStartTime.minute.toString().padLeft(2, '0')}',
                                         ),
                                       ),
                                     ),
@@ -214,9 +212,8 @@ class _NewEventPageState extends State<NewEventPage> {
                                     child: AbsorbPointer(
                                       child: TextFormField(
                                         decoration: InputDecoration(
-                                          labelText: _selecteEnddDate == null
-                                              ? 'Select Date'
-                                              : '${_selecteEnddDate!.toLocal().day}/${_selecteEnddDate!.toLocal().month}/${_selecteEnddDate!.toLocal().year}',
+                                          labelText:
+                                              '${_selecteEnddDate.toLocal().day}/${_selecteEnddDate.toLocal().month}/${_selecteEnddDate.toLocal().year}',
                                         ),
                                       ),
                                     ),
@@ -232,9 +229,8 @@ class _NewEventPageState extends State<NewEventPage> {
                                     child: AbsorbPointer(
                                       child: TextFormField(
                                         decoration: InputDecoration(
-                                          labelText: _selectedStartTime == null
-                                              ? 'Select End Time'
-                                              : '${_selectedEndTime!.hour}:${_selectedEndTime!.minute.toString().padLeft(2, '0')}',
+                                          labelText:
+                                              '${_selectedEndTime.hour}:${_selectedEndTime.minute.toString().padLeft(2, '0')}',
                                         ),
                                       ),
                                     ),

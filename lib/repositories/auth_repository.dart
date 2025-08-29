@@ -36,15 +36,15 @@ class FirestoreAuthRepository implements IAuthRepository {
       return userCredential.user;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
-        print('The password provided is too weak.');
+        // print('The password provided is too weak.');
       } else if (e.code == 'email-already-in-use') {
-        print('The account already exists for that email.');
+        // print('The account already exists for that email.');
       } else {
-        print('Signup failed: ${e.message}');
+        // print('Signup failed: ${e.message}');
       }
       return null;
     } catch (e) {
-      print('Signup failed: $e');
+      // print('Signup failed: $e');
       return null;
     }
   }
@@ -58,27 +58,27 @@ class FirestoreAuthRepository implements IAuthRepository {
   Future<void> checkActionCode(String actionCode) async {
     try {
       // Example: verifying a password reset code
-    ActionCodeInfo info =   await FirebaseAuth.instance.checkActionCode(actionCode);
+      await FirebaseAuth.instance.checkActionCode(actionCode);
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
         case 'expired-action-code':
-          print('The action code has expired.');
+          // print('The action code has expired.');
           // Handle expired code (e.g., prompt the user to request a new one)
           break;
         case 'invalid-action-code':
-          print('The action code is invalid or has already been used.');
+          //print('The action code is invalid or has already been used.');
           // Handle invalid code (e.g., inform the user)
           break;
         case 'user-disabled':
-          print('The user corresponding to the action code has been disabled.');
+          //print('The user corresponding to the action code has been disabled.');
           // Handle disabled user (e.g., show support contact info)
           break;
         default:
-          print('An unexpected error occurred: ${e.message}');
+        // print('An unexpected error occurred: ${e.message}');
         // Handle other errors
       }
     } catch (e) {
-      print('An unknown error occurred: $e');
+      //print('An unknown error occurred: $e');
       // Handle non-Firebase errors
     }
   }
