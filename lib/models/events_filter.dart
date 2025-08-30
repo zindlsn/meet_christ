@@ -1,12 +1,12 @@
 class EventsFilter {
   List<String> categories;
-  List<String> locations;
+  String location;
   DateTime? startDate;
   DateTime? endDate;
 
   EventsFilter({
     this.categories = const [],
-    this.locations = const [],
+    this.location = "",
     this.startDate,
     this.endDate,
   });

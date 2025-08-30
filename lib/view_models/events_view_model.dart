@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meet_christ/models/event.dart';
-import 'package:meet_christ/models/events_filter.dart' show EventsFilter;
+import 'package:meet_christ/models/events_filter.dart';
 import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/services/community_service.dart';
 import 'package:meet_christ/services/event_service.dart';
@@ -24,6 +24,28 @@ class EventsViewModel extends ChangeNotifier {
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
+
+  String city = "";
+  String get _city => city;
+
+  void setCity(String city) {
+    this.city = city;
+    notifyListeners();
+  }
+
+  Future<void> loadEventsWithFilter() async {
+    EventsFilter currentFilter = EventsFilter();
+
+    if (city.isNotEmpty) {
+      currentFilter.location = _city;
+    }
+
+    events = [];
+    _isLoading = true;
+    events = await eventService.getEventsWithoutGroup(currentFilter);
+    _isLoading = false;
+    notifyListeners();
+  }
 
   Future<void> loadEvents(EventsFilter filter) async {
     events = [];
@@ -62,8 +84,8 @@ class EventsViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> reload() async{
-   await loadEvents(filter);
+  Future<void> reload() async {
+    await loadEvents(filter);
   }
 
   EventsFilter filter = EventsFilter();

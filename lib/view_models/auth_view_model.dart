@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_login/flutter_login.dart';
+import 'package:get_it/get_it.dart';
 import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/models/user_credentails.dart';
 import 'package:meet_christ/services/user_service.dart';
@@ -53,5 +54,17 @@ class AuthViewModel extends ChangeNotifier {
       User(id: "", name: "Stefan Zindl", email: email),
     );
     return user != null;
+  }
+
+  Future<User?> tryAutoLogin() async {
+    var logindata = await GetIt.I.get<UserService>().loadLogindataLocally();
+    User? user;
+    if (logindata != null) {
+      user = await GetIt.I.get<UserService>().login(
+        UserCredentials(email: logindata.name, password: logindata.password),
+      );
+    }
+    notifyListeners();
+    return user;
   }
 }

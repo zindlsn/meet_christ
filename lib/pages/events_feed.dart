@@ -17,16 +17,31 @@ class EventsPage extends StatefulWidget {
 }
 
 class _EventsPageState extends State<EventsPage> {
+  final TextEditingController _cityController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
         appBar: AppBar(
+          title: Expanded(
+            child: TextField(
+              controller: _cityController,
+              decoration: InputDecoration(
+                suffixIcon: GestureDetector(
+                  onTap: () {
+                    Provider.of<EventsViewModel>(
+                      context,
+                      listen: false,
+                    ).setCity(_cityController.text);
+                  },
+                  child: Icon(Icons.location_pin),
+                ),
+              ),
+            ),
+          ),
           bottom: TabBar(
-            onTap: (value) {
-              setState(() {});
-            },
             isScrollable: true,
             tabs: [
               Tab(text: "Upcoming"),
@@ -83,45 +98,48 @@ class _EventsListState extends State<EventsList> {
         }
         return Column(
           children: [
-            if (model.events.isNotEmpty) Expanded(
-                    child: ListView.builder(
-                      primary: false,
-                      shrinkWrap: true,
-                      itemCount: model.events.length,
-                      itemBuilder: (context, index) {
-                        final event = model.events[index];
-                        return Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: GestureDetector(
-                            onTap: () async {
-                              Provider.of<EventsViewModel>(
-                                context,
-                                listen: false,
-                              ).setFilter(widget.filter);
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      EventDetailpage(event: event),
-                                ),
-                              );
-
-                             await Provider.of<EventsViewModel>(
-                                context,
-                                listen: false,
-                              ).reload();
-                            },
-                            child: EventCard(event: event),
-                          ),
-                        );
-                      },
-                    ),
-                  ) else Center(
-                    child: Padding(
+            if (model.events.isNotEmpty)
+              Expanded(
+                child: ListView.builder(
+                  primary: false,
+                  shrinkWrap: true,
+                  itemCount: model.events.length,
+                  itemBuilder: (context, index) {
+                    final event = model.events[index];
+                    return Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text("No upcoming events"),
-                    ),
-                  ),
+                      child: GestureDetector(
+                        onTap: () async {
+                          Provider.of<EventsViewModel>(
+                            context,
+                            listen: false,
+                          ).setFilter(widget.filter);
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  EventDetailpage(event: event),
+                            ),
+                          );
+
+                          await Provider.of<EventsViewModel>(
+                            context,
+                            listen: false,
+                          ).reload();
+                        },
+                        child: EventCard(event: event),
+                      ),
+                    );
+                  },
+                ),
+              )
+            else
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text("No upcoming events"),
+                ),
+              ),
           ],
         );
       },

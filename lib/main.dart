@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:meet_christ/firebase_options.dart';
 import 'package:meet_christ/models/user.dart';
-import 'package:meet_christ/models/user_credentails.dart';
+import 'package:meet_christ/pages/auth_page.dart';
 import 'package:meet_christ/pages/home.dart';
 import 'package:meet_christ/repositories/auth_repository.dart';
 import 'package:meet_christ/repositories/events_repository.dart';
@@ -28,7 +28,7 @@ User? user;
 void main() async {
   final i = GetIt.I;
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.android);
   var factory = BackendAuthFactory(type: BackendType.firestore);
   GetIt.I.registerSingleton<IAuthRepository>(factory.getRepository());
   GetIt.I.registerSingleton<FileRepository>(FileRepository());
@@ -80,6 +80,8 @@ void main() async {
     ),
   );
 
+  GetIt.I.registerFactory<ConnectivityViewModel>(() => ConnectivityViewModel());
+
   GetIt.I.registerFactory<EventDetailViewModel>(
     () => EventDetailViewModel(
       userService: GetIt.I.get<UserService>(),
@@ -128,13 +130,6 @@ void main() async {
       LoginData(name: "szindl@posteo.de", password: "Jesus1000."),
     );
 */
-  var logindata = await GetIt.I.get<UserService>().loadLogindataLocally();
-  user;
-  if (logindata != null) {
-    user = await i.get<UserService>().login(
-      UserCredentials(email: logindata.name, password: logindata.password),
-    );
-  }
 
   runApp(
     MultiProvider(
@@ -154,15 +149,15 @@ void main() async {
         ChangeNotifierProvider(
           create: (context) => GetIt.I<EventDetailViewModel>(),
         ),
-
+        ChangeNotifierProvider(
+          create: (context) => GetIt.I<ConnectivityViewModel>(),
+        ),
         ChangeNotifierProvider(
           create: (context) => GetIt.I<EventCommentsViewModel>(),
         ),
-
         ChangeNotifierProvider(
           create: (context) => GetIt.I<ChatListViewModel>(),
         ),
-
         ChangeNotifierProvider(create: (context) => GetIt.I<AuthViewModel>()),
         ChangeNotifierProvider(
           create: (context) => GetIt.I<ProfilePageViewModel>(),
@@ -181,13 +176,26 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Provider.of<ConnectivityViewModel>(context, listen: false).init();
+    if (Provider.of<ConnectivityViewModel>(context, listen: false).isOnline == true) {
+      Provider.of<AuthViewModel>(context, listen: false).tryAutoLogin().then((
+        value,
+      ) {
+        user = value;
+      });
+    }
+
     return MaterialApp(
       title: 'Meet Christ',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: user == null ? const HomePage(indexTab: 3) : HomePage(indexTab: 0),
+      home: user == null
+          ? const AuthPage()
+          : HomePage(
+              indexTab: 0,
+            ), //HomePage(indexTab: 3) : HomePage(indexTab: 0),
     );
   }
 }
