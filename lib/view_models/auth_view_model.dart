@@ -10,6 +10,13 @@ class AuthViewModel extends ChangeNotifier {
 
   AuthViewModel({required this.userService});
 
+  bool isLoading = false;
+
+  void setLoading(bool loading) {
+    isLoading = loading;
+    notifyListeners();
+  }
+
   String email = "";
   void setEmail(String email) {
     this.email = email;
@@ -57,6 +64,7 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   Future<User?> tryAutoLogin() async {
+    setLoading(true);
     var logindata = await GetIt.I.get<UserService>().loadLogindataLocally();
     User? user;
     if (logindata != null) {
@@ -64,7 +72,7 @@ class AuthViewModel extends ChangeNotifier {
         UserCredentials(email: logindata.name, password: logindata.password),
       );
     }
-    notifyListeners();
+    setLoading(false);
     return user;
   }
 }

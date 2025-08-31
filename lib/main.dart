@@ -176,26 +176,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Provider.of<ConnectivityViewModel>(context, listen: false).init();
-    if (Provider.of<ConnectivityViewModel>(context, listen: false).isOnline == true) {
-      Provider.of<AuthViewModel>(context, listen: false).tryAutoLogin().then((
-        value,
-      ) {
-        user = value;
-      });
-    }
-
     return MaterialApp(
       title: 'Meet Christ',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: user == null
-          ? const AuthPage()
-          : HomePage(
-              indexTab: 0,
-            ), //HomePage(indexTab: 3) : HomePage(indexTab: 0),
+      home: const AuthGate(),
+      builder: (context, child) =>
+          Stack(children: [child!, ConnectivityBanner()]),
     );
   }
 }

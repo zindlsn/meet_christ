@@ -4,6 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_login/flutter_login.dart';
 import 'package:http/http.dart' as http;
+import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/pages/home.dart';
 import 'package:meet_christ/view_models/auth_view_model.dart';
 import 'package:provider/provider.dart';
@@ -16,7 +17,6 @@ class AuthPage extends StatefulWidget {
 }
 
 class _AuthPageState extends State<AuthPage> {
-
   @override
   Widget build(BuildContext context) {
     var titleTag = "login";
@@ -25,7 +25,6 @@ class _AuthPageState extends State<AuthPage> {
         builder: (context, model, child) {
           return Stack(
             children: [
-              ConnectivityBanner(),
               FlutterLogin(
                 titleTag: "login",
                 savedEmail: "szindl@posteo.de",
@@ -34,9 +33,11 @@ class _AuthPageState extends State<AuthPage> {
                   return null;
                 },
                 onLogin: (loginData) async {
-                  model.setEmail(loginData.name);
-                  model.setPassword(loginData.password);
-                  await model.login();
+                  if (context.read<ConnectivityViewModel>().isOnline == true) {
+                    model.setEmail(loginData.name);
+                    model.setPassword(loginData.password);
+                    await model.login();
+                  }
                   return null;
                 },
                 onRecoverPassword: (password) {
@@ -77,24 +78,35 @@ class _AuthPageState extends State<AuthPage> {
 }
 
 class ConnectivityBanner extends StatelessWidget {
-  const ConnectivityBanner({super.key});
-
+  ConnectivityBanner({super.key});
+  SnackBar? snackBar;
   @override
   Widget build(BuildContext context) {
     return Selector<ConnectivityViewModel, bool?>(
       selector: (_, vm) => vm.isOnline,
       builder: (context, isOnline, child) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          final snackBar = SnackBar(
-            content: Text(
-              isOnline == null
-                  ? ''
-                  : (isOnline ? 'Wieder online' : 'Offline'),
-            ),
-            backgroundColor: isOnline == true ? Colors.green : Colors.red,
-            duration: const Duration(days: 2),
-          );
-          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          if (snackBar != null) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          }
+          if (isOnline == true) {
+            snackBar = SnackBar(
+              content: Text('Wieder online', style: TextStyle(fontSize: 12)),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            );
+          } else if (isOnline == false) {
+            //show offline snackbar indefinitely
+            snackBar = SnackBar(
+              content: Text(
+                'Keine Internetverbindung',
+                style: TextStyle(fontSize: 12),
+              ),
+              backgroundColor: Colors.redAccent,
+              duration: const Duration(days: 2),
+            );
+          }
+          ScaffoldMessenger.of(context).showSnackBar(snackBar!);
         });
         return const SizedBox.shrink();
       },
@@ -113,15 +125,20 @@ class ConnectivityViewModel extends ChangeNotifier {
     _isOnline = await _checkInternet();
     _sub = _connectivity.onConnectivityChanged.listen((_) async {
       final nowOnline = await _checkInternet();
+      if (isOnline == null && nowOnline) {
+        _isOnline = null;
+        notifyListeners();
+        return;
+      }
       if (isOnline == null && !nowOnline) {
         _isOnline = false;
         notifyListeners();
-      } else if (!isOnline! && nowOnline) {
+      } else if (isOnline == false && nowOnline) {
         //went online
         _isOnline = true;
         notifyListeners();
       }
-      if (isOnline! && !nowOnline) {
+      if (isOnline == true && !nowOnline) {
         //went offline
         _isOnline = false;
         notifyListeners();
@@ -147,5 +164,47 @@ class ConnectivityViewModel extends ChangeNotifier {
   void dispose() {
     _sub?.cancel();
     super.dispose();
+  }
+}
+
+class AuthGate extends StatefulWidget {
+  const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  User? user;
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() async {
+      final conn = context.read<ConnectivityViewModel>();
+      await conn.init();
+
+      if (conn.isOnline == true) {
+        user = await context.read<AuthViewModel>().tryAutoLogin();
+        setState(() {
+          user = user;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthViewModel>(
+      builder: (context, value, child) {
+        if (value.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return user == null
+            ? const AuthPage()
+            : HomePage(
+                indexTab: 0,
+              ); //HomePage(indexTab: 3) : HomePage(indexTab: 0)
+      },
+    );
   }
 }
