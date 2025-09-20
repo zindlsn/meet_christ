@@ -6,6 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:meet_christ/models/event.dart';
+import 'package:meet_christ/models/user.dart';
+import 'package:meet_christ/services/user_service.dart';
 import 'package:uuid/uuid.dart';
 
 class EventCommentsViewModel extends ChangeNotifier {
@@ -50,7 +52,7 @@ class EventCommentsViewModel extends ChangeNotifier {
 
 class EventComment {
   final String id;
-  final String senderId;
+  final EventUser creator;
   final String content;
   late DateTime creationDate;
   DateTime? updatedDate;
@@ -58,8 +60,8 @@ class EventComment {
   List<String> seenBy = [];
   EventComment({
     required this.id,
-    required this.senderId,
     required this.content,
+    required this.creator,
   }) {
     creationDate = DateTime.now();
   }
@@ -108,6 +110,10 @@ class EventCommentDto {
 
 class EventCommentsService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final UserService userService;
+
+  EventCommentsService({required this.userService});
+
   Future<List<EventComment>> fetchComments(String eventId) async {
     var snapshot = await _firestore
         .collection('events')
@@ -119,8 +125,8 @@ class EventCommentsService {
       var data = doc.data();
       return EventComment(
         id: data['id'],
-        senderId: data['senderId'],
         content: data['content'],
+        creator: EventUser.fromMap(data['creator']),
       );
     }).toList();
   }

@@ -7,11 +7,11 @@ import 'package:meet_christ/repositories/auth_repository.dart';
 import 'package:meet_christ/repositories/events_repository.dart';
 
 class UserService {
-  final DatabaseService2<String,User> userRepository;
+  final DatabaseService2<String, User> userRepository;
   final IAuthRepository authRepository;
 
   User? loggedInUser;
-  User  get user => loggedInUser!;
+  User get user => loggedInUser!;
 
   UserService({required this.userRepository, required this.authRepository});
 
@@ -30,19 +30,16 @@ class UserService {
     return loggedInUser;
   }
 
-  Future<User?> signUp(
-    UserCredentials userCredentials,
-    User newUserData,
-  ) async {
+  /// Signs up a new user with the given credentials and user data.
+  Future<User> signUp(UserCredentials userCredentials, User newUserData) async {
     var authUser = await authRepository.signupWithUserCredentials(
       userCredentials,
     );
     if (authUser != null) {
-      User newUser = newUserData;
-      newUser.set(authUser.uid);
-      return await userRepository.create(newUser);
+      User user = User(id: authUser.uid, email: newUserData.email, firstname: newUserData.firstname, lastname: newUserData.lastname);
+      return await userRepository.create(user);
     }
-    return null;
+    throw Exception('Signup failed');
   }
 
   Future<void> saveUserdataLocally(LoginData user) async {
@@ -98,7 +95,9 @@ class FirestoreUserRepository extends DatabaseService2<String, User> {
   @override
   Future<List<User>> getAllByUserIds(List<String> userIds) async {
     var col = FirebaseFirestore.instance.collection('users');
-    var snapshot = await col.where(FieldPath.documentId, whereIn: userIds).get();
+    var snapshot = await col
+        .where(FieldPath.documentId, whereIn: userIds)
+        .get();
     return snapshot.docs
         .map((doc) => User.fromMap(doc.data(), doc.id))
         .toList();

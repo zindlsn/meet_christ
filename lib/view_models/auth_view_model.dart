@@ -1,9 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart' hide User;
 import 'package:flutter/material.dart';
 import 'package:flutter_login/flutter_login.dart';
 import 'package:get_it/get_it.dart';
 import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/models/user_credentails.dart';
 import 'package:meet_christ/services/user_service.dart';
+import 'package:uuid/uuid.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final UserService userService;
@@ -30,6 +32,20 @@ class AuthViewModel extends ChangeNotifier {
 
   String repeatPassword = "";
 
+  String? errorMessage;
+
+  String firstname = "";
+
+  void setFirstname(String firstname) {
+    this.firstname = firstname;
+  }
+
+  String lastname = "";
+
+  void setLastname(String lastname) {
+    this.lastname = lastname;
+  }
+
   void setRepeatPassword(String repeatPassword) {
     this.repeatPassword = repeatPassword;
   }
@@ -43,24 +59,40 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> login() async {
-    var user = await userService.login(
-      UserCredentials(email: email, password: password),
-    );
-
-    await userService.saveUserdataLocally(
-      LoginData(name: email, password: password),
-    );
-
-    return user != null;
+  Future<bool> login(String email, String password) async {
+    try {
+      var user = await userService.login(
+        UserCredentials(email: email, password: password),
+      );
+      if (user == null) {
+        return false;
+      }
+      await userService.saveUserdataLocally(
+        LoginData(name: email, password: password),
+      );
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<bool> signUp() async {
-    var user = await userService.signUp(
-      UserCredentials(email: email, password: password),
-      User(id: "", name: "Stefan Zindl", email: email),
-    );
-    return user != null;
+    try {
+      var user = await userService.signUp(
+        UserCredentials(email: email, password: password),
+        User(
+          id: Uuid().v4(),
+          firstname: firstname,
+          lastname: lastname,
+          email: email,
+        ),
+      );
+      errorMessage = null;
+      return true;
+    } on FirebaseAuthException catch (e) {
+      errorMessage = e.message;
+      return false;
+    }
   }
 
   Future<User?> tryAutoLogin() async {
@@ -76,3 +108,5 @@ class AuthViewModel extends ChangeNotifier {
     return user;
   }
 }
+
+enum UserGender { female, male }

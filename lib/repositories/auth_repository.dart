@@ -22,30 +22,36 @@ class FirestoreAuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<User?> signupWithUserCredentials(
+  Future<User> signupWithUserCredentials(
     UserCredentials userCredentials,
   ) async {
     final FirebaseAuth auth = FirebaseAuth.instance;
     try {
       final UserCredential userCredential = await auth
           .createUserWithEmailAndPassword(
-            email: userCredentials.email,
-            password: userCredentials.password,
+            email: userCredentials.email.trim(),
+            password: userCredentials.password.trim(),
           );
-
-      return userCredential.user;
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'weak-password') {
-        // print('The password provided is too weak.');
-      } else if (e.code == 'email-already-in-use') {
-        // print('The account already exists for that email.');
-      } else {
-        // print('Signup failed: ${e.message}');
+      User? user = userCredential.user;
+      if (user == null) {
+        throw FirebaseAuthException(
+          code: 'unknown-error',
+          message: 'User is null after signup',
+        );
       }
-      return null;
+      return user;
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      if (e.code == 'weak-password') {
+        errorMessage = 'The password provided is too weak.';
+      } else if (e.code == 'email-already-in-use') {
+        errorMessage = 'The account already exists for that email.';
+      } else {
+        errorMessage = 'Signup failed: ${e.message}';
+      }
+      throw FirebaseAuthException(code: e.code, message: errorMessage);
     } catch (e) {
-      // print('Signup failed: $e');
-      return null;
+      throw Exception('Signup failed: $e');
     }
   }
 

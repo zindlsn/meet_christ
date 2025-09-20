@@ -40,29 +40,24 @@ class NewEventViewModel extends ChangeNotifier {
 
   void setImage(Uint8List? image) {
     imageAsBytes = image;
-    notifyListeners();
   }
 
   String title = "";
   void setTitle({required String title}) {
     this.title = title;
-    notifyListeners();
   }
 
   String location = "";
   void setLocation({required String location}) {
     this.location = location;
-    notifyListeners();
   }
 
   void setSelectedCommunity(Community? time) {
     selectedCommunity = time;
-    notifyListeners();
   }
 
   void setSelectedGroup(Group? time) {
     selectedGroup = time;
-    notifyListeners();
   }
 
   /// saves a new event
@@ -72,7 +67,7 @@ class NewEventViewModel extends ChangeNotifier {
       id: eventId,
       title: title.isNotEmpty ? title : 'New Event',
       description: '',
-      attendees: [],
+      attendees: [EventUser.attendee(userService.user.id, eventId)],
       organizers: [EventUser.host(userService.user.id, eventId)],
       startDate: DateTime(
         selectedStartDate.year,
@@ -98,17 +93,14 @@ class NewEventViewModel extends ChangeNotifier {
 
   void setSelectedStartTime(TimeOfDay time) {
     _selectedStartTime = time;
-    notifyListeners();
   }
 
   void setSelectedEndTime(TimeOfDay time) {
     _selectedEndTime = time;
-    notifyListeners();
   }
 
   void setSelectedStartDate(DateTime date) {
     selectedStartDate = date;
-    notifyListeners();
   }
 
   Future initCommunity(Community? community) async {
@@ -120,11 +112,9 @@ class NewEventViewModel extends ChangeNotifier {
         return;
       }
     }
-    notifyListeners();
   }
 
   void setSelectedEndDate(DateTime picked) {
     _selecteEnddDate = picked;
-    notifyListeners();
   }
 }

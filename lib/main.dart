@@ -3,7 +3,6 @@ import 'package:get_it/get_it.dart';
 import 'package:meet_christ/firebase_options.dart';
 import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/pages/auth_page.dart';
-import 'package:meet_christ/pages/home.dart';
 import 'package:meet_christ/repositories/auth_repository.dart';
 import 'package:meet_christ/repositories/events_repository.dart';
 import 'package:meet_christ/repositories/file_repository.dart';
@@ -55,7 +54,9 @@ void main() async {
     EventService(GetIt.I.get<IEventRepository>(), GetIt.I.get<UserService>()),
   );
 
-  GetIt.I.registerSingleton<EventCommentsService>(EventCommentsService());
+  GetIt.I.registerSingleton<EventCommentsService>(
+    EventCommentsService(userService: GetIt.I.get<UserService>()),
+  );
 
   GetIt.I.registerSingleton<ICommunityRepository>(
     FirestoreCommunityRepository(),

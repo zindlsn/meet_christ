@@ -3,8 +3,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:maps_launcher/maps_launcher.dart';
 import 'package:meet_christ/models/event.dart';
+import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/view_models/event_comments_view_model.dart';
 import 'package:meet_christ/view_models/event_detail_view_model.dart';
 import 'package:meet_christ/widgets/event_card.dart';
@@ -108,6 +110,7 @@ class _EventDetailpageState extends State<EventDetailpage> {
                         padding: const EdgeInsets.all(8.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             Text(
                               model.event.title,
@@ -148,28 +151,23 @@ class _EventDetailpageState extends State<EventDetailpage> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text('Organizers'),
+                                      Text('Hosts'),
                                       Column(
-                                        children: model.event.organizers.map((
-                                          e,
-                                        ) {
-                                          return Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Column(
-                                              children: [
-                                                CircleAvatar(
-                                                  radius: 24,
-                                                  backgroundImage: NetworkImage(
-                                                    e.photoUrl ??
-                                                        'https://www.gravatar.com/avatar/placeholder',
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(e.name),
-                                              ],
-                                            ),
-                                          );
-                                        }).toList(),
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Icon(Icons.people),
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            children: [
+                                              Text(
+                                                model.event.organizers.length
+                                                    .toString(),
+                                              ),
+                                              Text(" People"),
+                                            ],
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
@@ -179,30 +177,28 @@ class _EventDetailpageState extends State<EventDetailpage> {
                                   children: [
                                     Text('Attendees'),
                                     Column(
-                                      children: model.event.attendees.map((e) {
-                                        return Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Column(
-                                            children: [
-                                              CircleAvatar(
-                                                radius: 24,
-                                                backgroundImage: NetworkImage(
-                                                  e.photoUrl ??
-                                                      'https://www.gravatar.com/avatar/placeholder',
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(e.name),
-                                            ],
-                                          ),
-                                        );
-                                      }).toList(),
+                                      children: [
+                                        Icon(Icons.people),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Text(
+                                              model.event.attendees.length
+                                                  .toString(),
+                                            ),
+                                            Text(" People"),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
                               ],
                             ),
-                            SizedBox(height: 500, child: EventCommentSection()),
+                            SizedBox(
+                              height: 500,
+                              child: EventCommentSection(event: model.event),
+                            ),
                             /*  Container(height: 16, color: Colors.grey[200]),
                             Text("Comments"),
                             TextFormField(
@@ -364,7 +360,8 @@ class InfoSection extends StatelessWidget {
 }
 
 class EventCommentSection extends StatefulWidget {
-  const EventCommentSection({super.key});
+  final Event event;
+  const EventCommentSection({super.key, required this.event});
 
   @override
   State<EventCommentSection> createState() => _EventCommentSectionState();
@@ -390,32 +387,95 @@ class _EventCommentSectionState extends State<EventCommentSection> {
             Expanded(
               child: Column(
                 children: [
-                  ...model.comments.map((comment) {
-                    return ListTile(title: Text(comment.content));
-                  }),
-                  TextFormField(
-                    controller: _textController,
-                    decoration: InputDecoration(
-                      suffixIcon: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            model.setComment(_textController.text);
-                            model.saveComment();
-                            Provider.of<EventCommentsViewModel>(
-                              context,
-                              listen: false,
-                            ).loadComments();
-                          });
-                        },
-                        child: Icon(Icons.send),
-                      ),
-                      hintText: "Add a comment...",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                      ),
+                  Expanded(
+                    child: ListView(
+                      children: model.comments.map((comment) {
+                        return ListTile(
+                          leading: CircleAvatar(
+                            child:
+                                comment.creator.photoUrl == null ||
+                                    comment.creator.photoUrl!.isEmpty
+                                ? Text(
+                                    comment.creator.name[0] +
+                                        ((comment.creator.name
+                                                    .split(" ")
+                                                    .length >
+                                                1)
+                                            ? comment.creator.name.split(
+                                                " ",
+                                              )[1][0]
+                                            : ""),
+                                  )
+                                : Image.network(comment.creator.photoUrl!),
+                          ),
+                          title: Text(comment.content),
+                          subtitle: Text(
+                            DateFormat(
+                              'dd.MM.yyyy',
+                            ).format(comment.creationDate),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
+                  widget.event.me?.commentPermissions.contains(
+                            CommentPermissions.canAdd,
+                          ) ==
+                          true
+                      ? TextFormField(
+                          controller: _textController,
+                          decoration: InputDecoration(
+                            suffixIcon: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  model.setComment(_textController.text);
+                                  model.saveComment();
+                                  Provider.of<EventCommentsViewModel>(
+                                    context,
+                                    listen: false,
+                                  ).loadComments();
+                                });
+                              },
+                              child: Icon(Icons.send),
+                            ),
+                            hintText: "Add a comment...",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                              borderSide: BorderSide(
+                                color: Colors.grey,
+                                width: 1.0,
+                              ),
+                            ),
+                          ),
+                        )
+                      : Container(
+                          child: TextFormField(
+                            controller: _textController,
+                            decoration: InputDecoration(
+                              suffixIcon: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    model.setComment(_textController.text);
+                                    model.saveComment();
+                                    Provider.of<EventCommentsViewModel>(
+                                      context,
+                                      listen: false,
+                                    ).loadComments();
+                                  });
+                                },
+                                child: Icon(Icons.send),
+                              ),
+                              hintText: "Add a comment...",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                                borderSide: BorderSide(
+                                  color: Colors.grey,
+                                  width: 1.0,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                 ],
               ),
             ),
@@ -425,6 +485,7 @@ class _EventCommentSectionState extends State<EventCommentSection> {
     );
   }
 }
+
 /*
 Usecases:
 1. Event users with privilege to write comments can write a comment, so that

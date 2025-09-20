@@ -50,18 +50,7 @@ class _NewEventPageState extends State<NewEventPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Create Event"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: () {
-              Provider.of<NewEventViewModel>(
-                context,
-                listen: false,
-              ).saveNewEvent();
-            },
-          ),
+      appBar: AppBar(title: const Text("Create Event"), actions: [
         ],
       ),
       body: SafeArea(

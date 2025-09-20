@@ -1,5 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
-
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get_it/get_it.dart';
@@ -130,10 +129,330 @@ class _HomePageState extends State<HomePage> {
     } else if (_selectedIndex == 3) {
       return const CommunitiesPage();
     } else if (_selectedIndex == 4) {
-      return PrayerListPage();
+      return PrayerHomePage();
     } else {
       return MyGroupsPage();
     }
+  }
+}
+
+class PrayerHomePageViewModel extends ChangeNotifier {
+  final List<PrayerPack> _prayerPacks = [
+    PrayerPack(
+      title: "Morgengebet",
+      prayers: [
+        PrayerX(title: "Vater Unser", text: vaterUnserArray.join("\n")),
+        PrayerX(title: "Abendgebet", text: bonhoefferPrayer.join("\n")),
+      ],
+    ),
+    PrayerPack(
+      title: "Mittag",
+      prayers: [
+        PrayerX(title: "Mittagsgebet", text: bonhoefferPrayer.join("\n")),
+      ],
+    ),
+    PrayerPack(
+      title: "Abendgebet",
+      prayers: [
+        PrayerX(title: "Abendgebet", text: bonhoefferPrayer.join("\n")),
+      ],
+    ),
+  ];
+
+  bool _isLoading = false;
+
+  List<PrayerPack> get prayerPacks => _prayerPacks;
+  bool get isLoading => _isLoading;
+
+  void loadPrayerPacks() async {
+    _isLoading = true;
+    notifyListeners();
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  void markPrayerAsDone(PrayerPack pack, PrayerX prayer) {
+    pack.prayers.remove(prayer);
+    notifyListeners();
+  }
+
+  void setCurrentPrayerPack(int index) {
+    if (index >= 0 && index < _prayerPacks.length) {
+      _currentPrayerPack = index;
+      notifyListeners();
+    }
+  }
+
+  void setNextPrayer() {
+    if (_currentPrayerIndex < (currentPack?.prayers.length ?? 0)) {
+      _currentPrayerIndex++;
+      notifyListeners();
+    }
+  }
+
+  // current Pack
+  PrayerPack? get currentPack =>
+      _prayerPacks.isNotEmpty ? _prayerPacks[_currentPrayerPack] : null;
+
+  int get currentPrayerPackIndex => _currentPrayerPack;
+
+  // current Prayer
+  PrayerX? get currentPrayer => currentPack?.prayers.isNotEmpty == true
+      ? currentPack!.prayers[_currentPrayerIndex]
+      : null;
+
+  int _currentPrayerPack = 0;
+  int _currentPrayerIndex = 0;
+
+  int get currentPrayerIndex => _currentPrayerIndex;
+}
+
+class PrayerHomePage extends StatefulWidget {
+  const PrayerHomePage({super.key});
+
+  @override
+  State<PrayerHomePage> createState() => _PrayerHomePageState();
+}
+
+class _PrayerHomePageState extends State<PrayerHomePage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(
+        children: [
+          Text(
+            "Morgenroutine",
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          ExpandableCard2(prayerPacks: prayerPacks),
+        ],
+      ),
+    );
+  }
+}
+
+final prayerPacks = [
+  PrayerPack(
+    title: "Morgengebet",
+    prayers: [
+      PrayerX(title: "Vater Unser", text: vaterUnserArray.join("\n")),
+      PrayerX(title: "Abendgebet", text: bonhoefferPrayer.join("\n")),
+    ],
+  ),
+  PrayerPack(
+    title: "Mittag",
+    prayers: [
+      PrayerX(title: "Mittagsgebet", text: bonhoefferPrayer.join("\n")),
+    ],
+  ),
+  PrayerPack(
+    title: "Abendgebet",
+    prayers: [PrayerX(title: "Abendgebet", text: bonhoefferPrayer.join("\n"))],
+  ),
+];
+
+class PrayerPack {
+  String title;
+  List<PrayerX> prayers = [];
+
+  PrayerPack({required this.title, required this.prayers});
+}
+
+class PrayerX {
+  final String title;
+  final String text;
+
+  PrayerX({required this.title, required this.text});
+}
+
+class ExpandableCard2 extends StatefulWidget {
+  final List<PrayerPack> prayerPacks;
+
+  const ExpandableCard2({super.key, required this.prayerPacks});
+
+  @override
+  _ExpandableCardState2 createState() => _ExpandableCardState2();
+}
+
+class _ExpandableCardState2 extends State<ExpandableCard2> {
+  late List<PrayerX> _prayers;
+  bool _expanded = false;
+  bool _visible = true;
+  int _currentIndex = 0;
+  final int _currentPrayerPack = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _prayers = List.from(widget.prayerPacks[_currentPrayerPack].prayers);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_visible) return const SizedBox.shrink();
+
+    if (_prayers.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Container(
+          height: 150,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Center(
+            child: Text(
+              'All prayers are done!',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final currentPrayer = _prayers[_currentIndex];
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    height: 200,
+                    child: PageView.builder(
+                      itemCount: _prayers.length,
+                      onPageChanged: (index) {
+                        setState(() {
+                          _currentIndex = index;
+                          _expanded = false;
+                        });
+                      },
+                      itemBuilder: (context, index) {
+                        final prayer = _prayers[index];
+                        return SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              Text(
+                                _expanded
+                                    ? prayer.text
+                                    : _truncateText(prayer.text),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              const SizedBox(height: 8),
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _expanded = !_expanded;
+                                  });
+                                },
+                                child: Text(
+                                  _expanded
+                                      ? 'weniger anzeigen'
+                                      : 'mehr anzeigen',
+                                  style: const TextStyle(
+                                    color: Colors.blue,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _prayers.removeAt(_currentIndex);
+                                    if (_prayers.isEmpty) {
+                                      _visible =
+                                          true; // Card visible but shows done message
+                                    } else {
+                                      if (_currentIndex >= _prayers.length) {
+                                        _currentIndex = _prayers.length - 1;
+                                      }
+                                      _expanded = false;
+                                    }
+                                  });
+                                },
+                                child: const Text('I have read the prayer'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildPageIndicator(),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            top: -12,
+            child: Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              alignment: Alignment.center,
+              child: Text(
+                currentPrayer.title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+          Positioned(
+            right: 0,
+            top: 0,
+            child: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () {
+                setState(() {
+                  _visible = false;
+                });
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPageIndicator() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(_prayers.length, (index) {
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          width: _currentIndex == index ? 12 : 8,
+          height: _currentIndex == index ? 12 : 8,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: _currentIndex == index ? Colors.blue : Colors.grey,
+          ),
+        );
+      }),
+    );
+  }
+
+  String _truncateText(String text, {int cutoff = 100}) {
+    if (text.length <= cutoff) return text;
+    return '${text.substring(0, cutoff)}...';
   }
 }
 
@@ -690,14 +1009,12 @@ class _HomeTabPageState extends State<HomeTabPage> {
 }
 
 class ExpandableCard extends StatefulWidget {
-  final String previewText;
   final String fullText;
-  final String title;
+  final String date;
   const ExpandableCard({
     super.key,
-    required this.previewText,
     required this.fullText,
-    required this.title,
+    required this.date,
   });
 
   @override
@@ -708,49 +1025,35 @@ class _ExpandableCardState extends State<ExpandableCard> {
   bool isExpanded = false;
   @override
   Widget build(BuildContext context) {
-    if (isExpanded) {
       return GestureDetector(
         onTap: () {
           setState(() {
-            isExpanded = false;
+            isExpanded = !isExpanded;
           });
         },
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: RichText(
+          text: TextSpan(
+            text: !isExpanded ? widget.fullText.length > 100
+                ? "${widget.fullText.substring(0, 100)}... "
+                : widget.fullText : widget.fullText,
+            style: DefaultTextStyle.of(context).style,
             children: [
-              Text(
-                widget.title,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              Text(widget.fullText),
+              if (widget.fullText.length > 100)
+                TextSpan(
+                  text: isExpanded ? "\nWeniger anzeigen" : "Mehr anzeigen",
+                  style: const TextStyle(color: Colors.blue),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      setState(() {
+                        isExpanded = !isExpanded;
+                      });
+                    },
+                ),
             ],
           ),
         ),
       );
-    } else {
-      return GestureDetector(
-        onTap: () {
-          setState(() {
-            isExpanded = true;
-          });
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Text("${widget.previewText}..."),
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: Center(child: Text("Ganze Botschaft anzeigen")),
-            ),
-            Center(child: Icon(Icons.arrow_downward)),
-          ],
-        ),
-      );
     }
-  }
 }
 
 class MariaMessageSection extends StatefulWidget {
@@ -767,15 +1070,23 @@ class _MariaMessageSectionState extends State<MariaMessageSection> {
     if (!isClosed) {
       return Card(
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.only(left:8.0, bottom: 8.0),
           child: Column(
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Text(
-                      'Letzte Maria Botschaft',
-                      style: TextStyle(fontSize: 32, color: Colors.blueAccent),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Maria Botschaft',
+                          style: TextStyle(fontSize: 32, color: Colors.blueAccent),
+                        ),
+                        Text("28.08.2025", style: TextStyle(fontStyle: FontStyle.italic),),
+                      ],
                     ),
                   ),
                   IconButton(
@@ -789,8 +1100,7 @@ class _MariaMessageSectionState extends State<MariaMessageSection> {
                 ],
               ),
               ExpandableCard(
-                title: "Botschaft vom 25.08.2025",
-                previewText: "Liebe Kinder, meine Kinder, meine Geliebten!",
+                date: "25.08.2025",
                 fullText: """Liebe Kinder, meine Kinder, meine Geliebten!
 Ihr seid auserwählt, weil ihr meinen Weisungen gefolgt seid, sie in die Praxis umgesetzt habt und ihr Gott über alles liebt.
 Deshalb, meine lieben Kinder, betet von ganzem Herzen, damit meine Worte sich verwirklichen.

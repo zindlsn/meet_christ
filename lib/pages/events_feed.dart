@@ -25,22 +25,6 @@ class _EventsPageState extends State<EventsPage> {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: Expanded(
-            child: TextField(
-              controller: _cityController,
-              decoration: InputDecoration(
-                suffixIcon: GestureDetector(
-                  onTap: () {
-                    Provider.of<EventsViewModel>(
-                      context,
-                      listen: false,
-                    ).setCity(_cityController.text);
-                  },
-                  child: Icon(Icons.location_pin),
-                ),
-              ),
-            ),
-          ),
           bottom: TabBar(
             isScrollable: true,
             tabs: [

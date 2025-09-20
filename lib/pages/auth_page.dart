@@ -1,3 +1,5 @@
+// ignore_for_file: must_be_immutable
+
 import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -23,44 +25,56 @@ class _AuthPageState extends State<AuthPage> {
     return Scaffold(
       body: Consumer<AuthViewModel>(
         builder: (context, model, child) {
+          model.loadStoredLogindata();
           return Stack(
             children: [
               FlutterLogin(
                 titleTag: "login",
-                savedEmail: "szindl@posteo.de",
-                savedPassword: "Jesus1000.",
+                savedEmail: model.email,
+                savedPassword: model.password,
                 onResendCode: (code) {
                   return null;
                 },
                 onLogin: (loginData) async {
+                  if (await model.login(loginData.name, loginData.password) ==
+                      true) {
+                    return null;
+                  } else {
+                    return "Username or password incorrect";
+                  }
+                  if (context.read<ConnectivityViewModel>().isOnline == false) {
+                    return "Check internet connection";
+                  }
                   if (context.read<ConnectivityViewModel>().isOnline == true) {
-                    model.setEmail(loginData.name);
-                    model.setPassword(loginData.password);
-                    await model.login();
+                    if (await model.login(loginData.name, loginData.password) ==
+                        true) {
+                      return null;
+                    } else {
+                      return "Login failed";
+                    }
                   }
                   return null;
                 },
                 onRecoverPassword: (password) {
                   return null;
                 },
-                onConfirmSignup: (text, loginData) {
-                  model.setEmail(loginData.name);
-                  model.setPassword(loginData.password);
-                  model.signUp();
-                  return null;
-                },
                 initialAuthMode: AuthMode.login,
                 onSignup: (loginData) async {
                   model.setEmail(loginData.name ?? "");
                   model.setPassword(loginData.password ?? "");
-                  await model.signUp();
-                  return null;
+                  var isSuccess = await model.signUp();
+                  if (isSuccess) {
+                    return null;
+                  } else {
+                    return "error signup";
+                  }
                 },
                 validateUserImmediately: true,
-                loginAfterSignUp: true,
+                loginAfterSignUp: false,
+
                 onSubmitAnimationCompleted: () {
                   if (titleTag == "login") {
-                    Navigator.push(
+                    Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
                         builder: (context) => HomePage(indexTab: 0),
@@ -86,15 +100,14 @@ class ConnectivityBanner extends StatelessWidget {
       selector: (_, vm) => vm.isOnline,
       builder: (context, isOnline, child) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (snackBar != null) {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          }
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
           if (isOnline == true) {
             snackBar = SnackBar(
               content: Text('Wieder online', style: TextStyle(fontSize: 12)),
               backgroundColor: Colors.green,
               duration: const Duration(seconds: 2),
             );
+            ScaffoldMessenger.of(context).showSnackBar(snackBar!);
           } else if (isOnline == false) {
             //show offline snackbar indefinitely
             snackBar = SnackBar(
@@ -105,8 +118,8 @@ class ConnectivityBanner extends StatelessWidget {
               backgroundColor: Colors.redAccent,
               duration: const Duration(days: 2),
             );
+            ScaffoldMessenger.of(context).showSnackBar(snackBar!);
           }
-          ScaffoldMessenger.of(context).showSnackBar(snackBar!);
         });
         return const SizedBox.shrink();
       },
@@ -120,11 +133,28 @@ class ConnectivityViewModel extends ChangeNotifier {
 
   bool? _isOnline;
   bool? get isOnline => _isOnline;
+  bool initCheck = false;
 
   Future<void> init() async {
-    _isOnline = await _checkInternet();
+    final nowOnline = await _checkInternet();
+    if (_isOnline != null && nowOnline) {
+      _isOnline = true;
+    } else if (!nowOnline) {
+      _isOnline = false;
+    }
     _sub = _connectivity.onConnectivityChanged.listen((_) async {
       final nowOnline = await _checkInternet();
+      if (_isOnline != null && nowOnline) {
+        _isOnline = true;
+      } else if (!nowOnline) {
+        _isOnline = false;
+      }
+      notifyListeners();
+      /*if (!initCheck) {
+        notifyListeners();
+        initCheck = true;
+        return;
+      }
       if (isOnline == null && nowOnline) {
         _isOnline = null;
         notifyListeners();
@@ -142,14 +172,15 @@ class ConnectivityViewModel extends ChangeNotifier {
         //went offline
         _isOnline = false;
         notifyListeners();
-      }
+      } */
     });
   }
 
   Future<bool> _checkInternet() async {
     final result = await _connectivity.checkConnectivity();
-    if (result.any((element) => element == ConnectivityResult.none))
+    if (result.any((element) => element == ConnectivityResult.none)) {
       return false;
+    }
     try {
       final r = await http
           .get(Uri.parse('https://www.google.com'))
@@ -179,11 +210,11 @@ class _AuthGateState extends State<AuthGate> {
   @override
   void initState() {
     super.initState();
+
     Future.microtask(() async {
       final conn = context.read<ConnectivityViewModel>();
       await conn.init();
-
-      if (conn.isOnline == true) {
+      if (conn.isOnline == null) {
         user = await context.read<AuthViewModel>().tryAutoLogin();
         setState(() {
           user = user;

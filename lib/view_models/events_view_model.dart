@@ -10,12 +10,13 @@ class EventsViewModel extends ChangeNotifier {
   final EventService eventService;
   final CommunityService communityService;
   final UserService userService;
+
   EventsViewModel({
     required this.eventService,
     required this.communityService,
     required this.userService,
   });
-
+  
   List<Event> events = [];
   List<Event> attendingEvents = [];
 
@@ -63,6 +64,8 @@ class EventsViewModel extends ChangeNotifier {
     //print("Loading attending events for user ${userService.user.id}");
     var loadedEvents = await eventService.getUserEvents(userService.user.id);
     attendingEvents = loadedEvents;
+
+    
     notifyListeners();
   }
 

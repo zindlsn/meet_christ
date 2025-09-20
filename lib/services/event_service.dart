@@ -8,6 +8,7 @@ import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/repositories/events_repository.dart';
 import 'package:meet_christ/services/user_service.dart';
 import 'package:uuid/uuid.dart';
+import 'package:collection/collection.dart';
 
 class EventService {
   final IEventRepository _repository;
@@ -50,8 +51,17 @@ class EventService {
       } else {
         event.meAttending = false;
       }
+
+      var user = getCurrentUser(event, _userService);
+      event.me = user;
     }
     return events;
+  }
+
+  EventUser? getCurrentUser(Event event, UserService userService) {
+    final id = userService.user.id;
+    return event.organizers.firstWhereOrNull((o) => o.userId == id) ??
+        event.attendees.firstWhereOrNull((a) => a.userId == id);
   }
 
   void updateEvent(Event event) {
@@ -165,6 +175,8 @@ class FirestoreEventRepository implements IEventRepository {
       'groupId': event.group?.id,
       'attendeeIds': event.attendees.map((u) => u.userId).toList(),
       'organizerIds': event.organizers.map((u) => u.userId).toList(),
+      'organizers': event.organizers.map((u) => u.toMap()).toList(),
+      'attendees': event.attendees.map((u) => u.toMap()).toList(),
       'createdAt': FieldValue.serverTimestamp(),
     });
 
@@ -291,7 +303,9 @@ class FirestoreEventRepository implements IEventRepository {
       attendees: attendees
           .map((item) => EventUser.attendee(item!.id, doc.id))
           .toList(),
-      organizers: organizers.whereType<EventUser>().toList(),
+      organizers: organizers
+          .map((item) => EventUser.host(item!.id, doc.id))
+          .toList(),
     );
   }
 }

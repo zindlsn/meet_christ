@@ -6,7 +6,8 @@ class CommunityUser extends User {
   String communityUserId;
 
   CommunityUser({
-    required super.name,
+    required super.firstname,
+    required super.lastname,
     required super.id,
     required super.email,
     required super.profilePictureUrl,
@@ -16,7 +17,8 @@ class CommunityUser extends User {
 
   static CommunityUser newUser() {
     return CommunityUser(
-      name: "",
+      firstname: "",
+      lastname: "",
       id: "",
       email: "",
       profilePictureUrl: null,
@@ -26,7 +28,8 @@ class CommunityUser extends User {
 
   CommunityUser fromUser(User user) {
     return CommunityUser(
-      name: user.name,
+      firstname: user.firstname,
+      lastname: user.lastname,
       id: user.id,
       email: user.email,
       profilePictureUrl: user.profilePictureUrl,
@@ -38,7 +41,8 @@ class CommunityUser extends User {
   factory CommunityUser.fromMap(Map<String, dynamic> map, String documentId) {
     return CommunityUser(
       id: documentId,
-      name: map['name'] ?? '',
+      firstname: map['firstname'] ?? '',
+      lastname: map['lastname'] ?? '',
       email: map['email'] ?? '',
       profilePictureUrl: map['profilePictureUrl'],
       communityUserId: map['communityUserId'] ?? '',
@@ -50,7 +54,7 @@ class CommunityUser extends User {
   @override
   Map<String, dynamic> toMap() {
     return {
-      'name': name,
+      'name': firstname,
       'email': email,
       'profilePictureUrl': profilePictureUrl,
       'communityUserId': communityUserId,
@@ -76,6 +80,6 @@ class CommunityUser extends User {
 
   @override
   String toString() {
-    return 'CommunityUser{id: $id, name: $name, email: $email, profilePictureUrl: $profilePictureUrl, communityUserId: $communityUserId, isAdmin: $isAdmin}';
+    return 'CommunityUser{id: $id, name: $firstname, email: $email, profilePictureUrl: $profilePictureUrl, communityUserId: $communityUserId, isAdmin: $isAdmin}';
   }
 }

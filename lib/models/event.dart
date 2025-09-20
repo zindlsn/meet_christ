@@ -4,6 +4,8 @@ import 'package:get_it/get_it.dart';
 import 'package:meet_christ/models/group.dart';
 import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/services/user_service.dart';
+import 'package:collection/collection.dart';
+import 'package:meet_christ/view_models/event_comments_view_model.dart';
 
 class EventDto {
   final String title;
@@ -17,6 +19,8 @@ class EventDto {
   int? pricePerPerson;
   List<String> attendeeIds = []; // Changed from User to String IDs
   List<String> organizerIds = []; // Changed from User to String IDs
+  final List<EventUser> organizers;
+  final List<EventUser> attendees;
   final int? repeatEveryWeeks;
   final DateTime? repeatEndDate;
   final Group? group;
@@ -35,6 +39,8 @@ class EventDto {
     this.imageUrl,
     this.pricePerPerson,
     List<String>? attendeeIds,
+    required this.organizers,
+    required this.attendees,
     List<String>? organizerIds,
   }) {
     if (attendeeIds != null) this.attendeeIds = attendeeIds;
@@ -43,7 +49,7 @@ class EventDto {
 
   // Deserialize from Firestore data map
   static EventDto fromMap(Map<String, dynamic> data, String id) {
-    var event =  EventDto(
+    var event = EventDto(
       title: data['title'] ?? '',
       description: data['description'] ?? '',
       startDate: data['startDate']?.toDate() ?? DateTime.now(),
@@ -52,6 +58,12 @@ class EventDto {
       id: id,
       type: data['type'],
       imageUrl: data['imageUrl'],
+      attendees: List<EventUser>.from(
+        data['attendees']?.map((x) => EventUser.fromMap(x)) ?? [],
+      ),
+      organizers: List<EventUser>.from(
+        data['organizers']?.map((x) => EventUser.fromMap(x)) ?? [],
+      ),
       pricePerPerson: data['pricePerPerson'] as int?,
       repeatEveryWeeks: data['repeatEveryWeeks'] as int?,
       repeatEndDate: data['repeatEndDate']?.toDate(),
@@ -62,7 +74,6 @@ class EventDto {
           ? List<String>.from(data['organizerIds'])
           : [],
     );
-
     return event;
   }
 
@@ -81,6 +92,8 @@ class EventDto {
       if (repeatEndDate != null) 'repeatEndDate': repeatEndDate,
       'attendeeIds': attendeeIds,
       'organizerIds': organizerIds,
+      'attendees': attendees.map((u) => u.toMap()).toList(),
+      'organizers': organizers.map((u) => u.toMap()).toList(),
       if (group != null) 'groupId': group!.id,
     };
   }
@@ -102,6 +115,8 @@ class EventDto {
       pricePerPerson: event.pricePerPerson,
       attendeeIds: event.attendees.map((u) => u.userId).toList(),
       organizerIds: event.organizers.map((u) => u.userId).toList(),
+      attendees: event.attendees,
+      organizers: event.organizers,
     );
   }
 
@@ -111,7 +126,7 @@ class EventDto {
     required List<EventUser> attendees,
     required List<EventUser> organizers,
   }) {
-    return Event(
+    var event = Event(
       title: title,
       description: description,
       startDate: startDate,
@@ -127,6 +142,16 @@ class EventDto {
       attendees: attendees,
       organizers: organizers,
     );
+
+    event.me = getCurrentUser(event, GetIt.I.get<UserService>())!;
+
+    return event;
+  }
+
+  EventUser? getCurrentUser(Event event, UserService userService) {
+    final id = userService.user.id;
+    return event.organizers.firstWhereOrNull((o) => o.userId == id) ??
+        event.attendees.firstWhereOrNull((a) => a.userId == id);
   }
 }
 
@@ -143,11 +168,12 @@ class Event {
   int? pricePerPerson;
   List<EventUser> attendees = [];
   List<EventUser> organizers = [];
+  EventUser? me;
   bool meAttending = false;
   final int? repeatEveryWeeks;
   final DateTime? repeatEndDate;
   final Group? group;
-  List<String> comments = [];
+  List<EventComment> comments = [];
 
   Event({
     required this.title,
@@ -168,6 +194,13 @@ class Event {
   }) {
     if (attendees != null) this.attendees = attendees;
     if (organizers != null) this.organizers = organizers;
+    me =
+        attendees!.firstWhereOrNull(
+          (attendee) => attendee.userId == GetIt.I.get<UserService>().user.id,
+        ) ??
+        organizers?.firstWhereOrNull(
+          (organizer) => organizer.userId == GetIt.I.get<UserService>().user.id,
+        );
   }
 
   factory Event.fromDto(
@@ -191,6 +224,7 @@ class Event {
       pricePerPerson: dto.pricePerPerson,
       attendees: attendees,
       organizers: organizers,
+
       meAttending: attendees.any(
         (attendee) => attendee.userId == GetIt.I.get<UserService>().user.id,
       ),
@@ -208,6 +242,12 @@ class Event {
   void addAttendee(EventUser attendee) {
     if (!attendees.any((a) => a.userId == attendee.userId)) {
       attendees.add(attendee);
+    }
+  }
+
+  void addHost(EventUser host) {
+    if (!organizers.any((a) => a.userId == host.userId)) {
+      organizers.add(host);
     }
   }
 
