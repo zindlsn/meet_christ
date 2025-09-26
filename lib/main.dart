@@ -1,3 +1,4 @@
+import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:meet_christ/firebase_options.dart';
@@ -10,6 +11,7 @@ import 'package:meet_christ/services/community_service.dart';
 import 'package:meet_christ/services/event_service.dart';
 import 'package:meet_christ/services/group_service.dart';
 import 'package:meet_christ/services/user_service.dart';
+import 'package:meet_christ/view_models/auth/cubit/auth_cubit.dart';
 import 'package:meet_christ/view_models/auth_view_model.dart';
 import 'package:meet_christ/view_models/chat_list_view_model.dart';
 import 'package:meet_christ/view_models/community_view_model.dart';
@@ -20,8 +22,10 @@ import 'package:meet_christ/view_models/new_community_group_view_model.dart';
 import 'package:meet_christ/view_models/new_community_view_model.dart';
 import 'package:meet_christ/view_models/new_event_view_model.dart';
 import 'package:meet_christ/view_models/profile_view_model.dart';
+import 'package:meet_christ/view_models/signup/signup_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 User? user;
 void main() async {
@@ -90,6 +94,8 @@ void main() async {
     ),
   );
 
+  GetIt.I.registerFactory<SignupBloc>(() => SignupBloc());
+
   GetIt.I.registerFactory<ProfilePageViewModel>(
     () => ProfilePageViewModel(userService: GetIt.I.get<UserService>()),
   );
@@ -133,41 +139,48 @@ void main() async {
 */
 
   runApp(
-    MultiProvider(
+    MultiBlocProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (context) => GetIt.I.get<EventsViewModel>(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => GetIt.I.get<NewCommunityViewModel>(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => GetIt.I<CommunityViewModel>(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => GetIt.I<NewEventViewModel>(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => GetIt.I<EventDetailViewModel>(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => GetIt.I<ConnectivityViewModel>(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => GetIt.I<EventCommentsViewModel>(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => GetIt.I<ChatListViewModel>(),
-        ),
-        ChangeNotifierProvider(create: (context) => GetIt.I<AuthViewModel>()),
-        ChangeNotifierProvider(
-          create: (context) => GetIt.I<ProfilePageViewModel>(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => GetIt.I<NewCommunityGroupPageViewModel>(),
-        ),
+        BlocProvider(create: (context) => SignupBloc()),
+        BlocProvider(create: (context) => AuthCubit(userService: GetIt.I.get<UserService>())),
       ],
-      child: const MyApp(),
+      child: MultiProvider(
+        providers: [
+          // add signup bloc provider
+          ChangeNotifierProvider(
+            create: (context) => GetIt.I.get<EventsViewModel>(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => GetIt.I.get<NewCommunityViewModel>(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => GetIt.I<CommunityViewModel>(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => GetIt.I<NewEventViewModel>(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => GetIt.I<EventDetailViewModel>(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => GetIt.I<ConnectivityViewModel>(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => GetIt.I<EventCommentsViewModel>(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => GetIt.I<ChatListViewModel>(),
+          ),
+          ChangeNotifierProvider(create: (context) => GetIt.I<AuthViewModel>()),
+          ChangeNotifierProvider(
+            create: (context) => GetIt.I<ProfilePageViewModel>(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => GetIt.I<NewCommunityGroupPageViewModel>(),
+          ),
+        ],
+        child: const MyApp(),
+      ),
     ),
   );
 }

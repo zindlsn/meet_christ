@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_login/flutter_login.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -15,6 +17,28 @@ class UserService {
 
   UserService({required this.userRepository, required this.authRepository});
 
+  Future<bool> updatePassword(
+    String email,
+    String oldPassword,
+    String newPassword,
+  ) async {
+    return false;
+  }
+
+  Future<AuthUser?> emailAvailable(String email) async {
+    var newUser = await authRepository.emailIsAvailable(email);
+    if (newUser?.user != null) {
+      var user = User(
+        id: newUser!.user!.uid,
+        firstname: "",
+        email: email,
+        lastname: "",
+      );
+      loggedInUser = user;
+    }
+    return newUser;
+  }
+
   Future<User?> login(UserCredentials userCredentials) async {
     var authUser = await authRepository.loginWithUserCredentials(
       userCredentials,
@@ -30,32 +54,80 @@ class UserService {
     return loggedInUser;
   }
 
-  /// Signs up a new user with the given credentials and user data.
+  Future<User?> loginAnonymously() async {
+    var authUser = await authRepository.signInAnonymously();
+
+    var id = authUser.uid;
+    var loadedUser = await userRepository.getById(id);
+    if (loadedUser == null) {
+      loggedInUser = await userRepository.create(
+        User(
+          email: "",
+          firstname: bibleNames[random.nextInt(bibleNames.length)],
+          lastname: "",
+          id: id,
+          isAnonym: authUser.isAnonymous,
+        ),
+      );
+    } else {
+      loggedInUser = loadedUser;
+    }
+
+    await saveAnonymUserIdLocally(id);
+    /*
+    var user = await userRepository.getById(
+      (collection) => collection.where("uid", isEqualTo: authUser.uid),
+    );
+    loggedInUser = user.dataOrNull![0]; */
+    return loggedInUser;
+  }
+
   Future<User> signUp(UserCredentials userCredentials, User newUserData) async {
     var authUser = await authRepository.signupWithUserCredentials(
       userCredentials,
     );
     if (authUser != null) {
-      User user = User(id: authUser.uid, email: newUserData.email, firstname: newUserData.firstname, lastname: newUserData.lastname);
+      User user = User(
+        id: authUser.uid,
+        email: newUserData.email,
+        firstname: newUserData.firstname,
+        lastname: newUserData.lastname,
+        birthday: newUserData.birthday
+      );
       return await userRepository.create(user);
     }
     throw Exception('Signup failed');
   }
 
+  Future<void> saveAnonymUserIdLocally(String userId) async {
+    var localStorage = FlutterSecureStorage();
+    await localStorage.write(key: 'anonym', value: "true");
+    await localStorage.write(key: 'userId', value: userId);
+  }
+
   Future<void> saveUserdataLocally(LoginData user) async {
     var localStorage = FlutterSecureStorage();
+    await localStorage.write(key: 'anonym', value: "false");
     await localStorage.write(key: 'name', value: user.name);
     await localStorage.write(key: 'password', value: user.password);
   }
 
-  Future<LoginData?> loadLogindataLocally() async {
+  Future<(LoginData?, bool)> loadLogindataLocally() async {
     var localStorage = FlutterSecureStorage();
     var name = await localStorage.read(key: 'name');
+    var isAnonymString = await localStorage.read(key: 'anonym');
+    var isAnonym = false;
+    if (isAnonymString?.isEmpty == true) {
+      isAnonym = false;
+    } else {
+      isAnonym = bool.parse(isAnonymString!);
+      return (null, isAnonym);
+    }
     var password = await localStorage.read(key: 'password');
     if (name == null || password == null) {
-      return null;
+      return (null, false);
     } else {
-      return LoginData(name: name, password: password);
+      return (LoginData(name: name, password: password), isAnonym);
     }
   }
 
@@ -64,6 +136,7 @@ class UserService {
     var localStorage = FlutterSecureStorage();
     await localStorage.delete(key: 'name');
     await localStorage.delete(key: 'password');
+    await localStorage.delete(key: 'anonym');
     await authRepository.logout();
   }
 }
@@ -128,3 +201,104 @@ class FirestoreUserRepository extends DatabaseService2<String, User> {
     }
   }
 }
+
+final bibleNames = [
+  // Old Testament
+  "Adam",
+  "Eve",
+  "Noah",
+  "Abraham",
+  "Sarah",
+  "Isaac",
+  "Rebekah",
+  "Jacob",
+  "Rachel",
+  "Leah",
+  "Joseph",
+  "Moses",
+  "Aaron",
+  "Miriam",
+  "Joshua",
+  "Caleb",
+  "Samuel",
+  "David",
+  "Jonathan",
+  "Solomon",
+  "Elijah",
+  "Elisha",
+  "Isaiah",
+  "Jeremiah",
+  "Ezekiel",
+  "Daniel",
+  "Hosea",
+  "Joel",
+  "Amos",
+  "Obadiah",
+  "Jonah",
+  "Micah",
+  "Nahum",
+  "Habakkuk",
+  "Zephaniah",
+  "Haggai",
+  "Zechariah",
+  "Malachi",
+  "Job",
+  "Esther",
+  "Ruth",
+  "Boaz",
+  "Gideon",
+  "Deborah",
+  "Samson",
+  "Delilah",
+  "Saul",
+  "Rehoboam",
+  "Jeroboam",
+  "Hezekiah",
+  "Josiah",
+  "Ezra",
+  "Nehemiah",
+  "Esther",
+  "Mordecai",
+
+  // New Testament
+  "Mary",
+  "Joseph",
+  "Jesus",
+  "John",
+  "Peter",
+  "Paul",
+  "James",
+  "Andrew",
+  "Philip",
+  "Bartholomew",
+  "Thomas",
+  "Matthew",
+  "Simon",
+  "Thaddaeus",
+  "Judas",
+  "Barnabas",
+  "Timothy",
+  "Titus",
+  "Silas",
+  "Lydia",
+  "Priscilla",
+  "Aquila",
+  "Apollos",
+  "Stephen",
+  "Philip",
+  "Cornelius",
+  "Luke",
+  "Mark",
+
+  // Extra Biblical figures
+  "Herod",
+  "Pilate",
+  "Caiaphas",
+  "Nicodemus",
+  "Zacchaeus",
+  "Martha",
+  "Mary Magdalene",
+  "Elizabeth", "Zechariah", "Anna", "Simeon",
+];
+
+final random = Random();

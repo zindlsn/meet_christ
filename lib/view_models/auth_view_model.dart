@@ -19,12 +19,12 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  String email = "";
+  String email = "szindl@posteo.de";
   void setEmail(String email) {
     this.email = email;
   }
 
-  String password = "";
+  String password = "Jesus1000.";
 
   void setPassword(String password) {
     this.password = password;
@@ -51,10 +51,10 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   Future<void> loadStoredLogindata() async {
-    LoginData? data = await userService.loadLogindataLocally();
-    if (data != null) {
-      email = data.name;
-      password = data.password;
+    var data = await userService.loadLogindataLocally();
+    if (data.$1 != null) {
+      email = data.$1!.name;
+      password = data.$1!.password;
     }
     notifyListeners();
   }
@@ -72,6 +72,7 @@ class AuthViewModel extends ChangeNotifier {
       );
       return true;
     } catch (e) {
+      setLoading(false);
       return false;
     }
   }
@@ -88,24 +89,46 @@ class AuthViewModel extends ChangeNotifier {
         ),
       );
       errorMessage = null;
+      setLoading(false);
       return true;
     } on FirebaseAuthException catch (e) {
-      errorMessage = e.message;
+      if (e.code == "email-already-in-use") {
+        errorMessage = "Email already in use";
+      } else if (e.code == "weak-password") {
+        errorMessage = "Password is too weak";
+      } else {
+        errorMessage = e.message;
+      }
+      setLoading(false);
       return false;
     }
   }
 
   Future<User?> tryAutoLogin() async {
     setLoading(true);
-    var logindata = await GetIt.I.get<UserService>().loadLogindataLocally();
-    User? user;
-    if (logindata != null) {
-      user = await GetIt.I.get<UserService>().login(
-        UserCredentials(email: logindata.name, password: logindata.password),
-      );
+    try {
+      var login = await GetIt.I.get<UserService>().loadLogindataLocally();
+      User? user;
+      if (login.$2) {
+        user = await GetIt.I.get<UserService>().loginAnonymously();
+        setLoading(false);
+        return user;
+      }
+      if (login.$1 != null) {
+        user = await GetIt.I.get<UserService>().login(
+          UserCredentials(email: login.$1!.name, password: login.$1!.password),
+        );
+      }
+      setLoading(false);
+      return user;
+    } catch (e) {
+      setLoading(false);
+      return null;
     }
-    setLoading(false);
-    return user;
+  }
+
+  Future<void> loginWithoutAccount() async {
+    await userService.loginAnonymously();
   }
 }
 

@@ -5,6 +5,8 @@ class User {
   final String email;
   final String? profilePictureUrl;
   final UserStatus status;
+  final bool isAnonym;
+  final DateTime? birthday;
 
   User({
     required this.id,
@@ -13,6 +15,8 @@ class User {
     this.profilePictureUrl,
     required this.lastname,
     this.status = UserStatus.active,
+    this.isAnonym = false,
+    this.birthday,
   });
 
   set(String id) => User(
@@ -21,6 +25,8 @@ class User {
     lastname: lastname,
     profilePictureUrl: profilePictureUrl,
     id: id,
+    isAnonym: isAnonym,
+    birthday: birthday,
   );
 
   factory User.fromMap(Map<String, dynamic> map, String documentId) {
@@ -31,6 +37,8 @@ class User {
       profilePictureUrl: map['profilePictureUrl'],
       lastname: map['lastname'] ?? '',
       status: UserStatus.values[map['status'] ?? 0],
+      isAnonym: map['isAnonym'] ?? false,
+      birthday: map['birthday'],
     );
   }
 
@@ -41,6 +49,8 @@ class User {
       'profilePictureUrl': profilePictureUrl,
       'lastname': lastname,
       'status': status.index,
+      'isAnonym': isAnonym,
+      'birthday': birthday
     };
   }
 
@@ -60,8 +70,7 @@ class EventUser {
   final List<String> eventPermissions;
   final List<String> commentPermissions;
   final String name = "Name Lastname";
-  DateTime joinedAt  = DateTime.now();
-  
+  DateTime joinedAt = DateTime.now();
 
   /// Use enum for better type safety:
   /// 0 - Not Attending
@@ -262,4 +271,4 @@ class Roles {
 
 enum EventUserStatus { invited, going, notGoing, maybe, rejoined }
 
-enum UserStatus { active, inactive, banned,deleted }
+enum UserStatus { active, inactive, banned, deleted }

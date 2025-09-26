@@ -77,7 +77,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  widget.user.firstname,
+                  "${widget.user.firstname} ${widget.user.lastname}",
                   style: const TextStyle(fontSize: 32, color: Colors.grey),
                 ),
                 TextFormField(
@@ -91,7 +91,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     setState(() {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => AuthPage()),
+                        MaterialPageRoute(builder: (context) => AuthGate()),
                       );
                     });
                   },

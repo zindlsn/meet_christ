@@ -1,12 +1,20 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:meet_christ/models/user_credentails.dart';
+import 'package:uuid/uuid.dart';
 
 abstract class IAuthRepository {
   Future<User> loginWithUserCredentials(UserCredentials userCredentials);
   Future<User?> signupWithUserCredentials(UserCredentials userCredentials);
   Future<void> checkActionCode(String actionCode);
+  Future<User> signInAnonymously();
   Future<void> logout();
+  Future<AuthUser?> emailIsAvailable(String email);
+  Future<bool> updatePassword(
+    String email,
+    String oldPassword,
+    String newPassword,
+  );
 }
 
 class FirestoreAuthRepository implements IAuthRepository {
@@ -19,6 +27,33 @@ class FirestoreAuthRepository implements IAuthRepository {
       password: userCredentials.password,
     );
     return userCredential.user!;
+  }
+
+  @override
+  Future<User> signInAnonymously() async {
+    try {
+      final FirebaseAuth auth = FirebaseAuth.instance;
+      var authUser = FirebaseAuth.instance.currentUser;
+
+      if (authUser != null) {
+        return authUser;
+      } else {
+        var crendetials = await auth.signInAnonymously();
+        if (crendetials.user != null) {
+          return crendetials.user!;
+        }
+      }
+    } catch (e) {
+      throw FirebaseAuthException(
+        code: 'no-sign-in-anonym',
+        message: 'could not sign in anonymously',
+      );
+    }
+
+    throw FirebaseAuthException(
+      code: 'no-sign-in-anonym',
+      message: 'could not sign in anonymously',
+    );
   }
 
   @override
@@ -88,6 +123,64 @@ class FirestoreAuthRepository implements IAuthRepository {
       // Handle non-Firebase errors
     }
   }
+
+  @override
+  Future<AuthUser?> emailIsAvailable(String email) async {
+    String password = "thisIsFakePassword123!${Uuid().v4()}";
+    try {
+      var credentials = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
+      await FirebaseAuth.instance.currentUser?.delete();
+      return AuthUser(password: "", user: credentials.user);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'email-already-in-use') {
+        return null; // email does not exist
+      }
+      if (e.code == 'wrong-password') {
+        return null;
+      }
+    } on Exception catch (e) {
+      return null;
+    }
+    return null;
+  }
+
+  @override
+  Future<bool> updatePassword(
+    String email,
+    String oldPassword,
+    String newPassword,
+  ) async {
+    try {
+      // Get current user
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw FirebaseAuthException(
+          code: 'no-current-user',
+          message: 'No user currently signed in.',
+        );
+      }
+
+      // Reauthenticate user with old password
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: email,
+        password: oldPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+
+      // Update password
+      await user.updatePassword(newPassword);
+
+      return true; // Password updated successfully
+    } on FirebaseAuthException catch (e) {
+      // Handle specific Firebase auth errors here if needed
+      print('Error during password update: ${e.message}');
+      return false;
+    } catch (e) {
+      print('Unknown error: $e');
+      return false;
+    }
+  }
 }
 
 class BackendAuthFactory {
@@ -104,3 +197,10 @@ class BackendAuthFactory {
 }
 
 enum BackendType { firestore }
+
+class AuthUser {
+  User? user;
+  String password;
+
+  AuthUser({required this.password, required this.user});
+}
