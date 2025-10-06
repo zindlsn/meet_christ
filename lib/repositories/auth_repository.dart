@@ -9,7 +9,7 @@ abstract class IAuthRepository {
   Future<void> checkActionCode(String actionCode);
   Future<User> signInAnonymously();
   Future<void> logout();
-  Future<AuthUser?> emailIsAvailable(String email);
+  Future<bool> emailIsAvailable(String email);
   Future<bool> updatePassword(
     String email,
     String oldPassword,
@@ -121,13 +121,6 @@ class AuthRepository implements IAuthRepository {
           message: 'User is null after signup',
         );
       }
-      if (user.emailVerified == false) {
-        await auth.signOut();
-        throw FirebaseAuthException(
-          code: 'email-not-verified',
-          message: 'Email not verified',
-        );
-      }
       return user;
     } on FirebaseAuthException catch (e) {
       String errorMessage;
@@ -179,24 +172,37 @@ class AuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<AuthUser?> emailIsAvailable(String email) async {
+  Future<bool> emailIsAvailable(String email) async {
     String password = "thisIsFakePassword123!${Uuid().v4()}";
     try {
       var credentials = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
       await FirebaseAuth.instance.currentUser?.delete();
-      return AuthUser(password: "", user: credentials.user);
+      return false;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
-        return null; // email does not exist
+        return false;
       }
       if (e.code == 'wrong-password') {
-        return null;
+        return true;
       }
     } on Exception catch (e) {
-      return null;
+      return true;
     }
-    return null;
+    return true;
+  }
+
+  Future<bool> sendPasswordResetEmail({required String email}) async {
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      return true;
+    } on FirebaseAuthException catch (e) {
+      print('Error sending password reset email: ${e.message}');
+      return false;
+    } catch (e) {
+      print('Unknown error: $e');
+      return false;
+    }
   }
 
   @override

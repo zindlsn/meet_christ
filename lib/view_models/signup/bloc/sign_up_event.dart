@@ -4,7 +4,13 @@ part of 'sign_up_bloc.dart';
 abstract class SignupEvent {}
 
 class InitSignup extends SignupEvent {
-  InitSignup();
+  final String email;
+  InitSignup({required this.email});
+}
+
+class VerifyEmailRequested extends SignupEvent {
+  final String email;
+  VerifyEmailRequested({required this.email});
 }
 
 class SignupRequested extends SignupEvent {}

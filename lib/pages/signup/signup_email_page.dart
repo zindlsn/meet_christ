@@ -57,7 +57,11 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
               child: Center(
                 child: ElevatedButton(
                   onPressed: () async {
-                    if (true) {
+                    final isEmailAvailable = await context
+                        .read<SignupBloc>()
+                        .authRepository
+                        .emailIsAvailable(_emailController.text);
+                    if (isEmailAvailable) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(

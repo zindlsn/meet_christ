@@ -98,6 +98,7 @@ void main() async {
     () => LoginBloc(
       authBloc: GetIt.I.get<AuthBloc>(),
       authRepository: GetIt.I.get<AuthRepository>(),
+      userService: GetIt.I.get<UserService>(),
     ),
   );
 

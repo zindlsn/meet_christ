@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meet_christ/pages/home.dart';
 import 'package:meet_christ/pages/signup/signup_email_page.dart';
+import 'package:meet_christ/repositories/auth_repository.dart';
+import 'package:meet_christ/view_models/auth/bloc/auth_bloc.dart';
 import 'package:meet_christ/view_models/login/bloc/login_bloc.dart';
 import 'package:meet_christ/view_models/signup/bloc/sign_up_bloc.dart';
 
@@ -217,14 +219,18 @@ class JesusLoginScreen extends StatelessWidget {
                 _TextFieldWithIcon(
                   label: "Password",
                   icon: Icons.lock_outline,
-                  hintText: "Jesus1000.",
+                  hintText: "Password",
                   obscureText: true,
                 ),
                 const SizedBox(height: 16),
 
                 // Forgot Password
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    context.read<AuthRepository>().sendPasswordResetEmail(
+                          email: emailController.text,
+                        );
+                  },
                   child: const Text(
                     "Forgot Password?",
                     style: TextStyle(
@@ -277,7 +283,9 @@ class JesusLoginScreen extends StatelessWidget {
                   builder: (context, state) {
                     return ElevatedButton(
                       onPressed: () {
-                        context.read<SignupBloc>().add(InitSignup());
+                        context.read<SignupBloc>().add(
+                          InitSignup(email: emailController.text),
+                        );
                         Navigator.push(
                           context,
                           MaterialPageRoute(

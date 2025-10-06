@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:meet_christ/models/user.dart';
@@ -22,11 +24,11 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
   }) : super(const SignupInitial()) {
     on<InitSignup>((event, emit) {
       emit(
-        const SignupDataUpdated(
-          email: 'stefan.zindl@outlook.de',
-          password: 'Jesus1000.',
-          firstname: 'S',
-          lastname: 'Z',
+        SignupDataUpdated(
+          email: event.email,
+          password: '',
+          firstname: '',
+          lastname: '',
           birthday: null,
         ),
       );
@@ -36,6 +38,7 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
     on<SignupNameUpdated>(_onNameUpdated);
     on<SignupBirthdayUpdated>(_onBirthdayUpdated);
     on<SignupRequested>(_onSignupRequested);
+    on<VerifyEmailRequested>(_onVerifyEmailRequested);
   }
 
   void _onEmailUpdated(SignupEmailUpdated event, Emitter<SignupState> emit) {
@@ -116,30 +119,26 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
         credentials,
       );
 
-      if (userCredential != null) {
-        final user = UserModel(
-          id: userCredential.uid,
+      final user = UserModel(
+        id: userCredential.uid,
+        email: state.email,
+        firstname: state.firstname,
+        lastname: state.lastname,
+        birthday: state.birthday,
+        isAnonym: true,
+      );
+      await userService.createUser(user);
+      emit(
+        SignupSuccess(
           email: state.email,
+          password: state.password,
           firstname: state.firstname,
           lastname: state.lastname,
           birthday: state.birthday,
-        );
+        ),
+      );
 
-        await userService.createUser(user);
-        emit(
-          SignupSuccess(
-            email: state.email,
-            password: state.password,
-            firstname: state.firstname,
-            lastname: state.lastname,
-            birthday: state.birthday,
-          ),
-        );
-
-        authBloc.add(UserLoggedIn(userCredential));
-      } else {
-        emit(SignupFailure("Signup failed"));
-      }
+      authBloc.add(UserLoggedIn(userCredential));
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-not-verified') {
         emit(SignupFailure("Verify your email."));
@@ -147,5 +146,24 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
     } catch (e) {
       emit(SignupFailure(e.toString()));
     }
+  }
+
+  Future<bool> _onVerifyEmailRequested(
+    VerifyEmailRequested event,
+    Emitter<SignupState> emit,
+  ) {
+    return authRepository
+        .emailIsAvailable(event.email)
+        .then((authUser) {
+          if (authUser == null) {
+            return true; // Email is available
+          } else {
+            return false; // Email is already in use
+          }
+        })
+        .catchError((error) {
+          // Handle any errors that occur during the check
+          return false; // Assume email is not available on error
+        });
   }
 }
