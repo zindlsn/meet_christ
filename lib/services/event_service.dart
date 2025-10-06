@@ -88,7 +88,7 @@ abstract class IEventRepository {
 class FirestoreEventRepository implements IEventRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
-  final DatabaseService2<String, User> _userRepository;
+  final DatabaseService2<String, UserModel> _userRepository;
   FirestoreEventRepository(this._userRepository);
   final _uuid = const Uuid();
 

@@ -73,14 +73,14 @@ class EventsViewModel extends ChangeNotifier {
     final index = events.indexWhere((e) => e.id == event.id);
     if (index != -1) {
       if (events[index].attendees.any(
-        (attendee) => attendee.userId == userService.loggedInUser!.id,
+        (attendee) => attendee.userId == userService.user.id,
       )) {
         events[index].attendees.removeWhere(
-          (attendee) => attendee.userId == userService.loggedInUser!.id,
+          (attendee) => attendee.userId == userService.user.id,
         );
       } else {
         events[index].attendees.add(
-          EventUser.attendee(userService.loggedInUser!.id, event.id),
+          EventUser.attendee(userService.user.id, event.id),
         );
       }
       notifyListeners();

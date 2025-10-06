@@ -17,16 +17,61 @@ abstract class IAuthRepository {
   );
 }
 
-class FirestoreAuthRepository implements IAuthRepository {
+class AuthRepository implements IAuthRepository {
   @override
   Future<User> loginWithUserCredentials(UserCredentials userCredentials) async {
-    final FirebaseAuth auth = FirebaseAuth.instance;
+    try {
+      final FirebaseAuth auth = FirebaseAuth.instance;
 
-    final UserCredential userCredential = await auth.signInWithEmailAndPassword(
-      email: userCredentials.email,
-      password: userCredentials.password,
-    );
-    return userCredential.user!;
+      final UserCredential userCredential = await auth
+          .signInWithEmailAndPassword(
+            email: userCredentials.email,
+            password: userCredentials.password,
+          );
+      final user = userCredential.user;
+      await user?.reload();
+      if (user != null && user.emailVerified) {
+        print("Email verified");
+      } else {
+        print("Email not verified");
+      }
+      print(userCredential.toString());
+      if (userCredential.user?.emailVerified == false) {
+        throw FirebaseAuthException(
+          code: 'email-not-verified',
+          message: 'Email not verified',
+        );
+      }
+      if (userCredential.user != null) {
+        return userCredential.user!;
+      }
+      throw FirebaseAuthException(code: 'no-login', message: 'could not login');
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'email-not-verified') {
+        throw FirebaseAuthException(
+          code: 'email-not-verified',
+          message: 'verify your email before login',
+        );
+      } else if (e.code == 'user-not-found') {
+        throw FirebaseAuthException(
+          code: 'user-not-found',
+          message: 'could not login',
+        );
+      } else if (e.code == 'wrong-password') {
+        throw FirebaseAuthException(
+          code: 'wrong-password',
+          message: 'could not login',
+        );
+      } else if (e.code == 'invalid-credential') {
+        throw FirebaseAuthException(
+          code: 'wrong-password',
+          message: 'could not login',
+        );
+      }
+    } catch (e) {
+      throw FirebaseAuthException(code: 'no-login', message: 'could not login');
+    }
+    throw FirebaseAuthException(code: 'no-login', message: 'could not login');
   }
 
   @override
@@ -61,17 +106,26 @@ class FirestoreAuthRepository implements IAuthRepository {
     UserCredentials userCredentials,
   ) async {
     final FirebaseAuth auth = FirebaseAuth.instance;
+    auth.authStateChanges();
     try {
       final UserCredential userCredential = await auth
           .createUserWithEmailAndPassword(
             email: userCredentials.email.trim(),
             password: userCredentials.password.trim(),
           );
+      await userCredential.user?.sendEmailVerification();
       User? user = userCredential.user;
       if (user == null) {
         throw FirebaseAuthException(
           code: 'unknown-error',
           message: 'User is null after signup',
+        );
+      }
+      if (user.emailVerified == false) {
+        await auth.signOut();
+        throw FirebaseAuthException(
+          code: 'email-not-verified',
+          message: 'Email not verified',
         );
       }
       return user;
@@ -181,6 +235,7 @@ class FirestoreAuthRepository implements IAuthRepository {
       return false;
     }
   }
+
 }
 
 class BackendAuthFactory {
@@ -191,7 +246,7 @@ class BackendAuthFactory {
   IAuthRepository getRepository() {
     switch (type) {
       case BackendType.firestore:
-        return FirestoreAuthRepository();
+        return AuthRepository();
     }
   }
 }
@@ -204,3 +259,36 @@ class AuthUser {
 
   AuthUser({required this.password, required this.user});
 }
+
+
+/*
+
+
+class AuthRepository {
+  User? _cachedUser;
+
+  Future<User?> getSavedUser() async {
+    // load from local storage (simplified)
+    final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString('email');
+    if (email != null) {
+      return User(email: email);
+    }
+    return null;
+  }
+
+  Future<void> persistUser(User user) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('email', user.email);
+    _cachedUser = user;
+  }
+
+  Future<void> deleteUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('email');
+    _cachedUser = null;
+  }
+}
+
+
+*/

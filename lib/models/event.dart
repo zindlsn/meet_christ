@@ -4,7 +4,6 @@ import 'package:get_it/get_it.dart';
 import 'package:meet_christ/models/group.dart';
 import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/services/user_service.dart';
-import 'package:collection/collection.dart';
 import 'package:meet_christ/view_models/event_comments_view_model.dart';
 
 class EventDto {
@@ -143,15 +142,18 @@ class EventDto {
       organizers: organizers,
     );
 
-    event.me = getCurrentUser(event, GetIt.I.get<UserService>())!;
+    event.me = getCurrentUser(
+      event,
+      GetIt.I.get<UserService>(),
+    );
 
     return event;
   }
 
   EventUser? getCurrentUser(Event event, UserService userService) {
     final id = userService.user.id;
-    return event.organizers.firstWhereOrNull((o) => o.userId == id) ??
-        event.attendees.firstWhereOrNull((a) => a.userId == id);
+    return event.organizers.firstWhere((o) => o.userId == id) ??
+        event.attendees.firstWhere((a) => a.userId == id);
   }
 }
 
@@ -195,11 +197,14 @@ class Event {
     if (attendees != null) this.attendees = attendees;
     if (organizers != null) this.organizers = organizers;
     me =
-        attendees!.firstWhereOrNull(
-          (attendee) => attendee.userId == GetIt.I.get<UserService>().user.id,
+        attendees!.firstWhere(
+          (attendee) =>
+              attendee.userId == GetIt.I.get<UserService>().user.id,
         ) ??
-        organizers?.firstWhereOrNull(
-          (organizer) => organizer.userId == GetIt.I.get<UserService>().user.id,
+        organizers?.firstWhere(
+          (organizer) =>
+              organizer.userId ==
+              GetIt.I.get<UserService>().user.id,
         );
   }
 

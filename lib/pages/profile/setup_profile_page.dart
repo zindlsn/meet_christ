@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:meet_christ/pages/profile/signup_name_page.dart';
-import 'package:meet_christ/view_models/auth/cubit/auth_cubit.dart';
 import 'package:provider/provider.dart';
 
 class SetupProfileNamePage extends StatefulWidget {
@@ -15,7 +14,6 @@ class _SetupProfileNamePageState extends State<SetupProfileNamePage> {
   final TextEditingController _lastNameController = TextEditingController();
   @override
   Widget build(BuildContext context) {
-    final authCubit = context.read<AuthCubit>();
     return Scaffold(
       appBar: AppBar(title: Text("Create account")),
       body: Padding(
@@ -100,8 +98,6 @@ class _SetupProfileNamePageState extends State<SetupProfileNamePage> {
               child: Center(
                 child: ElevatedButton(
                   onPressed: () {
-                    context.read<AuthCubit>().firstnameChanged(_firstNameController.text);
-                    context.read<AuthCubit>().lastnameChanged(_lastNameController.text);
                     Navigator.push(
                       context,
                       MaterialPageRoute(

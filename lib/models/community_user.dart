@@ -1,7 +1,7 @@
 import 'package:meet_christ/models/user.dart';
 import 'package:uuid/uuid.dart';
 
-class CommunityUser extends User {
+class CommunityUser extends UserModel {
   bool isAdmin = false;
   String communityUserId;
 
@@ -26,7 +26,7 @@ class CommunityUser extends User {
     );
   }
 
-  CommunityUser fromUser(User user) {
+  CommunityUser fromUser(UserModel user) {
     return CommunityUser(
       firstname: user.firstname,
       lastname: user.lastname,

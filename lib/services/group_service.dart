@@ -190,7 +190,7 @@ class FirestoreGroupRepository implements IGroupRepository {
     return groups;
   }
 
-  Future<List<User>> _getUsersFromList(List<dynamic> userIds) async {
+  Future<List<UserModel>> _getUsersFromList(List<dynamic> userIds) async {
     // Implement your user fetching logic here
     // Example: return await userRepository.getUsersByIds(List<String>.from(userIds));
     return []; // Placeholder

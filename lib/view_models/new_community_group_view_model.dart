@@ -22,7 +22,7 @@ class NewCommunityGroupPageViewModel extends ChangeNotifier {
     Group group = Group.newNewGroup(name);
     group.community = community;
     group.createdOn = DateTime.now();
-    group.createdBy = userService.loggedInUser!.id;
+    group.createdBy = userService.user.id;
     group.admins.add(userService.user);
     group.members.add(userService.user);
     await groupService.createGroup(group: group);

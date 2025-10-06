@@ -15,8 +15,8 @@ class Group {
   final Address? address;
   final Uint8List? profileImage;
   final List<Event> events;
-  final List<User> members = [];
-  final List<User> admins = [];
+  final List<UserModel> members = [];
+  final List<UserModel> admins = [];
   String? createdBy;
   DateTime? createdOn;
 
@@ -39,8 +39,8 @@ class Group {
     Address? address,
     Uint8List? profileImage,
     List<Event>? events,
-    List<User>? members,
-    List<User>? admins,
+    List<UserModel>? members,
+    List<UserModel>? admins,
     String? createdBy,
     DateTime? createdOn,
     bool clearProfileImage = false,
@@ -77,8 +77,8 @@ class Group {
     GroupDto dto, {
     List<Event>? events,
     Uint8List? profileImage,
-    List<User>? members,
-    List<User>? admins,
+    List<UserModel>? members,
+    List<UserModel>? admins,
   }) {
     return Group(
         id: dto.id,
@@ -177,8 +177,8 @@ class GroupDto {
   Group toEntity({
     required List<EventDto> events,
     Uint8List? profileImage,
-    List<User> members = const [],
-    List<User> admins = const [],
+    List<UserModel> members = const [],
+    List<UserModel> admins = const [],
   }) {
     return Group(
         id: id,

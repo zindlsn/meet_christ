@@ -1,9 +1,10 @@
 import 'package:bloc/bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:meet_christ/firebase_options.dart';
 import 'package:meet_christ/models/user.dart';
-import 'package:meet_christ/pages/auth_page.dart';
+import 'package:meet_christ/pages/auth/auth.dart';
 import 'package:meet_christ/repositories/auth_repository.dart';
 import 'package:meet_christ/repositories/events_repository.dart';
 import 'package:meet_christ/repositories/file_repository.dart';
@@ -11,41 +12,39 @@ import 'package:meet_christ/services/community_service.dart';
 import 'package:meet_christ/services/event_service.dart';
 import 'package:meet_christ/services/group_service.dart';
 import 'package:meet_christ/services/user_service.dart';
-import 'package:meet_christ/view_models/auth/cubit/auth_cubit.dart';
-import 'package:meet_christ/view_models/auth_view_model.dart';
+import 'package:meet_christ/view_models/auth/bloc/auth_bloc.dart';
 import 'package:meet_christ/view_models/chat_list_view_model.dart';
 import 'package:meet_christ/view_models/community_view_model.dart';
 import 'package:meet_christ/view_models/event_comments_view_model.dart';
 import 'package:meet_christ/view_models/event_detail_view_model.dart';
 import 'package:meet_christ/view_models/events_view_model.dart';
+import 'package:meet_christ/view_models/login/bloc/login_bloc.dart';
 import 'package:meet_christ/view_models/new_community_group_view_model.dart';
 import 'package:meet_christ/view_models/new_community_view_model.dart';
 import 'package:meet_christ/view_models/new_event_view_model.dart';
 import 'package:meet_christ/view_models/profile_view_model.dart';
-import 'package:meet_christ/view_models/signup/signup_bloc.dart';
+import 'package:meet_christ/view_models/signup/bloc/sign_up_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-User? user;
+UserModel? user;
 void main() async {
   final i = GetIt.I;
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.android);
   var factory = BackendAuthFactory(type: BackendType.firestore);
   GetIt.I.registerSingleton<IAuthRepository>(factory.getRepository());
+  GetIt.I.registerSingleton<AuthRepository>(AuthRepository());
   GetIt.I.registerSingleton<FileRepository>(FileRepository());
-  GetIt.I.registerSingleton<DatabaseService2<String, User>>(
+  GetIt.I.registerSingleton<DatabaseService2<String, UserModel>>(
     FirestoreUserRepository(),
   );
-  GetIt.I.registerSingleton<UserService>(
-    UserService(
-      authRepository: GetIt.I.get<IAuthRepository>(),
-      userRepository: GetIt.I.get<DatabaseService2<String, User>>(),
-    ),
-  );
+  GetIt.I.registerSingleton<UserService>(UserService());
   GetIt.I.registerSingleton<IEventRepository>(
-    FirestoreEventRepository(GetIt.I.get<DatabaseService2<String, User>>()),
+    FirestoreEventRepository(
+      GetIt.I.get<DatabaseService2<String, UserModel>>(),
+    ),
   );
 
   GetIt.I.registerSingleton<CommentService>(CommentService());
@@ -85,8 +84,6 @@ void main() async {
     ),
   );
 
-  GetIt.I.registerFactory<ConnectivityViewModel>(() => ConnectivityViewModel());
-
   GetIt.I.registerFactory<EventDetailViewModel>(
     () => EventDetailViewModel(
       userService: GetIt.I.get<UserService>(),
@@ -94,13 +91,26 @@ void main() async {
     ),
   );
 
-  GetIt.I.registerFactory<SignupBloc>(() => SignupBloc());
+  GetIt.I.registerFactory<AuthBloc>(
+    () => AuthBloc(FirebaseAuth.instance, GetIt.I.get<UserService>()),
+  );
+  GetIt.I.registerFactory<LoginBloc>(
+    () => LoginBloc(
+      authBloc: GetIt.I.get<AuthBloc>(),
+      authRepository: GetIt.I.get<AuthRepository>(),
+    ),
+  );
+
+  GetIt.I.registerFactory<SignupBloc>(
+    () => SignupBloc(
+      authRepository: GetIt.I.get<AuthRepository>(),
+      userService: GetIt.I.get<UserService>(),
+      authBloc: GetIt.I.get<AuthBloc>(),
+    ),
+  );
 
   GetIt.I.registerFactory<ProfilePageViewModel>(
-    () => ProfilePageViewModel(userService: GetIt.I.get<UserService>()),
-  );
-  GetIt.I.registerFactory<AuthViewModel>(
-    () => AuthViewModel(userService: GetIt.I.get<UserService>()),
+    () => ProfilePageViewModel(authRepository: GetIt.I.get<AuthRepository>()),
   );
   GetIt.I.registerFactory<NewCommunityViewModel>(
     () => NewCommunityViewModel(
@@ -141,8 +151,9 @@ void main() async {
   runApp(
     MultiBlocProvider(
       providers: [
-        BlocProvider(create: (context) => SignupBloc()),
-        BlocProvider(create: (context) => AuthCubit(userService: GetIt.I.get<UserService>())),
+        BlocProvider(create: (context) => GetIt.I.get<SignupBloc>()),
+        BlocProvider(create: (context) => GetIt.I.get<AuthBloc>()),
+        BlocProvider(create: (context) => GetIt.I.get<LoginBloc>()),
       ],
       child: MultiProvider(
         providers: [
@@ -163,15 +174,11 @@ void main() async {
             create: (context) => GetIt.I<EventDetailViewModel>(),
           ),
           ChangeNotifierProvider(
-            create: (context) => GetIt.I<ConnectivityViewModel>(),
-          ),
-          ChangeNotifierProvider(
             create: (context) => GetIt.I<EventCommentsViewModel>(),
           ),
           ChangeNotifierProvider(
             create: (context) => GetIt.I<ChatListViewModel>(),
           ),
-          ChangeNotifierProvider(create: (context) => GetIt.I<AuthViewModel>()),
           ChangeNotifierProvider(
             create: (context) => GetIt.I<ProfilePageViewModel>(),
           ),
@@ -196,9 +203,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const AuthGate(),
-      builder: (context, child) =>
-          Stack(children: [child!, ConnectivityBanner()]),
+      home: JesusLoginScreen(),
+      builder: (context, child) => Stack(children: [child!]),
     );
   }
 }

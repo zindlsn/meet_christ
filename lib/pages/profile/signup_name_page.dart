@@ -1,8 +1,6 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:meet_christ/pages/home.dart';
-import 'package:meet_christ/view_models/auth/cubit/auth_cubit.dart';
+import 'package:meet_christ/pages/auth/auth.dart';
+import 'package:meet_christ/view_models/signup/bloc/sign_up_bloc.dart';
 import 'package:provider/provider.dart';
 
 class SetupProfileBirthdayPage extends StatefulWidget {
@@ -14,11 +12,9 @@ class SetupProfileBirthdayPage extends StatefulWidget {
 }
 
 class _SetupProfileBirthdayPageState extends State<SetupProfileBirthdayPage> {
-
   var _selecteStartdDate = DateTime.now();
   @override
   Widget build(BuildContext context) {
-    final authCubit = context.read<AuthCubit>();
     return Scaffold(
       appBar: AppBar(title: Text("Create account")),
       body: Padding(
@@ -52,13 +48,12 @@ class _SetupProfileBirthdayPageState extends State<SetupProfileBirthdayPage> {
               child: Center(
                 child: ElevatedButton(
                   onPressed: () {
-                    authCubit.birthdayChanged(_selecteStartdDate);
-                    authCubit.submit();
+                    context.read<SignupBloc>().add(SignupRequested());
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) {
-                          return HomePage(indexTab: 0);
+                          return JesusLoginScreen();
                         },
                       ),
                     );

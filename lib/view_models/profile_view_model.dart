@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:meet_christ/services/user_service.dart';
+import 'package:meet_christ/repositories/auth_repository.dart';
 
 class ProfilePageViewModel extends ChangeNotifier{
 
-  final UserService userService;
+  final AuthRepository authRepository;
 
-  ProfilePageViewModel({required this.userService});
+  ProfilePageViewModel({required this.authRepository});
 
 
 
   Future<void> logout() async{
-    await userService.logout();
+    await authRepository.logout();
   }
 
 }

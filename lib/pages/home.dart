@@ -15,7 +15,7 @@ import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   final int indexTab;
-  const HomePage({super.key, required this.indexTab});
+  const HomePage({super.key, this.indexTab = 0});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -62,7 +62,7 @@ class _HomePageState extends State<HomePage> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => ProfilePage(
-                                user: GetIt.I.get<UserService>().loggedInUser!,
+                                user: GetIt.I.get<UserService>().user,
                               ),
                             ),
                           );
@@ -1011,11 +1011,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
 class ExpandableCard extends StatefulWidget {
   final String fullText;
   final String date;
-  const ExpandableCard({
-    super.key,
-    required this.fullText,
-    required this.date,
-  });
+  const ExpandableCard({super.key, required this.fullText, required this.date});
 
   @override
   State<ExpandableCard> createState() => _ExpandableCardState();
@@ -1025,35 +1021,37 @@ class _ExpandableCardState extends State<ExpandableCard> {
   bool isExpanded = false;
   @override
   Widget build(BuildContext context) {
-      return GestureDetector(
-        onTap: () {
-          setState(() {
-            isExpanded = !isExpanded;
-          });
-        },
-        child: RichText(
-          text: TextSpan(
-            text: !isExpanded ? widget.fullText.length > 100
-                ? "${widget.fullText.substring(0, 100)}... "
-                : widget.fullText : widget.fullText,
-            style: DefaultTextStyle.of(context).style,
-            children: [
-              if (widget.fullText.length > 100)
-                TextSpan(
-                  text: isExpanded ? "\nWeniger anzeigen" : "Mehr anzeigen",
-                  style: const TextStyle(color: Colors.blue),
-                  recognizer: TapGestureRecognizer()
-                    ..onTap = () {
-                      setState(() {
-                        isExpanded = !isExpanded;
-                      });
-                    },
-                ),
-            ],
-          ),
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          isExpanded = !isExpanded;
+        });
+      },
+      child: RichText(
+        text: TextSpan(
+          text: !isExpanded
+              ? widget.fullText.length > 100
+                    ? "${widget.fullText.substring(0, 100)}... "
+                    : widget.fullText
+              : widget.fullText,
+          style: DefaultTextStyle.of(context).style,
+          children: [
+            if (widget.fullText.length > 100)
+              TextSpan(
+                text: isExpanded ? "\nWeniger anzeigen" : "Mehr anzeigen",
+                style: const TextStyle(color: Colors.blue),
+                recognizer: TapGestureRecognizer()
+                  ..onTap = () {
+                    setState(() {
+                      isExpanded = !isExpanded;
+                    });
+                  },
+              ),
+          ],
         ),
-      );
-    }
+      ),
+    );
+  }
 }
 
 class MariaMessageSection extends StatefulWidget {
@@ -1070,7 +1068,7 @@ class _MariaMessageSectionState extends State<MariaMessageSection> {
     if (!isClosed) {
       return Card(
         child: Padding(
-          padding: const EdgeInsets.only(left:8.0, bottom: 8.0),
+          padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
           child: Column(
             children: [
               Row(
@@ -1083,9 +1081,15 @@ class _MariaMessageSectionState extends State<MariaMessageSection> {
                       children: [
                         Text(
                           'Maria Botschaft',
-                          style: TextStyle(fontSize: 32, color: Colors.blueAccent),
+                          style: TextStyle(
+                            fontSize: 32,
+                            color: Colors.blueAccent,
+                          ),
                         ),
-                        Text("28.08.2025", style: TextStyle(fontStyle: FontStyle.italic),),
+                        Text(
+                          "28.08.2025",
+                          style: TextStyle(fontStyle: FontStyle.italic),
+                        ),
                       ],
                     ),
                   ),

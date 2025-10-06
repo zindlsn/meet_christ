@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:meet_christ/models/user.dart';
-import 'package:meet_christ/pages/auth_page.dart';
+import 'package:meet_christ/pages/auth/auth.dart';
 import 'package:meet_christ/view_models/profile_view_model.dart';
 import 'package:provider/provider.dart';
 
 class ProfilePage extends StatefulWidget {
-  final User user;
+  final UserModel user;
   const ProfilePage({super.key, required this.user});
 
   @override
@@ -91,7 +91,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     setState(() {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => AuthGate()),
+                        MaterialPageRoute(builder: (context) => JesusLoginScreen()),
                       );
                     });
                   },

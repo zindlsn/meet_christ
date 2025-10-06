@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meet_christ/pages/profile/setup_profile_page.dart';
-import 'package:meet_christ/view_models/auth/cubit/auth_cubit.dart';
+import 'package:meet_christ/view_models/signup/bloc/sign_up_bloc.dart';
 import 'package:provider/provider.dart';
 
 class SignupPasswordPage extends StatefulWidget {
@@ -14,8 +14,8 @@ class _SignupPasswordPageState extends State<SignupPasswordPage> {
   final TextEditingController _passwordController = TextEditingController();
   @override
   Widget build(BuildContext context) {
-    final authCubit = context.read<AuthCubit>();
-    _passwordController.text = authCubit.state.password;
+        _passwordController.text =
+        context.watch<SignupBloc>().state.password ?? '';
     return Scaffold(
       appBar: AppBar(title: Text("Create account")),
       body: Padding(
@@ -64,8 +64,6 @@ class _SignupPasswordPageState extends State<SignupPasswordPage> {
                       context,
                       MaterialPageRoute(
                         builder: (context) {
-                          authCubit.passwordChanged(_passwordController.text);
-                          print(authCubit.state.email);
                           return SetupProfileNamePage();
                         },
                       ),

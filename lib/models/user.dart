@@ -1,4 +1,4 @@
-class User {
+class UserModel {
   final String id;
   final String firstname;
   final String lastname;
@@ -8,7 +8,7 @@ class User {
   final bool isAnonym;
   final DateTime? birthday;
 
-  User({
+  UserModel({
     required this.id,
     required this.firstname,
     required this.email,
@@ -19,7 +19,7 @@ class User {
     this.birthday,
   });
 
-  set(String id) => User(
+  set(String id) => UserModel(
     firstname: firstname,
     email: email,
     lastname: lastname,
@@ -29,8 +29,8 @@ class User {
     birthday: birthday,
   );
 
-  factory User.fromMap(Map<String, dynamic> map, String documentId) {
-    return User(
+  factory UserModel.fromMap(Map<String, dynamic> map, String documentId) {
+    return UserModel(
       id: documentId,
       firstname: map['firstname'] ?? '',
       email: map['email'] ?? '',
@@ -57,6 +57,15 @@ class User {
   @override
   String toString() {
     return 'User{id: $id, firstname: $firstname, email: $email, profilePictureUrl: $profilePictureUrl, lastname: $lastname, status: $status, status: $status }';
+  }
+
+  static UserModel empty() {
+    return UserModel(
+      id: '',
+      firstname: '',
+      email: '',
+      lastname: '',
+    );
   }
 }
 

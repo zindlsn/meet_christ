@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:meet_christ/pages/auth_page.dart';
+import 'package:meet_christ/pages/auth/auth.dart';
 import 'package:meet_christ/pages/signup/signup_passwort_page.dart';
-import 'package:meet_christ/view_models/auth/cubit/auth_cubit.dart';
+import 'package:meet_christ/view_models/signup/bloc/sign_up_bloc.dart';
 import 'package:provider/provider.dart';
 
 class SignupEmailPage extends StatefulWidget {
@@ -15,8 +15,8 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
   final TextEditingController _emailController = TextEditingController();
   @override
   Widget build(BuildContext context) {
-    final authCubit = context.read<AuthCubit>();
-    _emailController.text = authCubit.state.email;
+    _emailController.text =
+        context.watch<SignupBloc>().state.email;
     return Scaffold(
       appBar: AppBar(title: Text("Create account")),
       body: Padding(
@@ -57,11 +57,7 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
               child: Center(
                 child: ElevatedButton(
                   onPressed: () async {
-                    authCubit.emailChanged(_emailController.text);
-                    bool isAvailable = await authCubit.isEmailAvailable(
-                      _emailController.text,
-                    );
-                    if (isAvailable) {
+                    if (true) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -80,9 +76,15 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                               TextButton(
                                 onPressed: () {
                                   // Handle login action here, e.g. navigate to login page
-                                  Navigator.of(
+
+                                  Navigator.push(
                                     context,
-                                  ).pop(); // Close the dialog
+                                    MaterialPageRoute(
+                                      builder: (context) {
+                                        return JesusLoginScreen();
+                                      },
+                                    ),
+                                  );
                                 },
                                 child: Text("Want to log in?"),
                               ),
