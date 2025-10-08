@@ -16,8 +16,42 @@ class EventsPage extends StatefulWidget {
   State<EventsPage> createState() => _EventsPageState();
 }
 
-class _EventsPageState extends State<EventsPage> {
+class _EventsPageState extends State<EventsPage>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _cityController = TextEditingController();
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    if (!mounted) return;
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener((){
+      print("Tab Index: ${_tabController.index}");
+
+    });
+    _tabController.animation?.addStatusListener((status) {
+      setState(() {
+        final value = _tabController.index;
+        if (value == 0) {
+          Provider.of<EventsViewModel>(context, listen: false).setFilter(
+            EventsFilter()
+              ..startDate = DateTime.now()
+              ..endDate = DateTime.now().add(Duration(days: 30)),
+          );
+        } else if (value == 1) {
+          Provider.of<EventsViewModel>(
+            context,
+            listen: false,
+          ).setFilter(EventsFilter()..startDate = DateTime.now());
+        } else if (value == 2) {
+          Provider.of<EventsViewModel>(context, listen: false).setFilter(
+            EventsFilter()..startDate = DateTime.now().add(Duration(days: 1)),
+          );
+        }
+      });
+    });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +60,26 @@ class _EventsPageState extends State<EventsPage> {
       child: Scaffold(
         appBar: AppBar(
           bottom: TabBar(
+            controller: _tabController,
+            onTap: (value) => setState(() {
+              if (value == 0) {
+                Provider.of<EventsViewModel>(context, listen: false).setFilter(
+                  EventsFilter()
+                    ..startDate = DateTime.now()
+                    ..endDate = DateTime.now().add(Duration(days: 30)),
+                );
+              } else if (value == 1) {
+                Provider.of<EventsViewModel>(
+                  context,
+                  listen: false,
+                ).setFilter(EventsFilter()..startDate = DateTime.now());
+              } else if (value == 2) {
+                Provider.of<EventsViewModel>(context, listen: false).setFilter(
+                  EventsFilter()
+                    ..startDate = DateTime.now().add(Duration(days: 1)),
+                );
+              }
+            }),
             isScrollable: true,
             tabs: [
               Tab(text: "Upcoming"),
@@ -102,7 +156,7 @@ class _EventsListState extends State<EventsList> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  EventDetailpage(event: event),
+                                  EventDetailPage(event: event),
                             ),
                           );
 
@@ -142,6 +196,10 @@ class _EventsFeedState extends State<EventsFeed> {
   bool gottesdienstSelected = false;
   int? gottesdienstId;
   final controller = GroupButtonController();
+  final TabController tabController = TabController(
+    length: 3,
+    vsync: ScrollableState(),
+  );
 
   @override
   void initState() {
@@ -196,7 +254,25 @@ class _EventsFeedState extends State<EventsFeed> {
                 length: 3,
                 child: TabBar(
                   isScrollable: true,
-
+                  controller: tabController,
+                  onTap: (value) => setState(() {
+                    if (value == 0) {
+                      model.setFilter(
+                        EventsFilter()
+                          ..startDate = DateTime.now()
+                          ..endDate = DateTime.now().add(Duration(days: 30)),
+                      );
+                    } else if (value == 1) {
+                      model.setFilter(
+                        EventsFilter()..startDate = DateTime.now(),
+                      );
+                    } else if (value == 2) {
+                      model.setFilter(
+                        EventsFilter()
+                          ..startDate = DateTime.now().add(Duration(days: 1)),
+                      );
+                    }
+                  }),
                   tabs: [
                     Tab(text: "Today"),
                     Tab(text: "This Week"),

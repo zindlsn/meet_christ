@@ -74,7 +74,6 @@ class EventUser {
   final String eventId;
   final String role;
   final String status; // Consider making this an enum for clarity
-  final bool canComment;
   String? photoUrl;
   final List<String> eventPermissions;
   final List<String> commentPermissions;
@@ -92,7 +91,6 @@ class EventUser {
     required this.eventId,
     required this.role,
     required this.status,
-    required this.canComment,
     required this.eventPermissions,
     required this.attendingStatus,
     this.commentPermissions = const [],
@@ -105,7 +103,6 @@ class EventUser {
     eventId: eventId,
     role: Roles.organizer,
     status: '',
-    canComment: true,
     eventPermissions: EventPermissions.all,
     commentPermissions: CommentPermissions.all,
     attendingStatus: AttendingStatus.attending,
@@ -117,7 +114,6 @@ class EventUser {
     eventId: eventId,
     role: Roles.attendee,
     status: '',
-    canComment: true,
     eventPermissions: [],
     commentPermissions: [CommentPermissions.canAdd],
     attendingStatus: AttendingStatus.attending,
@@ -130,7 +126,6 @@ class EventUser {
       eventId: data['eventId'],
       role: data['role'],
       status: data['status'],
-      canComment: data['canComment'],
       eventPermissions: List<String>.from(data['eventPermissions'] ?? []),
       commentPermissions: List<String>.from(data['commentPermissions'] ?? []),
       photoUrl: data['photoUrl'],
@@ -145,7 +140,6 @@ class EventUser {
       'eventId': eventId,
       'role': role,
       'status': status,
-      'canComment': canComment,
       'eventPermissions': eventPermissions,
       'commentPermissions': commentPermissions,
       'photoUrl': photoUrl,
@@ -221,7 +215,7 @@ class EventUserDto {
       eventId: user.eventId,
       role: user.role,
       status: user.status,
-      canComment: user.canComment,
+      canComment: user.commentPermissions.contains(CommentPermissions.canAdd),
       eventPermissions: user.eventPermissions,
       commentPermissions: user.commentPermissions,
       photoUrl: user.photoUrl,
@@ -238,7 +232,6 @@ class EventUserDto {
       eventId: eventId,
       role: role,
       status: status,
-      canComment: canComment,
       eventPermissions: eventPermissions,
       commentPermissions: commentPermissions,
       photoUrl: photoUrl,

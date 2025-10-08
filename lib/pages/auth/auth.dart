@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meet_christ/pages/home.dart';
 import 'package:meet_christ/pages/signup/signup_email_page.dart';
 import 'package:meet_christ/repositories/auth_repository.dart';
-import 'package:meet_christ/view_models/auth/bloc/auth_bloc.dart';
 import 'package:meet_christ/view_models/login/bloc/login_bloc.dart';
 import 'package:meet_christ/view_models/signup/bloc/sign_up_bloc.dart';
 
@@ -133,7 +132,7 @@ class JesusLoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<LoginBloc>().add(
-        LoginInit(email: "szindl@posteo.de", password: "Jesus1000."),
+        LoginInit(email: "stefan.zindl@outlook.de", password: "Jesus1000."),
       );
     });
     return Scaffold(
@@ -143,7 +142,7 @@ class JesusLoginScreen extends StatelessWidget {
           BlocListener<LoginBloc, LoginState>(
             listener: (context, state) {
               if (state is LoginSuccess) {
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => HomePage()),
                 );

@@ -12,15 +12,15 @@ import 'package:meet_christ/view_models/event_detail_view_model.dart';
 import 'package:meet_christ/widgets/event_card.dart';
 import 'package:provider/provider.dart';
 
-class EventDetailpage extends StatefulWidget {
+class EventDetailPage extends StatefulWidget {
   final Event event;
-  const EventDetailpage({super.key, required this.event});
+  const EventDetailPage({super.key, required this.event});
 
   @override
-  State<EventDetailpage> createState() => _EventDetailpageState();
+  State<EventDetailPage> createState() => _EventDetailPageState();
 }
 
-class _EventDetailpageState extends State<EventDetailpage> {
+class _EventDetailPageState extends State<EventDetailPage> {
   @override
   void initState() {
     super.initState();
@@ -427,7 +427,9 @@ class _EventCommentSectionState extends State<EventCommentSection> {
                           decoration: InputDecoration(
                             suffixIcon: GestureDetector(
                               onTap: () {
+
                                 setState(() {
+                                  _textController.clear();
                                   model.setComment(_textController.text);
                                   model.saveComment();
                                   Provider.of<EventCommentsViewModel>(
@@ -448,34 +450,33 @@ class _EventCommentSectionState extends State<EventCommentSection> {
                             ),
                           ),
                         )
-                      : Container(
-                          child: TextFormField(
-                            controller: _textController,
-                            decoration: InputDecoration(
-                              suffixIcon: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    model.setComment(_textController.text);
-                                    model.saveComment();
-                                    Provider.of<EventCommentsViewModel>(
-                                      context,
-                                      listen: false,
-                                    ).loadComments();
-                                  });
-                                },
-                                child: Icon(Icons.send),
-                              ),
-                              hintText: "Add a comment...",
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8.0),
-                                borderSide: BorderSide(
-                                  color: Colors.grey,
-                                  width: 1.0,
-                                ),
-                              ),
+                      : TextFormField(
+                        controller: _textController,
+                        decoration: InputDecoration(
+                          suffixIcon: GestureDetector(
+                            onTap: () {
+                              model.setComment(_textController.text);
+                              model.saveComment();
+                              Provider.of<EventCommentsViewModel>(
+                                context,
+                                listen: false,
+                              ).loadComments();
+                              setState(() {
+                                _textController.clear();
+                              });
+                            },
+                            child: Icon(Icons.send),
+                          ),
+                          hintText: "Add a comment...!",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide(
+                              color: Colors.grey,
+                              width: 1.0,
                             ),
                           ),
                         ),
+                      ),
                 ],
               ),
             ),

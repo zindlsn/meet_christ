@@ -5,6 +5,7 @@ import 'package:meet_christ/models/group.dart';
 import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/services/user_service.dart';
 import 'package:meet_christ/view_models/event_comments_view_model.dart';
+import 'package:collection/collection.dart';
 
 class EventDto {
   final String title;
@@ -197,14 +198,13 @@ class Event {
     if (attendees != null) this.attendees = attendees;
     if (organizers != null) this.organizers = organizers;
     me =
-        attendees!.firstWhere(
+        attendees?.firstWhereOrNull(
           (attendee) =>
               attendee.userId == GetIt.I.get<UserService>().user.id,
         ) ??
-        organizers?.firstWhere(
+        organizers?.firstWhereOrNull(
           (organizer) =>
-              organizer.userId ==
-              GetIt.I.get<UserService>().user.id,
+              organizer.userId == GetIt.I.get<UserService>().user.id,
         );
   }
 

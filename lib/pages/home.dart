@@ -6,6 +6,7 @@ import 'package:meet_christ/pages/chat_list_page.dart';
 import 'package:meet_christ/pages/communities/communities_page.dart';
 import 'package:meet_christ/pages/event_detail_page.dart';
 import 'package:meet_christ/pages/events_feed.dart';
+import 'package:meet_christ/pages/home/home_page.dart';
 import 'package:meet_christ/pages/my_groups_page.dart';
 import 'package:meet_christ/pages/profile_page.dart';
 import 'package:meet_christ/services/user_service.dart';
@@ -115,7 +116,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _getBody() {
     if (_selectedIndex == 0) {
-      return HomeTabPage();
+      return MeetChristHomeView();
     } else if (_selectedIndex == 1) {
       return ChatListPage();
     } else if (_selectedIndex == 2) {
@@ -817,7 +818,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) =>
-                                                EventDetailpage(
+                                                EventDetailPage(
                                                   event: model
                                                       .attendingEvents[index],
                                                 ),

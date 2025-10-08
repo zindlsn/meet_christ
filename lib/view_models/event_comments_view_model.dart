@@ -36,6 +36,7 @@ class EventCommentsViewModel extends ChangeNotifier {
         eventId: event.id,
         senderId: FirebaseAuth.instance.currentUser!.uid,
         content: comment,
+        creator: event.me!,
       ),
     );
   }
@@ -76,12 +77,14 @@ class EventCommentDto {
   bool isDeleted = false;
   List<String> seenBy = [];
   final String eventId;
+  final EventUser creator;
 
   EventCommentDto({
     required this.id,
     required this.senderId,
     required this.content,
     required this.eventId,
+    required this.creator,
   }) {
     creationDate = DateTime.now();
   }
@@ -95,6 +98,7 @@ class EventCommentDto {
       'updatedDate': updatedDate,
       'isDeleted': isDeleted,
       'seenBy': seenBy,
+      'creator': creator.toMap(),
     };
   }
 
@@ -104,6 +108,7 @@ class EventCommentDto {
       senderId: json['senderId'],
       content: json['content'],
       eventId: json['eventId'],
+      creator: EventUser.fromMap(json['creator']),
     );
   }
 }

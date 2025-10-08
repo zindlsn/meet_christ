@@ -48,7 +48,7 @@ class EventsViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadEvents(EventsFilter filter) async {
+  Future<void> loadEvents(EventsFilter filters) async {
     events = [];
     _isLoading = true;
     events = await eventService.getEventsWithoutGroup(filter);
