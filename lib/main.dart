@@ -1,4 +1,3 @@
-import 'package:bloc/bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
@@ -13,7 +12,8 @@ import 'package:meet_christ/services/event_service.dart';
 import 'package:meet_christ/services/group_service.dart';
 import 'package:meet_christ/services/user_service.dart';
 import 'package:meet_christ/view_models/auth/bloc/auth_bloc.dart';
-import 'package:meet_christ/view_models/chat_list_view_model.dart';
+import 'package:meet_christ/view_models/chatlist/bloc/chatlist_bloc.dart';
+import 'package:meet_christ/view_models/chatpage/bloc/chat_page_bloc.dart';
 import 'package:meet_christ/view_models/community_view_model.dart';
 import 'package:meet_christ/view_models/event_comments_view_model.dart';
 import 'package:meet_christ/view_models/event_detail_view_model.dart';
@@ -24,13 +24,13 @@ import 'package:meet_christ/view_models/new_community_view_model.dart';
 import 'package:meet_christ/view_models/new_event_view_model.dart';
 import 'package:meet_christ/view_models/profile_view_model.dart';
 import 'package:meet_christ/view_models/signup/bloc/sign_up_bloc.dart';
+import 'package:meet_christ/view_models/userlist/bloc/user_list_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 UserModel? user;
 void main() async {
-  final i = GetIt.I;
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.android);
   var factory = BackendAuthFactory(type: BackendType.firestore);
@@ -65,6 +65,8 @@ void main() async {
     FirestoreCommunityRepository(),
   );
 
+  GetIt.I.registerSingleton<ChatListRepository>(ChatListRepository());
+
   GetIt.I.registerSingleton<CommunityService>(
     CommunityService(GetIt.I.get<ICommunityRepository>()),
   );
@@ -94,6 +96,8 @@ void main() async {
   GetIt.I.registerFactory<AuthBloc>(
     () => AuthBloc(FirebaseAuth.instance, GetIt.I.get<UserService>()),
   );
+  GetIt.I.registerFactory<UserListBloc>(() => UserListBloc());
+  GetIt.I.registerFactory<ChatlistBloc>(() => ChatlistBloc());
   GetIt.I.registerFactory<LoginBloc>(
     () => LoginBloc(
       authBloc: GetIt.I.get<AuthBloc>(),
@@ -130,8 +134,6 @@ void main() async {
       userService: GetIt.I.get<UserService>(),
     ),
   );
-  GetIt.I.registerFactory<ChatListViewModel>(() => ChatListViewModel());
-
   GetIt.I.registerFactory<EventsViewModel>(
     () => EventsViewModel(
       userService: GetIt.I.get<UserService>(),
@@ -139,6 +141,8 @@ void main() async {
       communityService: GetIt.I<CommunityService>(),
     ),
   );
+
+  GetIt.I.registerFactory<ChatPageBloc>(() => ChatPageBloc());
 
   /*  var user = await GetIt.I.get<UserService>().login(
       UserCredentials(email: "szindl@posteo.de", password: "Jesus1000."),
@@ -155,6 +159,9 @@ void main() async {
         BlocProvider(create: (context) => GetIt.I.get<SignupBloc>()),
         BlocProvider(create: (context) => GetIt.I.get<AuthBloc>()),
         BlocProvider(create: (context) => GetIt.I.get<LoginBloc>()),
+        BlocProvider(create: (context) => GetIt.I.get<ChatlistBloc>()),
+        BlocProvider(create: (context) => GetIt.I.get<UserListBloc>()),
+        BlocProvider(create: (context) => GetIt.I.get<ChatPageBloc>()),
       ],
       child: MultiProvider(
         providers: [
@@ -176,9 +183,6 @@ void main() async {
           ),
           ChangeNotifierProvider(
             create: (context) => GetIt.I<EventCommentsViewModel>(),
-          ),
-          ChangeNotifierProvider(
-            create: (context) => GetIt.I<ChatListViewModel>(),
           ),
           ChangeNotifierProvider(
             create: (context) => GetIt.I<ProfilePageViewModel>(),

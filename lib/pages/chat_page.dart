@@ -1,108 +1,138 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:meet_christ/models/user.dart';
+import 'package:meet_christ/pages/chat_list_page.dart';
+import 'package:meet_christ/view_models/chatpage/bloc/chat_page_bloc.dart';
 
-class ChatPage extends StatefulWidget {
-  final String chatName;
+class ChatPage extends StatelessWidget {
+  final UserModel partner;
+  final bool isNewChat;
+  final String? chatId;
 
-  const ChatPage({super.key, required this.chatName});
+  const ChatPage({
+    super.key,
+    required this.partner,
+    this.isNewChat = false,
+    this.chatId,
+  });
 
   @override
-  State<ChatPage> createState() => _ChatPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) =>
+          ChatPageBloc()..add(StartChat(partner, chatId, isNewChat: isNewChat)),
+      child: const ChatView(),
+    );
+  }
 }
 
-class _ChatPageState extends State<ChatPage> {
-  final TextEditingController _messageController = TextEditingController();
-  final List<ChatMessage> _messages = [];
+class ChatView extends StatefulWidget {
+  const ChatView({super.key});
 
   @override
-  void initState() {
-    super.initState();
-    _messages.add(ChatMessage(
-      message: 'You started a chat with ${widget.chatName}',
-      isMe: false,
-      isSystem: true,
-    ));
-  }
+  State<ChatView> createState() => _ChatViewState();
+}
 
-  void _sendMessage() {
+class _ChatViewState extends State<ChatView> {
+  final TextEditingController _messageController = TextEditingController();
+
+  void _send(BuildContext context) {
     if (_messageController.text.trim().isEmpty) return;
-
-    setState(() {
-      _messages.add(ChatMessage(
-        message: _messageController.text,
-        isMe: true,
-      ));
-      _messageController.clear();
-    });
-
-    // Simulate a reply after 1 second
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() {
-        _messages.add(ChatMessage(
-          message: 'This is ${widget.chatName} replying to you',
-          isMe: false,
-        ));
-      });
-    });
+    context.read<ChatPageBloc>().add(SendMessage(_messageController.text));
+    _messageController.clear();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.chatName),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(8.0),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                return _messages[index];
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: const InputDecoration(
-                      hintText: 'Type your message...',
-                      border: OutlineInputBorder(),
+    return BlocBuilder<ChatPageBloc, ChatPageState>(
+      builder: (context, state) {
+        if (state is ChatPageInitial) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (state is ChatLoading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (state is ChatLoadedFailed) {
+          return const Scaffold(
+            body: Center(child: Text('Failed to load chat')),
+          );
+        } else if (state is ChatLoaded) {
+          final chat = (state as ChatLoaded).chat;
+          return Scaffold(
+            appBar: AppBar(title: Text(chat.title)),
+            body: SafeArea(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(8),
+                      itemCount: chat.messages.length,
+                      itemBuilder: (context, index) {
+                        final msg = chat.messages[index];
+                        return Align(
+                          alignment: msg.isMe
+                              ? Alignment.centerRight
+                              : Alignment.centerLeft,
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: msg.isMe
+                                  ? Colors.blue[100]
+                                  : Colors.grey[200],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(msg.text),
+                          ),
+                        );
+                      },
                     ),
-                    onSubmitted: (_) => _sendMessage(),
                   ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: _sendMessage,
-                  color: Colors.blue,
-                ),
-              ],
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _messageController,
+                            decoration: const InputDecoration(
+                              hintText: 'Type your message...',
+                              border: OutlineInputBorder(),
+                            ),
+                            onSubmitted: (_) => _send(context),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.send),
+                          onPressed: () => _send(context),
+                          color: Colors.blue,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+          );
+        } else {
+          return Container();
+        }
+      },
     );
-  }
-
-  @override
-  void dispose() {
-    _messageController.dispose();
-    super.dispose();
   }
 }
 
-class ChatMessage extends StatelessWidget {
+class ChatMessageWidget extends StatelessWidget {
   final String message;
   final bool isMe;
   final bool isSystem;
 
-  const ChatMessage({
+  const ChatMessageWidget({
     super.key,
     required this.message,
     this.isMe = false,
@@ -140,6 +170,33 @@ class ChatMessage extends StatelessWidget {
         ),
         child: Text(message),
       ),
+    );
+  }
+}
+
+class ChatMessageModel {
+  final String text;
+  final bool isMe;
+
+  ChatMessageModel({required this.text, required this.isMe});
+
+  static ChatMessageModel fromEntity(ChatMessageEntity msg, bool isMe) {
+    return ChatMessageModel(text: msg.text, isMe: isMe);
+  }
+}
+
+class ChatModel {
+  final ChatUserModel me;
+  final ChatUserModel other;
+  final String title;
+  final List<ChatMessageModel> messages = [];
+  ChatModel({required this.me, required this.other, required this.title});
+
+  ChatModel copyWith({ChatUserModel? me, ChatUserModel? other, String? title}) {
+    return ChatModel(
+      me: me ?? this.me,
+      other: other ?? this.other,
+      title: title ?? this.title,
     );
   }
 }

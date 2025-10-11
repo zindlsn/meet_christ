@@ -1,12 +1,15 @@
 import 'dart:math';
 
+import 'package:get_it/get_it.dart';
 import 'package:meet_christ/models/user.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:meet_christ/pages/chat_list_page.dart';
+import 'package:meet_christ/pages/chat_page.dart';
 import 'package:meet_christ/repositories/events_repository.dart';
+import 'package:uuid/uuid.dart';
 
 class UserService {
-
   UserModel user = UserModel.empty();
 
   final CollectionReference _usersCollection = FirebaseFirestore.instance
@@ -38,6 +41,28 @@ class UserService {
       throw e; // rethrow or handle accordingly
     }
   }
+
+  /// Fetch all users from Firestore without my id
+  Future<List<UserModel>> fetchUsers() async {
+    try {
+      QuerySnapshot snapshot = await _usersCollection
+          .where('isAnonym', isEqualTo: false)
+          .where(FieldPath.documentId, isNotEqualTo: user.id)
+          .get();
+      return snapshot.docs
+          .map(
+            (doc) =>
+                UserModel.fromMap(doc.data() as Map<String, dynamic>, doc.id),
+          )
+          .where((user) => user.id != this.user.id)
+          .toList();
+    } catch (e) {
+      print('Error fetching users: $e');
+      return [];
+    }
+  }
+
+  Future fetchNewChatUsers() async {}
 }
 
 class FirestoreUserRepository extends DatabaseService2<String, UserModel> {
@@ -98,6 +123,109 @@ class FirestoreUserRepository extends DatabaseService2<String, UserModel> {
     } catch (e) {
       return false;
     }
+  }
+}
+
+class ChatListRepository {
+  Future<bool> createChat(SingleChatEntity chat) async {
+    var col = FirebaseFirestore.instance.collection('singlechats');
+    try {
+      final docRef = col.doc(chat.id);
+      await docRef.set(chat.toMap());
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<List<SingleChatEntity>> fetchChats(String myId) async {
+    final col = FirebaseFirestore.instance.collection('singlechats');
+
+    final chatsQuery = await col
+        .where('participantIds', arrayContains: myId)
+        .get();
+
+    final allDocs = chatsQuery.docs;
+
+    // Fetch all messages for each chat
+    final chats = await Future.wait(
+      allDocs.map((doc) async {
+        final data = doc.data();
+        final chatId = doc.id;
+
+        // 🔥 Fetch subcollection "messages"
+        final messagesSnap = await doc.reference
+            .collection('messages')
+            .orderBy('createdAt', descending: false)
+            .get();
+
+        final messages = messagesSnap.docs.map((msgDoc) {
+          return ChatMessageEntity.fromMap(msgDoc.data());
+        }).toList();
+
+        // 🧩 Combine messages into chat
+        final chatEntity = SingleChatEntity.fromMap({...data}, messages);
+
+        // chatEntity.copyWith(messages: messages);
+
+        return chatEntity;
+      }),
+    );
+
+    return chats;
+  }
+
+  Future startChatWithUser(
+    UserModel me,
+    UserModel chatPartner,
+    ChatMessageEntity message,
+  ) async {
+    var col = FirebaseFirestore.instance.collection('chats');
+    var chatQuery = await col
+        .where('meId', isEqualTo: chatPartner.id)
+        .where('otherId', isEqualTo: chatPartner.id)
+        .get();
+
+    if (chatQuery.docs.isNotEmpty) {
+      return chatQuery.docs.first.id;
+    } else {
+      var newChat = SingleChatEntity.fromMap({
+        'meId': me.id,
+        'otherId': chatPartner.id,
+        'messages': [message.toMap()],
+        'createdAt': DateTime.now().toIso8601String(),
+        'updatedAt': DateTime.now().toIso8601String(),
+      }, [message]);
+      var docRef = await col.add(newChat.toMap());
+      return docRef.id;
+    }
+  }
+
+  Future<SingleChatEntity> getChatById(String chatId) async {
+    var chats = await fetchChats(GetIt.I.get<UserService>().user.id);
+    var chat = chats.where((chat) => chat.id == chatId).first;
+
+    return chat;
+  }
+
+  Future<bool> sendMessage({
+    required String chatId,
+    required ChatMessageEntity message,
+  }) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('singlechats')
+          .doc(chatId)
+          .collection('messages')
+          .add({
+            'text': message.text,
+            'senderId': message.senderId,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+    } catch (e) {
+      return false;
+    }
+    return true;
   }
 }
 
