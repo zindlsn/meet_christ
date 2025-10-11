@@ -60,6 +60,7 @@ class _SignupPasswordPageState extends State<SignupPasswordPage> {
               child: Center(
                 child: ElevatedButton(
                   onPressed: () {
+                    context.read<SignupBloc>().add(SignupPasswordUpdated(_passwordController.text));
                     Navigator.push(
                       context,
                       MaterialPageRoute(

@@ -106,7 +106,6 @@ class AuthRepository implements IAuthRepository {
     UserCredentials userCredentials,
   ) async {
     final FirebaseAuth auth = FirebaseAuth.instance;
-    auth.authStateChanges();
     try {
       final UserCredential userCredential = await auth
           .createUserWithEmailAndPassword(

@@ -132,7 +132,7 @@ class JesusLoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<LoginBloc>().add(
-        LoginInit(email: "stefan.zindl@outlook.de", password: "Jesus1000."),
+        LoginInit(email: "szindl@posteo.de", password: "Jesus10001."),
       );
     });
     return Scaffold(
@@ -227,8 +227,8 @@ class JesusLoginScreen extends StatelessWidget {
                 TextButton(
                   onPressed: () {
                     context.read<AuthRepository>().sendPasswordResetEmail(
-                          email: emailController.text,
-                        );
+                      email: emailController.text,
+                    );
                   },
                   child: const Text(
                     "Forgot Password?",

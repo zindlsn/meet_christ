@@ -62,6 +62,7 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                         .authRepository
                         .emailIsAvailable(_emailController.text);
                     if (isEmailAvailable) {
+                      context.read<SignupBloc>().add(SignupEmailUpdated(_emailController.text));
                       Navigator.push(
                         context,
                         MaterialPageRoute(

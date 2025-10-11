@@ -36,7 +36,7 @@ class ChatlistBloc extends Bloc<ChatlistEvent, ChatlistState> {
             );
             if (otherUserModel != null) {
               other = ChatUserModel(
-                user: otherUserModel!,
+                user: otherUserModel,
                 isMuted: participant.isMuted,
                 isTyping: false,
                 lastSeen: participant.lastSeen,
@@ -58,7 +58,7 @@ class ChatlistBloc extends Bloc<ChatlistEvent, ChatlistState> {
                 .map(
                   (message) => ChatMessageModel.fromEntity(
                     message,
-                    message.id == GetIt.I.get<UserService>().user.id,
+                    message.senderId == GetIt.I.get<UserService>().user.id,
                   ),
                 )
                 .toList(),

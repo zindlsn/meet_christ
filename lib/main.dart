@@ -32,7 +32,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 UserModel? user;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.android);
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   var factory = BackendAuthFactory(type: BackendType.firestore);
   GetIt.I.registerSingleton<IAuthRepository>(factory.getRepository());
   GetIt.I.registerSingleton<AuthRepository>(AuthRepository());
