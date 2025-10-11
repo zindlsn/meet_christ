@@ -178,18 +178,18 @@ class AuthRepository implements IAuthRepository {
       var credentials = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
       await FirebaseAuth.instance.currentUser?.delete();
-      return false;
+      return true;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
         return false;
       }
       if (e.code == 'wrong-password') {
-        return true;
+        return false;
       }
     } on Exception catch (e) {
-      return true;
+      return false;
     }
-    return true;
+    return false;
   }
 
   Future<bool> sendPasswordResetEmail({required String email}) async {
