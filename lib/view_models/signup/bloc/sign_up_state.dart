@@ -79,3 +79,7 @@ class SignupDataUpdated extends SignupState {
     super.fieldErrors,
   });
 }
+
+class EmailLoading extends SignupState {}
+
+class EmailLoaded extends SignupState {}

@@ -1,11 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/pages/chat_page.dart';
 import 'package:meet_christ/services/user_service.dart';
 import 'package:meet_christ/view_models/chatlist/bloc/chatlist_bloc.dart';
 import 'package:meet_christ/view_models/userlist/bloc/user_list_bloc.dart';
+import 'package:uuid/uuid.dart';
 
 class ChatListPage extends StatefulWidget {
   const ChatListPage({super.key});
@@ -87,18 +89,22 @@ class _ChatListPageState extends State<ChatListPage> {
                                       title: Text("chat.name"),
                                       subtitle: Text("chat.lastMessage"),
                                       trailing: 2 > 0
-                                          ? CircleAvatar(
+                                          ?  state.chats[index]
+                                                    .newMessageCount > 0 ?CircleAvatar(
                                               radius: 12,
                                               backgroundColor: Colors.blue,
                                               child: Text(
-                                                2.toString(),
+                                                state
+                                                    .chats[index]
+                                                    .newMessageCount
+                                                    .toString(),
                                                 style: const TextStyle(
                                                   color: Colors.white,
                                                   fontSize: 12,
                                                 ),
                                               ),
                                             )
-                                          : null,
+                                          : null : null,
                                       onTap: () {
                                         Navigator.push(
                                           context,
@@ -187,6 +193,8 @@ class SingleChatModel {
 
   final String title;
 
+  late int newMessageCount = 0;
+
   SingleChatModel({
     required this.id,
     required this.creatorId,
@@ -220,7 +228,7 @@ class SingleChatModel {
           .map(
             (msg) => ChatMessageModel.fromEntity(
               msg,
-              msg.senderId == entity.participants[0].userId,
+              msg.senderId == GetIt.I.get<UserService>().user.id,
             ),
           )
           .toList(),
@@ -433,6 +441,7 @@ class ChatMessageEntity {
   final String text;
   final DateTime sentAt;
   final bool isSystem;
+  final DateTime createdAt;
 
   /// List of user IDs who have received the message
   final List<String> receivedBy;
@@ -445,22 +454,24 @@ class ChatMessageEntity {
     required this.senderId,
     required this.text,
     required this.sentAt,
+    required this.createdAt,
     this.receivedBy = const [],
     this.seenBy = const [],
     this.isSystem = false,
   });
 
-  ChatMessageEntity newChat(
+  static ChatMessageEntity newChat(
     UserModel model,
     String text, {
     bool isSystem = false,
   }) {
     return ChatMessageEntity(
-      id: model.id + DateTime.now().toIso8601String(),
+      id: Uuid().v4(),
       senderId: model.id,
       text: text,
       sentAt: DateTime.now(),
       isSystem: isSystem,
+      createdAt: DateTime.now(),
     );
   }
 
@@ -472,6 +483,7 @@ class ChatMessageEntity {
     List<String>? receivedBy,
     List<String>? seenBy,
     bool? isSystem,
+    DateTime? createdAt,
   }) {
     return ChatMessageEntity(
       id: id ?? this.id,
@@ -481,15 +493,17 @@ class ChatMessageEntity {
       receivedBy: receivedBy ?? this.receivedBy,
       seenBy: seenBy ?? this.seenBy,
       isSystem: isSystem ?? this.isSystem,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'createdAt': createdAt,
       'senderId': senderId,
       'text': text,
-      'sentAt': sentAt.toIso8601String(),
+      'sentAt': sentAt,
       'receivedBy': receivedBy,
       'seenBy': seenBy,
       'isSystem': isSystem,
@@ -501,10 +515,11 @@ class ChatMessageEntity {
       id: map['id'] ?? "0",
       senderId: map['senderId'],
       text: map['text'],
-      sentAt: (map['createdAt'] as Timestamp).toDate(),
+      sentAt: (map['sentAt'] as Timestamp).toDate(),
       receivedBy: List<String>.from(map['receivedBy'] ?? []),
       seenBy: List<String>.from(map['seenBy'] ?? []),
       isSystem: map['isSystem'] ?? false,
+      createdAt: (map['createdAt'] as Timestamp).toDate(),
     );
   }
 }

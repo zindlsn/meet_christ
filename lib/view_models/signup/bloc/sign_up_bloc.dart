@@ -125,7 +125,7 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
         firstname: state.firstname,
         lastname: state.lastname,
         birthday: state.birthday,
-        isAnonym: true,
+        isAnonym: false,
       );
       await userService.createUser(user);
       emit(
@@ -151,8 +151,10 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
   Future<bool> _onVerifyEmailRequested(
     VerifyEmailRequested event,
     Emitter<SignupState> emit,
-  ) {
-    return authRepository
+  ) async{
+    emit(EmailLoading());
+    await Future.delayed(Duration(seconds: 10));
+    var authenticated =  authRepository
         .emailIsAvailable(event.email)
         .then((authUser) {
           if (authUser == null) {
@@ -165,5 +167,7 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
           // Handle any errors that occur during the check
           return false; // Assume email is not available on error
         });
+    emit(EmailLoaded());
+    return authenticated;
   }
 }

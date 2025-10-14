@@ -1,0 +1,83 @@
+name: Firebase Hosting Deployments
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  # 🔹 1. Preview deploy for each Pull Request
+  build_and_preview:
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Setup Flutter
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      # Optional caching for faster builds
+      - name: Cache Flutter packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-pub-
+
+      # Build Flutter Web
+      - name: Build Flutter Web
+        run: |
+          flutter pub get
+          flutter build web --release
+
+      # Deploy preview to PR
+      - name: Deploy Preview to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MEET_CHRIST_APP }}
+          projectId: meet-christ-app
+          channelId: pr-${{ github.event.pull_request.number }}
+
+  # 🔹 2. Production deploy for every commit to main
+  build_and_deploy_production:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Setup Flutter
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      # Cache Flutter packages
+      - name: Cache Flutter packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-pub-
+
+      # Build Flutter Web
+      - name: Build Flutter Web
+        run: |
+          flutter pub get
+          flutter build web --release
+
+      # Deploy to Production Hosting
+      - name: Deploy to Firebase Hosting (Production)
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MEET_CHRIST_APP }}
+          projectId: meet-christ-app
+          channelId: live

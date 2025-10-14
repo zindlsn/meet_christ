@@ -28,7 +28,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (userData == null) {
         emit(Unauthenticated());
       } else {
-        _userService.user = userData;
+        _userService.setLoggedInUser(userData);
         emit(Authenticated(userData));
       }
     });

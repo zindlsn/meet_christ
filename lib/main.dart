@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:meet_christ/firebase_options.dart';
@@ -32,7 +35,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 UserModel? user;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  if (kIsWeb) {
+     await Firebase.initializeApp(options: DefaultFirebaseOptions.web);
+  }else if(Platform.isAndroid){
+     await Firebase.initializeApp(options: DefaultFirebaseOptions.android);
+  }
+
   var factory = BackendAuthFactory(type: BackendType.firestore);
   GetIt.I.registerSingleton<IAuthRepository>(factory.getRepository());
   GetIt.I.registerSingleton<AuthRepository>(AuthRepository());

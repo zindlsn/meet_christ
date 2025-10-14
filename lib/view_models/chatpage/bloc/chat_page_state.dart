@@ -14,4 +14,4 @@ final class ChatLoadedFailed extends ChatPageState {}
 
 final class ChatLoading extends ChatPageState {}
 
-final class ChatMessageSentSucces extends ChatPageState{}
+final class ChatMessageSentSucces extends ChatPageState {}

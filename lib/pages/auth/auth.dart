@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meet_christ/pages/home.dart';
@@ -131,9 +132,15 @@ class JesusLoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<LoginBloc>().add(
-        LoginInit(email: "szindl@posteo.de", password: "Jesus10001."),
-      );
+      if (kIsWeb || kIsWasm) {
+        context.read<LoginBloc>().add(
+          LoginInit(email: "szindl@posteo.de", password: "Jesus10001."),
+        );
+      } else {
+        context.read<LoginBloc>().add(
+          LoginInit(email: "stefan.zindl@outlook.de", password: "Jesus10001."),
+        );
+      }
     });
     return Scaffold(
       backgroundColor: const Color(0xFFF9EFF9),
@@ -189,7 +196,7 @@ class JesusLoginScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: Colors.deepPurple,
+                          color: Color(0xFFC4A466),
                         ),
                       ),
                       TextSpan(
@@ -197,7 +204,7 @@ class JesusLoginScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 30,
                           fontWeight: FontWeight.bold,
-                          color: Colors.orange,
+                          color: Colors.redAccent,
                         ),
                       ),
                     ],
@@ -233,7 +240,7 @@ class JesusLoginScreen extends StatelessWidget {
                   child: const Text(
                     "Forgot Password?",
                     style: TextStyle(
-                      color: Colors.deepPurple,
+                      color: Color(0xFFC4A466),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -261,7 +268,10 @@ class JesusLoginScreen extends StatelessWidget {
                       ),
                       child: const Text(
                         "Login",
-                        style: TextStyle(fontSize: 18),
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Color(0xFFC4A466),
+                        ),
                       ),
                     );
                   },
@@ -293,7 +303,7 @@ class JesusLoginScreen extends StatelessWidget {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
+                        backgroundColor: Color(0xFFC4A466),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),

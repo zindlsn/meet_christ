@@ -35,7 +35,6 @@ class _SetupProfileNamePageState extends State<SetupProfileNamePage> {
                     ),
                   ),
                   TextFormField(
-                    obscureText: true,
                     controller: _firstNameController,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
@@ -68,7 +67,6 @@ class _SetupProfileNamePageState extends State<SetupProfileNamePage> {
                     ),
                   ),
                   TextFormField(
-                    obscureText: true,
                     controller: _lastNameController,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(

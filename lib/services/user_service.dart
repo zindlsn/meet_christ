@@ -5,9 +5,7 @@ import 'package:meet_christ/models/user.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:meet_christ/pages/chat_list_page.dart';
-import 'package:meet_christ/pages/chat_page.dart';
 import 'package:meet_christ/repositories/events_repository.dart';
-import 'package:uuid/uuid.dart';
 
 class UserService {
   UserModel user = UserModel.empty();
@@ -21,8 +19,7 @@ class UserService {
       DocumentSnapshot doc = await _usersCollection.doc(id).get();
       if (doc.exists) {
         var data = doc.data() as Map<String, dynamic>;
-        user = UserModel.fromMap(data, doc.id);
-        return user;
+        return UserModel.fromMap(data, doc.id);
       } else {
         return null;
       }
@@ -30,6 +27,10 @@ class UserService {
       print('Error getting user: $e');
       return null;
     }
+  }
+
+  void setLoggedInUser(UserModel loggedInUser) {
+    user = loggedInUser;
   }
 
   /// Create a new user in Firestore
@@ -189,13 +190,16 @@ class ChatListRepository {
     if (chatQuery.docs.isNotEmpty) {
       return chatQuery.docs.first.id;
     } else {
-      var newChat = SingleChatEntity.fromMap({
-        'meId': me.id,
-        'otherId': chatPartner.id,
-        'messages': [message.toMap()],
-        'createdAt': DateTime.now().toIso8601String(),
-        'updatedAt': DateTime.now().toIso8601String(),
-      }, [message]);
+      var newChat = SingleChatEntity.fromMap(
+        {
+          'meId': me.id,
+          'otherId': chatPartner.id,
+          'messages': [message.toMap()],
+          'createdAt': DateTime.now().toIso8601String(),
+          'updatedAt': DateTime.now().toIso8601String(),
+        },
+        [message],
+      );
       var docRef = await col.add(newChat.toMap());
       return docRef.id;
     }
@@ -213,19 +217,52 @@ class ChatListRepository {
     required ChatMessageEntity message,
   }) async {
     try {
-      await FirebaseFirestore.instance
+      var col = FirebaseFirestore.instance
           .collection('singlechats')
           .doc(chatId)
-          .collection('messages')
-          .add({
-            'text': message.text,
-            'senderId': message.senderId,
-            'createdAt': FieldValue.serverTimestamp(),
-          });
+          .collection('messages');
+      final docRef = col.doc(message.id);
+      await docRef.set(message.toMap());
     } catch (e) {
       return false;
     }
     return true;
+  }
+
+  Future<void> markAllMessagesAsSeen(String chatId) async {
+    final userId = GetIt.I.get<UserService>().user.id;
+
+    try {
+      final chatRef = FirebaseFirestore.instance
+          .collection('singlechats')
+          .doc(chatId)
+          .collection('messages');
+
+      // 🔹 Get recent messages (avoid loading thousands)
+      final querySnapshot = await chatRef
+          .limit(100) // adjust as needed
+          .get();
+
+      final batch = FirebaseFirestore.instance.batch();
+
+      for (final doc in querySnapshot.docs) {
+        final data = doc.data();
+        final seenBy = List<String>.from(data['seenBy'] ?? []);
+
+        // Only update if userId not already there
+        if (!seenBy.contains(userId)) {
+          seenBy.add(userId);
+          batch.update(doc.reference, {
+            'seenBy': FieldValue.arrayUnion([userId]),
+          });
+        }
+      }
+
+      await batch.commit();
+      print('✅ All messages marked as seen by $userId');
+    } catch (e, st) {
+      print('🔥 Error marking messages as seen: $e\n$st');
+    }
   }
 }
 

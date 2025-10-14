@@ -168,7 +168,12 @@ class ChatMessageWidget extends StatelessWidget {
           color: isMe ? Colors.blue[100] : Colors.grey[300],
           borderRadius: BorderRadius.circular(12.0),
         ),
-        child: Text(message),
+        child: Column(
+          children: [
+            Text(message),
+            Text(isMe.toString())
+          ],
+        ),
       ),
     );
   }

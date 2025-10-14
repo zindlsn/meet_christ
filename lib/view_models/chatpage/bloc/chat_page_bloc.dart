@@ -77,6 +77,8 @@ class ChatPageBloc extends Bloc<ChatPageEvent, ChatPageState> {
         event.chatId!,
       );
 
+      GetIt.I.get<ChatListRepository>().markAllMessagesAsSeen(chat.id);
+
       var model = SingleChatModel.fromEntity(chat);
       emit(ChatLoaded(chat: model));
     }
@@ -94,15 +96,10 @@ class ChatPageBloc extends Bloc<ChatPageEvent, ChatPageState> {
 
     var saved = GetIt.I.get<UserService>().user;
 
-   var newState = currentState.chat.copyWith(messages: messages);
+    var newState = currentState.chat.copyWith(messages: messages);
     bool isSentSuccess = await GetIt.I.get<ChatListRepository>().sendMessage(
       chatId: currentState.chat.id,
-      message: ChatMessageEntity(
-        id: Uuid().v4(),
-        senderId: GetIt.I.get<UserService>().user.id,
-        text: event.text,
-        sentAt: DateTime.now(),
-      ),
+      message: ChatMessageEntity.newChat(saved, event.text, isSystem: false),
     );
 
     if (isSentSuccess) {

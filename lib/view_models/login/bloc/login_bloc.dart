@@ -35,6 +35,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
             email: "",
             firstname: getRandomBibleName(),
             lastname: getRandomBibleName(),
+            isAnonym: true
           );
           await userService.createUser(user);
           authBloc.add(UserLoggedIn(anonymUser));

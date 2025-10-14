@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meet_christ/pages/auth/auth.dart';
 import 'package:meet_christ/pages/signup/signup_passwort_page.dart';
 import 'package:meet_christ/view_models/signup/bloc/sign_up_bloc.dart';
@@ -15,8 +16,7 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
   final TextEditingController _emailController = TextEditingController();
   @override
   Widget build(BuildContext context) {
-    _emailController.text =
-        context.watch<SignupBloc>().state.email;
+    _emailController.text = context.watch<SignupBloc>().state.email;
     return Scaffold(
       appBar: AppBar(title: Text("Create account")),
       body: Padding(
@@ -62,7 +62,9 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                         .authRepository
                         .emailIsAvailable(_emailController.text);
                     if (isEmailAvailable) {
-                      context.read<SignupBloc>().add(SignupEmailUpdated(_emailController.text));
+                      context.read<SignupBloc>().add(
+                        SignupEmailUpdated(_emailController.text),
+                      );
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -80,8 +82,6 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                             actions: [
                               TextButton(
                                 onPressed: () {
-                                  // Handle login action here, e.g. navigate to login page
-
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -99,7 +99,13 @@ class _SignupEmailPageState extends State<SignupEmailPage> {
                       );
                     }
                   },
-                  child: Text("Next"),
+                  child: BlocBuilder<SignupBloc, SignupState>(
+                    builder: (context, state) {
+                      return state is EmailLoading
+                          ? Text("Loading")
+                          : Text("Next");
+                    },
+                  ),
                 ),
               ),
             ),
