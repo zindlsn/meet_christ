@@ -40,8 +40,8 @@ class EventService {
   Stream<List<Event>> watchGroupEvents(String groupId) =>
       _repository.watchGroupEvents(groupId);
 
-  Future<void> rsvpToEvent(String eventId, String userId, bool attending) =>
-      _repository.rsvpToEvent(eventId, userId, attending);
+  Future<void> rsvpToEvent(EventUser eventUser, bool attending) =>
+      _repository.rsvpToEvent(eventUser, attending);
 
   Future<List<Event>> getEventsWithoutGroup(EventsFilter filter) async {
     var events = await _repository.getEventsWithoutGroup(filter);
@@ -80,7 +80,7 @@ abstract class IEventRepository {
   Future<void> deleteEvent(String id);
   Future<String> uploadEventImage(String eventId, Uint8List image);
   Stream<List<Event>> watchGroupEvents(String groupId);
-  Future<void> rsvpToEvent(String eventId, String userId, bool attending);
+  Future<void> rsvpToEvent(EventUser eventUser, bool attending);
 
   Future<List<Event>> getEventsWithoutGroup(EventsFilter filter);
 }
@@ -227,26 +227,28 @@ class FirestoreEventRepository implements IEventRepository {
   }
 
   @override
-  Future<void> rsvpToEvent(
-    String eventId,
-    String userId,
-    bool attending,
-  ) async {
-    final docRef = _firestore.collection('events').doc(eventId);
+  Future<void> rsvpToEvent(EventUser eventUser, bool attending) async {
+    final docRef = _firestore.collection('events').doc(eventUser.eventId);
 
     await _firestore.runTransaction((transaction) async {
       final doc = await transaction.get(docRef);
       final attendeeIds = List<String>.from(doc['attendeeIds'] ?? []);
+      final attendees = List<EventUser>.from(EventUser.fromMapList(doc['attendees']) ?? []);
 
       if (attending) {
-        if (!attendeeIds.contains(userId)) {
-          attendeeIds.add(userId);
+        if (!attendeeIds.contains(eventUser.userId)) {
+          attendeeIds.add(eventUser.userId);
+          attendees.add(eventUser);
         }
       } else {
-        attendeeIds.remove(userId);
+        attendeeIds.remove(eventUser.userId);
+        attendees.remove(eventUser);
       }
 
       transaction.update(docRef, {'attendeeIds': attendeeIds});
+      transaction.update(docRef, {
+        'attendees': attendees.map((attendee) => attendee.toMap()),
+      });
     });
   }
 

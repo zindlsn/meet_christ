@@ -25,15 +25,14 @@ class _EventsPageState extends State<EventsPage>
   void initState() {
     if (!mounted) return;
     _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener((){
+    _tabController.addListener(() {
       print("Tab Index: ${_tabController.index}");
-
     });
     _tabController.animation?.addStatusListener((status) {
       setState(() {
         final value = _tabController.index;
         if (value == 0) {
-          Provider.of<EventsViewModel>(context, listen: false).setFilter(
+          Provider.of<EventsViewModel>(context, listen: false).loadEvents(
             EventsFilter()
               ..startDate = DateTime.now()
               ..endDate = DateTime.now().add(Duration(days: 30)),
@@ -42,9 +41,9 @@ class _EventsPageState extends State<EventsPage>
           Provider.of<EventsViewModel>(
             context,
             listen: false,
-          ).setFilter(EventsFilter()..startDate = DateTime.now());
+          ).loadEvents(EventsFilter()..startDate = DateTime.now());
         } else if (value == 2) {
-          Provider.of<EventsViewModel>(context, listen: false).setFilter(
+          Provider.of<EventsViewModel>(context, listen: false).loadEvents(
             EventsFilter()..startDate = DateTime.now().add(Duration(days: 1)),
           );
         }
@@ -63,7 +62,7 @@ class _EventsPageState extends State<EventsPage>
             controller: _tabController,
             onTap: (value) => setState(() {
               if (value == 0) {
-                Provider.of<EventsViewModel>(context, listen: false).setFilter(
+                Provider.of<EventsViewModel>(context, listen: false).loadEvents(
                   EventsFilter()
                     ..startDate = DateTime.now()
                     ..endDate = DateTime.now().add(Duration(days: 30)),
@@ -72,9 +71,9 @@ class _EventsPageState extends State<EventsPage>
                 Provider.of<EventsViewModel>(
                   context,
                   listen: false,
-                ).setFilter(EventsFilter()..startDate = DateTime.now());
+                ).loadEvents(EventsFilter()..startDate = DateTime.now());
               } else if (value == 2) {
-                Provider.of<EventsViewModel>(context, listen: false).setFilter(
+                Provider.of<EventsViewModel>(context, listen: false).loadEvents(
                   EventsFilter()
                     ..startDate = DateTime.now().add(Duration(days: 1)),
                 );
@@ -148,10 +147,6 @@ class _EventsListState extends State<EventsList> {
                       padding: const EdgeInsets.all(8.0),
                       child: GestureDetector(
                         onTap: () async {
-                          Provider.of<EventsViewModel>(
-                            context,
-                            listen: false,
-                          ).setFilter(widget.filter);
                           await Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -257,17 +252,17 @@ class _EventsFeedState extends State<EventsFeed> {
                   controller: tabController,
                   onTap: (value) => setState(() {
                     if (value == 0) {
-                      model.setFilter(
+                      model.loadEvents(
                         EventsFilter()
                           ..startDate = DateTime.now()
                           ..endDate = DateTime.now().add(Duration(days: 30)),
                       );
                     } else if (value == 1) {
-                      model.setFilter(
+                      model.loadEvents(
                         EventsFilter()..startDate = DateTime.now(),
                       );
                     } else if (value == 2) {
-                      model.setFilter(
+                      model.loadEvents(
                         EventsFilter()
                           ..startDate = DateTime.now().add(Duration(days: 1)),
                       );

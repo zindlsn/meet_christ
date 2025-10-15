@@ -133,6 +133,12 @@ class EventUser {
     )..joinedAt = DateTime.parse(data['joinedAt']);
   }
 
+    static List<EventUser> fromMapList(List<dynamic> dataList) {
+    return dataList
+        .map((data) => EventUser.fromMap(Map<String, dynamic>.from(data)))
+        .toList();
+  }
+
   /// Convert [EventUser] -> [Map]
   Map<String, dynamic> toMap() {
     return {
