@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
@@ -13,6 +14,7 @@ import 'package:meet_christ/repositories/file_repository.dart';
 import 'package:meet_christ/services/community_service.dart';
 import 'package:meet_christ/services/event_service.dart';
 import 'package:meet_christ/services/group_service.dart';
+import 'package:meet_christ/services/notification_service.dart';
 import 'package:meet_christ/services/user_service.dart';
 import 'package:meet_christ/view_models/auth/bloc/auth_bloc.dart';
 import 'package:meet_christ/view_models/chatlist/bloc/chatlist_bloc.dart';
@@ -32,6 +34,22 @@ import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+   final settings = await FirebaseMessaging.instance.requestPermission();
+  print('📩 Background message: ${message.messageId}');
+
+  final title = message.notification?.title ?? 'New message';
+  final body = message.notification?.body ?? '';
+  final chatId = message.data['chatId'] ?? 'unknown_chat';
+
+  await NotificationService().showNotification(
+    title: title,
+    body: body,
+    payload: 'chat_$chatId',
+  );
+}
 UserModel? user;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,7 +58,7 @@ void main() async {
   }else if(Platform.isAndroid){
      await Firebase.initializeApp(options: DefaultFirebaseOptions.android);
   }
-
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   var factory = BackendAuthFactory(type: BackendType.firestore);
   GetIt.I.registerSingleton<IAuthRepository>(factory.getRepository());
   GetIt.I.registerSingleton<AuthRepository>(AuthRepository());
