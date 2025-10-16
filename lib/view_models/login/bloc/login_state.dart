@@ -32,12 +32,14 @@ class LoginInitialized extends LoginState {
   final String password;
   final bool rememberMe;
   final bool isLoading;
+  final bool isLoggingIn;
 
   LoginInitialized({
     required this.email,
     required this.password,
     required this.rememberMe,
     this.isLoading = false,
+    this.isLoggingIn = false,
   });
 }
 

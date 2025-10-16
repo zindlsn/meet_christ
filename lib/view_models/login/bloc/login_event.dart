@@ -13,6 +13,18 @@ class LoginRequested extends LoginEvent {
 
 class LoginWithoutAccountRequested extends LoginEvent {}
 
+final class UpdateLoginFields extends LoginEvent {
+  final String email;
+  final String password;
+  final bool rememberMe;
+
+  UpdateLoginFields({
+    required this.email,
+    required this.password,
+    required this.rememberMe,
+  });
+}
+
 // New event for initialization
 class LoginInit extends LoginEvent {
   final String email;
