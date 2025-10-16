@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:meet_christ/models/user_credentails.dart';
@@ -112,7 +113,20 @@ class AuthRepository implements IAuthRepository {
             email: userCredentials.email.trim(),
             password: userCredentials.password.trim(),
           );
-      await userCredential.user?.sendEmailVerification();
+   /*   var actionCodeSettings = ActionCodeSettings(
+        url: 'https://meet-christ-app.firebaseapp.com/finishSignIn',
+        handleCodeInApp: true,
+        iOSBundleId: 'com.example.meet_christ',
+        androidPackageName: 'com.example.meet_christ',
+        androidInstallApp: false,
+        androidMinimumVersion: '21',
+      );
+
+      await FirebaseAuth.instance.sendSignInLinkToEmail(
+        email: userCredentials.email,
+        actionCodeSettings: actionCodeSettings,
+      );
+*/
       User? user = userCredential.user;
       if (user == null) {
         throw FirebaseAuthException(
@@ -241,6 +255,47 @@ class AuthRepository implements IAuthRepository {
     }
   }
 
+  Future<void> changeEmail(
+    String oldEmail,
+    String newEmail,
+    String password,
+  ) async {
+    final auth = FirebaseAuth.instance;
+    final firestore = FirebaseFirestore.instance;
+    final user = auth.currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'no-user',
+        message: 'No user is currently signed in.',
+      );
+    }
+
+    try {
+      final cred = EmailAuthProvider.credential(
+        email: oldEmail,
+        password: password,
+      );
+      await user.reauthenticateWithCredential(cred);
+
+      await user.verifyBeforeUpdateEmail(newEmail);
+      // await user.sendEmailVerification();
+      await user.reload();
+      await FirebaseAuth.instance.signOut();
+      /*
+    await firestore.collection('users').doc(user.uid).update({
+      'email': newEmail,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }); */
+
+      print("✅ Email successfully changed to $newEmail");
+    } on FirebaseAuthException catch (e) {
+      print("❌ Firebase error: ${e.code} - ${e.message}");
+      rethrow;
+    } catch (e) {
+      print("⚠️ Unknown error: $e");
+      rethrow;
+    }
+  }
 }
 
 class BackendAuthFactory {

@@ -1,132 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:meet_christ/pages/forgot_password_page.dart';
 import 'package:meet_christ/pages/home.dart';
 import 'package:meet_christ/pages/signup/signup_email_page.dart';
-import 'package:meet_christ/repositories/auth_repository.dart';
 import 'package:meet_christ/view_models/login/bloc/login_bloc.dart';
 import 'package:meet_christ/view_models/signup/bloc/sign_up_bloc.dart';
-
-/*
-class LoginScreen extends StatelessWidget {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-
-  LoginScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<LoginBloc>().add(
-        LoginInit(email: "szindl@posteo.de", password: ""),
-      );
-    });
-
-    return Scaffold(
-      body: MultiBlocListener(
-        listeners: [
-          BlocListener<LoginBloc, LoginState>(
-            listener: (context, state) {
-              if (state is LoginSuccess) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Welcome ${state.user.email}!")),
-                );
-              } else if (state is LoginFailure) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(state.message)));
-              } else if (state is LoginInitialized) {
-                emailController.text = state.email;
-                passwordController.text = state.password;
-              }
-            },
-          ),
-          BlocListener<SignupBloc, SignupState>(
-            listener: (context, state) {
-              if (state is SignupSuccess) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Account created!")),
-                );
-              } else if (state is SignupFailure) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(state.error)));
-              }
-            },
-          ),
-        ],
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                "Start your journey with Jesus",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.deepPurple,
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(labelText: "Email"),
-              ),
-              TextField(
-                controller: passwordController,
-                decoration: const InputDecoration(labelText: "Password"),
-                obscureText: true,
-              ),
-              const SizedBox(height: 20),
-              BlocBuilder<LoginBloc, LoginState>(
-                builder: (context, state) {
-                  if (state is LoginLoading) {
-                    return const CircularProgressIndicator();
-                  }
-                  return ElevatedButton(
-                    onPressed: () {
-                      context.read<LoginBloc>().add(
-                        LoginRequested(
-                          emailController.text,
-                          passwordController.text,
-                        ),
-                      );
-                    },
-                    child: const Text("Login"),
-                  );
-                },
-              ),
-              const SizedBox(height: 10),
-              BlocBuilder<SignupBloc, SignupState>(
-                builder: (context, state) {
-                  if (state is SignupLoading) {
-                    return const CircularProgressIndicator();
-                  }
-                  return TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SignupEmailPage(),
-                        ),
-                      );
-                    },
-                    child: const Text("Sign Up"),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-} */
 
 class JesusLoginScreen extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController verifyPasswordController =
+      TextEditingController();
   JesusLoginScreen({super.key});
 
   @override
@@ -233,8 +118,12 @@ class JesusLoginScreen extends StatelessWidget {
                 // Forgot Password
                 TextButton(
                   onPressed: () {
-                    context.read<AuthRepository>().sendPasswordResetEmail(
-                      email: emailController.text,
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ForgotPasswordPage(email: emailController.text),
+                      ),
                     );
                   },
                   child: const Text(

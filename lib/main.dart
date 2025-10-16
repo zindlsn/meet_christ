@@ -7,6 +7,7 @@ import 'package:get_it/get_it.dart';
 import 'package:meet_christ/firebase_options.dart';
 import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/pages/auth/auth.dart';
+import 'package:meet_christ/pages/profile_page.dart';
 import 'package:meet_christ/repositories/auth_repository.dart';
 import 'package:meet_christ/repositories/events_repository.dart';
 import 'package:meet_christ/repositories/file_repository.dart';
@@ -14,7 +15,9 @@ import 'package:meet_christ/services/community_service.dart';
 import 'package:meet_christ/services/event_service.dart';
 import 'package:meet_christ/services/group_service.dart';
 import 'package:meet_christ/services/user_service.dart';
+import 'package:meet_christ/themes/themes.dart';
 import 'package:meet_christ/view_models/auth/bloc/auth_bloc.dart';
+import 'package:meet_christ/view_models/changemail/bloc/change_mail_bloc.dart';
 import 'package:meet_christ/view_models/chatlist/bloc/chatlist_bloc.dart';
 import 'package:meet_christ/view_models/chatpage/bloc/chat_page_bloc.dart';
 import 'package:meet_christ/view_models/community_view_model.dart';
@@ -25,6 +28,7 @@ import 'package:meet_christ/view_models/login/bloc/login_bloc.dart';
 import 'package:meet_christ/view_models/new_community_group_view_model.dart';
 import 'package:meet_christ/view_models/new_community_view_model.dart';
 import 'package:meet_christ/view_models/new_event_view_model.dart';
+import 'package:meet_christ/view_models/profile/bloc/profile_bloc.dart';
 import 'package:meet_christ/view_models/profile_view_model.dart';
 import 'package:meet_christ/view_models/signup/bloc/sign_up_bloc.dart';
 import 'package:meet_christ/view_models/userlist/bloc/user_list_bloc.dart';
@@ -36,9 +40,9 @@ UserModel? user;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (kIsWeb) {
-     await Firebase.initializeApp(options: DefaultFirebaseOptions.web);
-  }else if(Platform.isAndroid){
-     await Firebase.initializeApp(options: DefaultFirebaseOptions.android);
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.web);
+  } else if (Platform.isAndroid) {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.android);
   }
 
   var factory = BackendAuthFactory(type: BackendType.firestore);
@@ -151,6 +155,8 @@ void main() async {
   );
 
   GetIt.I.registerFactory<ChatPageBloc>(() => ChatPageBloc());
+  GetIt.I.registerFactory<ProfilePageBloc>(() => ProfilePageBloc());
+  GetIt.I.registerFactory<ChangeMailBloc>(() => ChangeMailBloc());
 
   /*  var user = await GetIt.I.get<UserService>().login(
       UserCredentials(email: "szindl@posteo.de", password: "Jesus1000."),
@@ -170,6 +176,8 @@ void main() async {
         BlocProvider(create: (context) => GetIt.I.get<ChatlistBloc>()),
         BlocProvider(create: (context) => GetIt.I.get<UserListBloc>()),
         BlocProvider(create: (context) => GetIt.I.get<ChatPageBloc>()),
+        BlocProvider(create: (context) => GetIt.I.get<ProfilePageBloc>()),
+        BlocProvider(create: (context) => GetIt.I.get<ChangeMailBloc>()),
       ],
       child: MultiProvider(
         providers: [
@@ -213,9 +221,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Meet Christ',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
+      theme: buildGoldenLightTheme(),
       home: JesusLoginScreen(),
       builder: (context, child) => Stack(children: [child!]),
     );

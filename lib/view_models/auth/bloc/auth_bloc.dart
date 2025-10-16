@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:get_it/get_it.dart';
 import 'package:meet_christ/models/user.dart';
+import 'package:meet_christ/repositories/auth_repository.dart';
 import 'package:meet_christ/services/user_service.dart';
 import 'package:meta/meta.dart';
 
@@ -35,6 +37,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     on<UserLoggedOut>((event, emit) async {
       _userService.user = UserModel.empty();
+      emit(Unauthenticated());
+    });
+    on<ResetPasswordRequested>((event, emit) async {
+    await  GetIt.I.get<AuthRepository>().sendPasswordResetEmail(email: event.email);
       emit(Unauthenticated());
     });
   }
