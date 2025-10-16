@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class UserModel {
   final String id;
   final String firstname;
@@ -38,7 +40,7 @@ class UserModel {
       lastname: map['lastname'] ?? '',
       status: UserStatus.values[map['status'] ?? 0],
       isAnonym: map['isAnonym'] ?? false,
-      birthday: map['birthday'],
+      birthday: (map['birthday'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -50,7 +52,7 @@ class UserModel {
       'lastname': lastname,
       'status': status.index,
       'isAnonym': isAnonym,
-      'birthday': birthday
+      'birthday': birthday,
     };
   }
 
@@ -60,12 +62,7 @@ class UserModel {
   }
 
   static UserModel empty() {
-    return UserModel(
-      id: '',
-      firstname: '',
-      email: '',
-      lastname: '',
-    );
+    return UserModel(id: '', firstname: '', email: '', lastname: '');
   }
 }
 
@@ -133,7 +130,7 @@ class EventUser {
     )..joinedAt = DateTime.parse(data['joinedAt']);
   }
 
-    static List<EventUser> fromMapList(List<dynamic> dataList) {
+  static List<EventUser> fromMapList(List<dynamic> dataList) {
     return dataList
         .map((data) => EventUser.fromMap(Map<String, dynamic>.from(data)))
         .toList();

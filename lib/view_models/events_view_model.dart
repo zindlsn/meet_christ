@@ -43,6 +43,7 @@ class EventsViewModel extends ChangeNotifier {
   }
 
   List<Event> getEvents() {
+    
     return events;
   }
 

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meet_christ/pages/forgot_password_page.dart';
 import 'package:meet_christ/pages/home.dart';
 import 'package:meet_christ/pages/signup/signup_email_page.dart';
+import 'package:meet_christ/view_models/auth/bloc/auth_bloc.dart';
 import 'package:meet_christ/view_models/login/bloc/login_bloc.dart';
 import 'package:meet_christ/view_models/signup/bloc/sign_up_bloc.dart';
 
@@ -31,6 +32,16 @@ class JesusLoginScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFF9EFF9),
       body: MultiBlocListener(
         listeners: [
+          BlocListener<AuthBloc, AuthState>(
+            listener: (context, state) {
+              if (state is Unauthenticated) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => JesusLoginScreen()),
+                );
+              }
+            },
+          ),
           BlocListener<LoginBloc, LoginState>(
             listener: (context, state) {
               if (state is LoginSuccess) {

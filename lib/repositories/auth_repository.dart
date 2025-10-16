@@ -5,7 +5,7 @@ import 'package:meet_christ/models/user_credentails.dart';
 import 'package:uuid/uuid.dart';
 
 abstract class IAuthRepository {
-  Future<User> loginWithUserCredentials(UserCredentials userCredentials);
+  Future<User?> loginWithUserCredentials(UserCredentials userCredentials);
   Future<User?> signupWithUserCredentials(UserCredentials userCredentials);
   Future<void> checkActionCode(String actionCode);
   Future<User> signInAnonymously();
@@ -20,7 +20,9 @@ abstract class IAuthRepository {
 
 class AuthRepository implements IAuthRepository {
   @override
-  Future<User> loginWithUserCredentials(UserCredentials userCredentials) async {
+  Future<User?> loginWithUserCredentials(
+    UserCredentials userCredentials,
+  ) async {
     try {
       final FirebaseAuth auth = FirebaseAuth.instance;
 
@@ -31,29 +33,9 @@ class AuthRepository implements IAuthRepository {
           );
       final user = userCredential.user;
       await user?.reload();
-      if (user != null && user.emailVerified) {
-        print("Email verified");
-      } else {
-        print("Email not verified");
-      }
-      print(userCredential.toString());
-      if (userCredential.user?.emailVerified == false) {
-        throw FirebaseAuthException(
-          code: 'email-not-verified',
-          message: 'Email not verified',
-        );
-      }
-      if (userCredential.user != null) {
-        return userCredential.user!;
-      }
-      throw FirebaseAuthException(code: 'no-login', message: 'could not login');
+      return user;
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'email-not-verified') {
-        throw FirebaseAuthException(
-          code: 'email-not-verified',
-          message: 'verify your email before login',
-        );
-      } else if (e.code == 'user-not-found') {
+      if (e.code == 'user-not-found') {
         throw FirebaseAuthException(
           code: 'user-not-found',
           message: 'could not login',
@@ -113,20 +95,7 @@ class AuthRepository implements IAuthRepository {
             email: userCredentials.email.trim(),
             password: userCredentials.password.trim(),
           );
-   /*   var actionCodeSettings = ActionCodeSettings(
-        url: 'https://meet-christ-app.firebaseapp.com/finishSignIn',
-        handleCodeInApp: true,
-        iOSBundleId: 'com.example.meet_christ',
-        androidPackageName: 'com.example.meet_christ',
-        androidInstallApp: false,
-        androidMinimumVersion: '21',
-      );
-
-      await FirebaseAuth.instance.sendSignInLinkToEmail(
-        email: userCredentials.email,
-        actionCodeSettings: actionCodeSettings,
-      );
-*/
+      await auth.currentUser?.sendEmailVerification();
       User? user = userCredential.user;
       if (user == null) {
         throw FirebaseAuthException(
@@ -152,7 +121,7 @@ class AuthRepository implements IAuthRepository {
 
   @override
   Future<void> logout() async {
-    await FirebaseAuth.instance.signOut();
+   // await FirebaseAuth.instance.signOut();
   }
 
   @override
@@ -296,6 +265,7 @@ class AuthRepository implements IAuthRepository {
       rethrow;
     }
   }
+
 }
 
 class BackendAuthFactory {

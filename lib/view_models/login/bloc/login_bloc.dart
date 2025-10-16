@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/models/user_credentails.dart';
 import 'package:meet_christ/repositories/auth_repository.dart';
+import 'package:meet_christ/services/localstorage_service.dart';
 import 'package:meet_christ/services/user_service.dart';
 import 'package:meet_christ/view_models/auth/bloc/auth_bloc.dart';
 import 'package:meta/meta.dart';
@@ -17,6 +18,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   final AuthRepository authRepository;
   final AuthBloc authBloc;
   final UserService userService;
+  final LocalStorageService localStorageService = LocalStorageService();
 
   LoginBloc({
     required this.authRepository,
@@ -35,7 +37,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
             email: "",
             firstname: getRandomBibleName(),
             lastname: getRandomBibleName(),
-            isAnonym: true
+            isAnonym: true,
           );
           await userService.createUser(user);
           authBloc.add(UserLoggedIn(anonymUser));
@@ -63,16 +65,41 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         email: event.email,
         password: event.password,
       );
-
       final user = await authRepository.loginWithUserCredentials(credentials);
 
-      if (user != null) {
-        // ✅ Tell AuthBloc that a user logged in
-        authBloc.add(UserLoggedIn(user));
-        emit(LoginSuccess(user));
-      } else {
+      if (user == null) {
         emit(LoginFailure('Invalid credentials'));
+        return;
       }
+
+      if (!user.emailVerified) {
+        emit(LoginFailure('Please verify your email before login.'));
+        return;
+      }
+
+      final firstName = await localStorageService.getFromDisk<String>(
+        LocalStorageKeys.firstName,
+      );
+      final lastName = await localStorageService.getFromDisk<String>(
+        LocalStorageKeys.lastName,
+      );
+
+      final birthDate = await localStorageService.getDateTimeFromDisk(
+        LocalStorageKeys.birthDate,
+      );
+
+      final newUser = UserModel(
+        id: user.uid,
+        email: user.email!,
+        firstname: user.displayName ?? firstName,
+        lastname: lastName,
+        isAnonym: false,
+        birthday: birthDate,
+      );
+
+      await userService.createUser(newUser);
+      authBloc.add(UserLoggedIn(user));
+      emit(LoginSuccess(user));
     } catch (e) {
       emit(LoginFailure(e.toString()));
     }

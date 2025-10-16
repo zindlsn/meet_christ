@@ -64,6 +64,15 @@ class UserService {
   }
 
   Future fetchNewChatUsers() async {}
+
+  Future<void> deleteUser(String uid) async {
+    try {
+      await _usersCollection.doc(uid).delete();
+    } catch (e) {
+      print('Error deleting user: $e');
+      throw e; 
+    }
+  }
 }
 
 class FirestoreUserRepository extends DatabaseService2<String, UserModel> {

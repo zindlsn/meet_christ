@@ -15,19 +15,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final FirebaseAuth _auth;
   final UserService _userService;
   late final StreamSubscription<User?> _authSub;
+  final _authRepository = GetIt.I.get<AuthRepository>();
 
   AuthBloc(this._auth, this._userService) : super(AuthInitial()) {
     _authSub = _auth.authStateChanges().listen((user) {
       if (user != null) {
         add(UserLoggedIn(user));
       } else {
-        add(UserLoggedOut());
+        add(UserLoggedOut(user));
       }
     });
 
     on<UserLoggedIn>((event, emit) async {
       final userData = await _userService.getUser(event.user.uid);
       if (userData == null) {
+        add(UserLoggedOut(_auth.currentUser));
         emit(Unauthenticated());
       } else {
         _userService.setLoggedInUser(userData);
@@ -37,10 +39,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     on<UserLoggedOut>((event, emit) async {
       _userService.user = UserModel.empty();
+      if (_auth.currentUser?.isAnonymous == true) {
+        await _userService.deleteUser(_auth.currentUser!.uid);
+        await _auth.currentUser?.delete();
+      }
+      await _auth.signOut();
       emit(Unauthenticated());
     });
     on<ResetPasswordRequested>((event, emit) async {
-    await  GetIt.I.get<AuthRepository>().sendPasswordResetEmail(email: event.email);
+      await GetIt.I.get<AuthRepository>().sendPasswordResetEmail(
+        email: event.email,
+      );
       emit(Unauthenticated());
     });
   }

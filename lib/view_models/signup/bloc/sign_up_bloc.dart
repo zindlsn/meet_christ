@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/models/user_credentails.dart';
 import 'package:meet_christ/repositories/auth_repository.dart';
+import 'package:meet_christ/services/localstorage_service.dart';
 import 'package:meet_christ/services/user_service.dart';
 import 'package:meet_christ/view_models/auth/bloc/auth_bloc.dart';
 import 'package:meta/meta.dart';
@@ -16,6 +16,7 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
   final AuthRepository authRepository;
   final UserService userService;
   final AuthBloc authBloc;
+  final LocalStorageService localStorageService = LocalStorageService();
 
   SignupBloc({
     required this.authRepository,
@@ -115,30 +116,24 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
         password: state.password,
       );
 
-      final userCredential = await authRepository.signupWithUserCredentials(
-        credentials,
+      var user = await authRepository.signupWithUserCredentials(credentials);
+      await LocalStorageService.saveData<String>(
+        LocalStorageKeys.email,
+        user.email,
       );
 
-      final user = UserModel(
-        id: userCredential.uid,
-        email: state.email,
-        firstname: state.firstname,
-        lastname: state.lastname,
-        birthday: state.birthday,
-        isAnonym: false,
+      await LocalStorageService.saveData<String>(
+        LocalStorageKeys.firstName,
+        state.firstname,
       );
-      await userService.createUser(user);
-      emit(
-        SignupSuccess(
-          email: state.email,
-          password: state.password,
-          firstname: state.firstname,
-          lastname: state.lastname,
-          birthday: state.birthday,
-        ),
+      await LocalStorageService.saveData<String>(
+        LocalStorageKeys.lastName,
+        state.lastname,
       );
-
-      authBloc.add(UserLoggedIn(userCredential));
+      await LocalStorageService.saveDateTime(
+        LocalStorageKeys.birthDate,
+        state.birthday,
+      );
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-not-verified') {
         emit(SignupFailure("Verify your email."));
@@ -151,10 +146,10 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
   Future<bool> _onVerifyEmailRequested(
     VerifyEmailRequested event,
     Emitter<SignupState> emit,
-  ) async{
+  ) async {
     emit(EmailLoading());
     await Future.delayed(Duration(seconds: 10));
-    var authenticated =  authRepository
+    var authenticated = authRepository
         .emailIsAvailable(event.email)
         .then((authUser) {
           if (authUser == null) {

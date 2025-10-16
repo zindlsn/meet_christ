@@ -7,13 +7,13 @@ import 'package:get_it/get_it.dart';
 import 'package:meet_christ/firebase_options.dart';
 import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/pages/auth/auth.dart';
-import 'package:meet_christ/pages/profile_page.dart';
 import 'package:meet_christ/repositories/auth_repository.dart';
 import 'package:meet_christ/repositories/events_repository.dart';
 import 'package:meet_christ/repositories/file_repository.dart';
 import 'package:meet_christ/services/community_service.dart';
 import 'package:meet_christ/services/event_service.dart';
 import 'package:meet_christ/services/group_service.dart';
+import 'package:meet_christ/services/localstorage_service.dart';
 import 'package:meet_christ/services/user_service.dart';
 import 'package:meet_christ/themes/themes.dart';
 import 'package:meet_christ/view_models/auth/bloc/auth_bloc.dart';
@@ -60,6 +60,7 @@ void main() async {
   );
 
   GetIt.I.registerSingleton<CommentService>(CommentService());
+  GetIt.I.registerSingleton<LocalStorageService>(LocalStorageService());
   GetIt.I.registerSingleton<IGroupRepository>(FirestoreGroupRepository());
   GetIt.I.registerSingleton<GroupService>(
     GroupService(GetIt.I.get<IGroupRepository>()),

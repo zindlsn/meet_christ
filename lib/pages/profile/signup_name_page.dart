@@ -48,6 +48,9 @@ class _SetupProfileBirthdayPageState extends State<SetupProfileBirthdayPage> {
               child: Center(
                 child: ElevatedButton(
                   onPressed: () {
+                    context.read<SignupBloc>().add(
+                          SignupBirthdayUpdated(_selecteStartdDate),
+                        );
                     context.read<SignupBloc>().add(SignupRequested());
                     Navigator.push(
                       context,

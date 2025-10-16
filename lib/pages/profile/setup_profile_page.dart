@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meet_christ/pages/profile/signup_name_page.dart';
+import 'package:meet_christ/view_models/signup/bloc/sign_up_bloc.dart';
 import 'package:provider/provider.dart';
 
 class SetupProfileNamePage extends StatefulWidget {
@@ -96,6 +97,12 @@ class _SetupProfileNamePageState extends State<SetupProfileNamePage> {
               child: Center(
                 child: ElevatedButton(
                   onPressed: () {
+                    context.read<SignupBloc>().add(
+                      SignupNameUpdated(
+                        _firstNameController.text,
+                        _lastNameController.text,
+                      ),
+                    );
                     Navigator.push(
                       context,
                       MaterialPageRoute(
