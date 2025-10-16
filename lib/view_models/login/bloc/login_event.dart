@@ -6,8 +6,9 @@ abstract class LoginEvent {}
 class LoginRequested extends LoginEvent {
   final String email;
   final String password;
+  final bool rememberMe;
 
-  LoginRequested(this.email, this.password);
+  LoginRequested(this.email, this.password, this.rememberMe);
 }
 
 class LoginWithoutAccountRequested extends LoginEvent {}
@@ -17,8 +18,27 @@ class LoginInit extends LoginEvent {
   final String email;
   final String password;
 
-  LoginInit({
+  LoginInit({required this.email, required this.password});
+}
+
+class RememberMeChanged extends LoginEvent {
+  final bool rememberMe;
+
+  RememberMeChanged(this.rememberMe);
+}
+
+class LoadLoginData extends LoginEvent {
+  final String email;
+  final String password;
+  final bool rememberMe;
+
+  LoadLoginData({
     required this.email,
     required this.password,
+    required this.rememberMe,
   });
+}
+
+class AutoLoginRequested extends LoginEvent {
+  AutoLoginRequested();
 }

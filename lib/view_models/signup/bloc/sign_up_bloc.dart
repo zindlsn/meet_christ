@@ -16,7 +16,6 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
   final AuthRepository authRepository;
   final UserService userService;
   final AuthBloc authBloc;
-  final LocalStorageService localStorageService = LocalStorageService();
 
   SignupBloc({
     required this.authRepository,

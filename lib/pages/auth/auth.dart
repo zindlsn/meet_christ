@@ -18,12 +18,13 @@ class JesusLoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      BlocProvider.of<LoginBloc>(context).add(AutoLoginRequested());
       if (kIsWeb || kIsWasm) {
         context.read<LoginBloc>().add(
           LoginInit(email: "stefan.zindl@outlook.de", password: "Jesus10001."),
         );
       } else {
-        context.read<LoginBloc>().add(
+        BlocProvider.of<LoginBloc>(context).add(
           LoginInit(email: "stefan.zindl@outlook.de", password: "Jesus10001."),
         );
       }
@@ -38,6 +39,12 @@ class JesusLoginScreen extends StatelessWidget {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => JesusLoginScreen()),
+                );
+              }
+              if(state is AutoLoginSuccess) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomePage()),
                 );
               }
             },
@@ -73,172 +80,201 @@ class JesusLoginScreen extends StatelessWidget {
             },
           ),
         ],
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24.0,
-              vertical: 40.0,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Title
-                RichText(
-                  textAlign: TextAlign.center,
-                  text: const TextSpan(
-                    children: [
-                      TextSpan(
-                        text: "Start your journey with\n",
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFC4A466),
-                        ),
+        child: BlocBuilder<LoginBloc, LoginState>(
+          builder: (context, state) {
+            return state is LoginInitialized
+                ? SafeArea(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0,
+                        vertical: 40.0,
                       ),
-                      TextSpan(
-                        text: "Jesus",
-                        style: TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.redAccent,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // Email Field
-                _TextFieldWithIcon(
-                  label: "Email",
-                  icon: Icons.email_outlined,
-                  hintText: "email@example.com",
-                  obscureText: false,
-                ),
-                const SizedBox(height: 16),
-
-                // Password Field
-                _TextFieldWithIcon(
-                  label: "Password",
-                  icon: Icons.lock_outline,
-                  hintText: "Password",
-                  obscureText: true,
-                ),
-                const SizedBox(height: 16),
-
-                // Forgot Password
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            ForgotPasswordPage(email: emailController.text),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    "Forgot Password?",
-                    style: TextStyle(
-                      color: Color(0xFFC4A466),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-
-                BlocBuilder<LoginBloc, LoginState>(
-                  builder: (context, state) {
-                    return ElevatedButton(
-                      onPressed: () {
-                        context.read<LoginBloc>().add(
-                          LoginRequested(
-                            emailController.text,
-                            passwordController.text,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Title
+                          RichText(
+                            textAlign: TextAlign.center,
+                            text: const TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: "Start your journey with\n",
+                                  style: TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFFC4A466),
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: "Jesus",
+                                  style: TextStyle(
+                                    fontSize: 30,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.redAccent,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFEFEFEF),
-                        foregroundColor: Colors.deepPurple,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: const Text(
-                        "Login",
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Color(0xFFC4A466),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 10),
+                          const SizedBox(height: 40),
 
-                // OR
-                const Center(
-                  child: Text(
-                    "or",
-                    style: TextStyle(fontSize: 16, color: Colors.black54),
-                  ),
-                ),
-                const SizedBox(height: 10),
-
-                // Sign Up Button
-                BlocBuilder<SignupBloc, SignupState>(
-                  builder: (context, state) {
-                    return ElevatedButton(
-                      onPressed: () {
-                        context.read<SignupBloc>().add(
-                          InitSignup(email: emailController.text),
-                        );
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SignupEmailPage(),
+                          // Email Field
+                          _TextFieldWithIcon(
+                            label: "Email",
+                            icon: Icons.email_outlined,
+                            hintText: "email@example.com",
+                            obscureText: false,
                           ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFFC4A466),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: const Text(
-                        "Sign Up",
-                        style: TextStyle(fontSize: 18, color: Colors.white),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 20),
+                          const SizedBox(height: 16),
 
-                // Login without account
-                Center(
-                  child: GestureDetector(
-                    onTap: () {
-                      BlocProvider.of<LoginBloc>(context).add(
-                        LoginWithoutAccountRequested(),
-                      );
-                    },
-                    child: const Text(
-                      "Login without an account",
-                      style: TextStyle(
-                        color: Colors.blue,
-                        decoration: TextDecoration.underline,
-                        fontSize: 16,
+                          // Password Field
+                          _TextFieldWithIcon(
+                            label: "Password",
+                            icon: Icons.lock_outline,
+                            hintText: "Password",
+                            obscureText: true,
+                          ),
+                          const SizedBox(height: 4),
+
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Row(
+                              children: [
+                                Checkbox(
+                                  value: state.rememberMe,
+                                  onChanged: (value) {
+                                    context.read<LoginBloc>().add(
+                                      RememberMeChanged(value ?? false),
+                                    );
+                                  },
+                                ),
+                                const Text("Remember Me"),
+                              ],
+                            ),
+                          ),
+
+                          // Forgot Password
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ForgotPasswordPage(
+                                    email: emailController.text,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              "Forgot Password?",
+                              style: TextStyle(
+                                color: Color(0xFFC4A466),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: () {
+                              context.read<LoginBloc>().add(
+                                LoginRequested(
+                                  emailController.text,
+                                  passwordController.text,
+                                  state.rememberMe,
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFEFEFEF),
+                              foregroundColor: Colors.deepPurple,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            child: const Text(
+                              "Login",
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Color(0xFFC4A466),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          // OR
+                          const Center(
+                            child: Text(
+                              "or",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Sign Up Button
+                          BlocBuilder<SignupBloc, SignupState>(
+                            builder: (context, state) {
+                              return ElevatedButton(
+                                onPressed: () {
+                                  context.read<SignupBloc>().add(
+                                    InitSignup(email: emailController.text),
+                                  );
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => SignupEmailPage(),
+                                    ),
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Color(0xFFC4A466),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                ),
+                                child: const Text(
+                                  "Sign Up",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Login without account
+                          Center(
+                            child: GestureDetector(
+                              onTap: () {
+                                BlocProvider.of<LoginBloc>(
+                                  context,
+                                ).add(LoginWithoutAccountRequested());
+                              },
+                              child: const Text(
+                                "Login without an account",
+                                style: TextStyle(
+                                  color: Colors.blue,
+                                  decoration: TextDecoration.underline,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+                  )
+                : CircularProgressIndicator();
+          },
         ),
       ),
     );

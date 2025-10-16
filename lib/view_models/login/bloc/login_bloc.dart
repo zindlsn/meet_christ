@@ -25,6 +25,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     required this.authBloc,
     required this.userService,
   }) : super(LoginInitial()) {
+    on<AutoLoginRequested>(_onAutoLoginRequested);
     on<LoginRequested>(_onLoginRequested);
     on<LoginInit>(_onLoginInit);
     on<LoginWithoutAccountRequested>((event, emit) async {
@@ -49,10 +50,20 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         emit(LoginFailure(e.toString()));
       }
     });
+    on<RememberMeChanged>(_onRememberMeChanged);
   }
 
-  void _onLoginInit(LoginInit event, Emitter<LoginState> emit) {
-    emit(LoginInitialized(email: event.email, password: event.password));
+  void _onLoginInit(LoginInit event, Emitter<LoginState> emit) async {
+    var rememberMe = await localStorageService.getFromDisk<bool>(
+      LocalStorageKeys.rememberMe,
+    );
+    emit(
+      LoginInitialized(
+        email: event.email,
+        password: event.password,
+        rememberMe: rememberMe ?? false,
+      ),
+    );
   }
 
   Future<void> _onLoginRequested(
@@ -77,8 +88,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         return;
       }
 
-      print(user.uid);
-
       if (await userService.getUser(user.uid) == null) {
         final firstName = await localStorageService.getFromDisk<String>(
           LocalStorageKeys.firstName,
@@ -94,19 +103,94 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         final newUser = UserModel(
           id: user.uid,
           email: user.email!,
-          firstname: user.displayName ?? firstName,
-          lastname: lastName,
+          firstname: user.displayName ?? firstName ?? "",
+          lastname: lastName ?? "",
           isAnonym: false,
           birthday: birthDate,
         );
 
         await userService.createUser(newUser);
       }
+
+      if (event.rememberMe) {
+        await LocalStorageService.saveData<String>(
+          LocalStorageKeys.email,
+          event.email,
+        );
+        await LocalStorageService.saveData<String>(
+          LocalStorageKeys.password,
+          event.password,
+        );
+      }
+
       authBloc.add(UserLoggedIn(user));
       emit(LoginSuccess(user));
     } catch (e) {
       emit(LoginFailure(e.toString()));
     }
+  }
+
+  Future<void> _onAutoLoginRequested(
+    AutoLoginRequested event,
+    Emitter<LoginState> emit,
+  ) async {
+    try {
+      var email = await localStorageService.getFromDisk<String>(
+        LocalStorageKeys.email,
+      );
+      var password = await localStorageService.getFromDisk<String>(
+        LocalStorageKeys.password,
+      );
+
+      if (email == null || password == null) {
+        email = "";
+        password = "";
+      }
+      final credentials = UserCredentials(email: email!, password: password!);
+      final user = await authRepository.loginWithUserCredentials(credentials);
+
+      if (user == null) {
+        emit(LoginInitialized(email: "", password: "", rememberMe: false));
+        return;
+      }
+
+      if (!user.emailVerified) {
+        emit(LoginFailure('Please verify your email before login.'));
+        return;
+      }
+      authBloc.add(UserLoggedIn(user));
+      emit(LoginSuccess(user));
+    } catch (e) {
+      emit(
+        LoginInitialized(
+          email: "stefan.zindl@outlook.de",
+          password: "Jesus10001.",
+          rememberMe: false,
+        ),
+      );
+    }
+  }
+
+  Future<void> _onRememberMeChanged(
+    RememberMeChanged event,
+    Emitter<LoginState> emit,
+  ) async {
+    LocalStorageService.saveData<bool?>(
+      LocalStorageKeys.rememberMe,
+      event.rememberMe,
+    );
+    await localStorageService.getFromDisk<bool?>(LocalStorageKeys.rememberMe);
+    emit(
+      LoginInitialized(
+        email: state is LoginInitialized
+            ? (state as LoginInitialized).email
+            : "",
+        password: state is LoginInitialized
+            ? (state as LoginInitialized).password
+            : "",
+        rememberMe: event.rememberMe,
+      ),
+    );
   }
 }
 

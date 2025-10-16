@@ -13,6 +13,13 @@ class LoginSuccess extends LoginState {
   LoginSuccess(this.user);
 }
 
+class AutoLoginSuccess extends LoginState {
+  final User user;
+
+  AutoLoginSuccess(this.user);
+}
+
+
 class LoginFailure extends LoginState {
   final String message;
 
@@ -23,10 +30,12 @@ class LoginFailure extends LoginState {
 class LoginInitialized extends LoginState {
   final String email;
   final String password;
+  final bool rememberMe;
 
   LoginInitialized({
     required this.email,
     required this.password,
+    required this.rememberMe,
   });
 }
 
@@ -34,4 +43,16 @@ class LoginWithoutAccountSuccess extends LoginState {
   final UserModel user;
 
   LoginWithoutAccountSuccess({required this.user});
+}
+
+class LoginDataLoaded extends LoginState {
+  final String email;
+  final String password;
+  final bool rememberMe;
+
+  LoginDataLoaded({
+    required this.email,
+    required this.password,
+    required this.rememberMe,
+  });
 }
