@@ -31,11 +31,13 @@ class LoginInitialized extends LoginState {
   final String email;
   final String password;
   final bool rememberMe;
+  final bool isLoading;
 
   LoginInitialized({
     required this.email,
     required this.password,
     required this.rememberMe,
+    this.isLoading = false,
   });
 }
 

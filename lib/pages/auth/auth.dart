@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meet_christ/pages/forgot_password_page.dart';
 import 'package:meet_christ/pages/home.dart';
 import 'package:meet_christ/pages/signup/signup_email_page.dart';
+import 'package:meet_christ/services/localstorage_service.dart';
 import 'package:meet_christ/view_models/auth/bloc/auth_bloc.dart';
 import 'package:meet_christ/view_models/login/bloc/login_bloc.dart';
 import 'package:meet_christ/view_models/signup/bloc/sign_up_bloc.dart';
@@ -18,7 +19,7 @@ class JesusLoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      BlocProvider.of<LoginBloc>(context).add(AutoLoginRequested());
+      BlocProvider.of<LoginBloc>(context).add(TryAutoLoginRequested());
       if (kIsWeb || kIsWasm) {
         context.read<LoginBloc>().add(
           LoginInit(email: "stefan.zindl@outlook.de", password: "Jesus10001."),
@@ -41,7 +42,8 @@ class JesusLoginScreen extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => JesusLoginScreen()),
                 );
               }
-              if(state is AutoLoginSuccess) {
+
+              if (state is AutoLoginSuccess || state is Authenticated) {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => HomePage()),
@@ -148,7 +150,7 @@ class JesusLoginScreen extends StatelessWidget {
                                     );
                                   },
                                 ),
-                                const Text("Remember Me"),
+                                Text("Remember Me"),
                               ],
                             ),
                           ),
@@ -273,7 +275,7 @@ class JesusLoginScreen extends StatelessWidget {
                       ),
                     ),
                   )
-                : CircularProgressIndicator();
+                : Text("Loading..." + state.toString());
           },
         ),
       ),

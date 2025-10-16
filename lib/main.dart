@@ -223,7 +223,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Meet Christ',
       debugShowCheckedModeBanner: false,
-      theme: buildGoldenLightTheme(),
+      theme: buildJugend2000LightTheme(),
       home: JesusLoginScreen(),
       builder: (context, child) => Stack(children: [child!]),
     );

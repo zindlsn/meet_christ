@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 const Color kGoldenAccent = Color(0xFFC4A466);
 
-ThemeData buildGoldenLightTheme() {
+ThemeData buildJugend2000LightTheme() {
   return ThemeData(
+    fontFamily: 'Roboto',
     brightness: Brightness.light,
     scaffoldBackgroundColor: const Color(0xFFF8F8F8), // soft light background
     primaryColor: kGoldenAccent,
@@ -33,13 +34,8 @@ ThemeData buildGoldenLightTheme() {
       style: ElevatedButton.styleFrom(
         backgroundColor: kGoldenAccent, // 🟤 your button color
         foregroundColor: Colors.white,
-        textStyle: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
       ),
     ),
@@ -70,10 +66,7 @@ ThemeData buildGoldenLightTheme() {
     textTheme: const TextTheme(
       bodyLarge: TextStyle(color: Colors.black87, fontSize: 16),
       bodyMedium: TextStyle(color: Colors.black87, fontSize: 14),
-      titleLarge: TextStyle(
-        fontWeight: FontWeight.bold,
-        color: Colors.black87,
-      ),
+      titleLarge: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
     ),
   );
 }

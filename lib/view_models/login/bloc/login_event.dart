@@ -39,6 +39,6 @@ class LoadLoginData extends LoginEvent {
   });
 }
 
-class AutoLoginRequested extends LoginEvent {
-  AutoLoginRequested();
+class TryAutoLoginRequested extends LoginEvent {
+  TryAutoLoginRequested();
 }

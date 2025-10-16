@@ -2,10 +2,13 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/repositories/auth_repository.dart';
+import 'package:meet_christ/services/localstorage_service.dart';
 import 'package:meet_christ/services/user_service.dart';
+import 'package:meet_christ/view_models/login/bloc/login_bloc.dart';
 import 'package:meta/meta.dart';
 
 part 'auth_event.dart';
@@ -41,6 +44,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         await _auth.currentUser?.delete();
       }
       await _auth.signOut();
+      LocalStorageService.saveData<bool?>(LocalStorageKeys.rememberMe, false);
       emit(Unauthenticated());
     });
     on<ResetPasswordRequested>((event, emit) async {

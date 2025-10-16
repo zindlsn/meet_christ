@@ -25,7 +25,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     required this.authBloc,
     required this.userService,
   }) : super(LoginInitial()) {
-    on<AutoLoginRequested>(_onAutoLoginRequested);
+    on<TryAutoLoginRequested>(_onTryAutoLoginRequested);
     on<LoginRequested>(_onLoginRequested);
     on<LoginInit>(_onLoginInit);
     on<LoginWithoutAccountRequested>((event, emit) async {
@@ -130,10 +130,23 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     }
   }
 
-  Future<void> _onAutoLoginRequested(
-    AutoLoginRequested event,
+  Future<void> _onTryAutoLoginRequested(
+    TryAutoLoginRequested event,
     Emitter<LoginState> emit,
   ) async {
+    var rememberMe = await localStorageService.getFromDisk<bool>(
+      LocalStorageKeys.rememberMe,
+    );
+    if(rememberMe != true) {
+      emit(
+        LoginInitialized(
+          email: "",
+          password: "",
+          rememberMe: false,
+        ),
+      );
+      return;
+    }
     try {
       var email = await localStorageService.getFromDisk<String>(
         LocalStorageKeys.email,
@@ -146,11 +159,17 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         email = "";
         password = "";
       }
-      final credentials = UserCredentials(email: email!, password: password!);
+      final credentials = UserCredentials(email: email, password: password);
       final user = await authRepository.loginWithUserCredentials(credentials);
 
       if (user == null) {
-        emit(LoginInitialized(email: "", password: "", rememberMe: false));
+        emit(
+          LoginInitialized(
+            email: "",
+            password: "",
+            rememberMe: false,
+          ),
+        );
         return;
       }
 
@@ -179,7 +198,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       LocalStorageKeys.rememberMe,
       event.rememberMe,
     );
-    await localStorageService.getFromDisk<bool?>(LocalStorageKeys.rememberMe);
     emit(
       LoginInitialized(
         email: state is LoginInitialized
