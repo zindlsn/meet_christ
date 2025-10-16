@@ -77,27 +77,31 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         return;
       }
 
-      final firstName = await localStorageService.getFromDisk<String>(
-        LocalStorageKeys.firstName,
-      );
-      final lastName = await localStorageService.getFromDisk<String>(
-        LocalStorageKeys.lastName,
-      );
+      print(user.uid);
 
-      final birthDate = await localStorageService.getDateTimeFromDisk(
-        LocalStorageKeys.birthDate,
-      );
+      if (await userService.getUser(user.uid) == null) {
+        final firstName = await localStorageService.getFromDisk<String>(
+          LocalStorageKeys.firstName,
+        );
+        final lastName = await localStorageService.getFromDisk<String>(
+          LocalStorageKeys.lastName,
+        );
 
-      final newUser = UserModel(
-        id: user.uid,
-        email: user.email!,
-        firstname: user.displayName ?? firstName,
-        lastname: lastName,
-        isAnonym: false,
-        birthday: birthDate,
-      );
+        final birthDate = await localStorageService.getDateTimeFromDisk(
+          LocalStorageKeys.birthDate,
+        );
 
-      await userService.createUser(newUser);
+        final newUser = UserModel(
+          id: user.uid,
+          email: user.email!,
+          firstname: user.displayName ?? firstName,
+          lastname: lastName,
+          isAnonym: false,
+          birthday: birthDate,
+        );
+
+        await userService.createUser(newUser);
+      }
       authBloc.add(UserLoggedIn(user));
       emit(LoginSuccess(user));
     } catch (e) {

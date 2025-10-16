@@ -34,9 +34,12 @@ class EventsViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  EventsFilter currentFilter = EventsFilter();
+
   Future<void> loadEvents(EventsFilter filters) async {
     events = [];
     _isLoading = true;
+    currentFilter = filters;
     events = await eventService.getEventsWithoutGroup(filters);
     _isLoading = false;
     notifyListeners();
@@ -75,6 +78,6 @@ class EventsViewModel extends ChangeNotifier {
   }
 
   Future<void> reload() async {
-    await loadEvents(new EventsFilter());
+    await loadEvents(currentFilter);
   }
 }

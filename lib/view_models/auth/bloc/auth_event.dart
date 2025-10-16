@@ -13,6 +13,11 @@ final class UserLoggedOut extends AuthEvent {
   UserLoggedOut(this.user);
 }
 
+final class Authenticat extends AuthEvent {
+  final UserModel user;
+  Authenticat(this.user);
+}
+
 final class ResetPasswordRequested extends AuthEvent {
   final String email;
   ResetPasswordRequested({required this.email});

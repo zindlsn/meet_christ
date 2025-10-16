@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:maps_launcher/maps_launcher.dart';
 import 'package:meet_christ/models/community.dart';
 import 'package:meet_christ/models/event.dart';
+import 'package:uuid/uuid.dart';
 
 class EventCard extends StatefulWidget {
   final Event event;
@@ -31,7 +32,7 @@ class _EventCardState extends State<EventCard> {
                     child: Stack(
                       children: [
                         Hero(
-                          tag: 'dash1',
+                          tag: 'dash1'+Uuid().v4(),
                           child: Image.asset(
                             "assets/images/placeholder_church.png",
                             fit: BoxFit.fill,

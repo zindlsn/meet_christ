@@ -20,7 +20,7 @@ class JesusLoginScreen extends StatelessWidget {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (kIsWeb || kIsWasm) {
         context.read<LoginBloc>().add(
-          LoginInit(email: "szindl@posteo.de", password: "Jesus10001."),
+          LoginInit(email: "stefan.zindl@outlook.de", password: "Jesus10001."),
         );
       } else {
         context.read<LoginBloc>().add(
@@ -222,7 +222,7 @@ class JesusLoginScreen extends StatelessWidget {
                 Center(
                   child: GestureDetector(
                     onTap: () {
-                      context.read<LoginBloc>().add(
+                      BlocProvider.of<LoginBloc>(context).add(
                         LoginWithoutAccountRequested(),
                       );
                     },

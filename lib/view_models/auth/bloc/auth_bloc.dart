@@ -18,14 +18,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final _authRepository = GetIt.I.get<AuthRepository>();
 
   AuthBloc(this._auth, this._userService) : super(AuthInitial()) {
-    _authSub = _auth.authStateChanges().listen((user) {
-      if (user != null) {
-        add(UserLoggedIn(user));
-      } else {
-        add(UserLoggedOut(user));
-      }
-    });
-
     on<UserLoggedIn>((event, emit) async {
       final userData = await _userService.getUser(event.user.uid);
       if (userData == null) {
@@ -33,8 +25,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(Unauthenticated());
       } else {
         _userService.setLoggedInUser(userData);
-        emit(Authenticated(userData));
+        add(Authenticat(userData));
       }
+    });
+
+    on<Authenticat>((event, emit) async {
+      _userService.user = event.user;
+      emit(Authenticated(event.user));
     });
 
     on<UserLoggedOut>((event, emit) async {

@@ -261,7 +261,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                                     model.setIsAttending(true);
                                     await context
                                         .read<EventDetailViewModel>()
-                                        .joinEvent(model.event.id);
+                                        .joinEvent(model.event.id, true);
                                   },
                                   child: Text('Join'),
                                 ),
@@ -284,7 +284,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                                     model.setIsAttending(false);
                                     final success = await context
                                         .read<EventDetailViewModel>()
-                                        .joinEvent(model.event.id);
+                                        .joinEvent(model.event.id, false);
                                     if (!mounted) return;
                                     if (success) {
                                       ScaffoldMessenger.of(

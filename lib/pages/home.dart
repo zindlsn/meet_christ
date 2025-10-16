@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get_it/get_it.dart';
 import 'package:meet_christ/pages/chat_list_page.dart';
@@ -10,6 +11,7 @@ import 'package:meet_christ/pages/home/home_page.dart';
 import 'package:meet_christ/pages/my_groups_page.dart';
 import 'package:meet_christ/pages/profile_page.dart';
 import 'package:meet_christ/services/user_service.dart';
+import 'package:meet_christ/view_models/auth/bloc/auth_bloc.dart';
 import 'package:meet_christ/view_models/events_view_model.dart';
 import 'package:meet_christ/widgets/event_card.dart';
 import 'package:provider/provider.dart';
@@ -34,88 +36,104 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadEvents() async {
     await Future.delayed(Duration.zero);
-    if (!mounted) return;
-    await Provider.of<EventsViewModel>(
-      context,
-      listen: false,
-    ).loadAttendingEvents();
   }
 
   String title = "Meet Christ";
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _selectedIndex == 0
-          ? AppBar(
-              title: _selectedIndex == 0 ? Text(title) : null,
-              actions: _selectedIndex == 0
-                  ? [
-                      Text("10"),
-                      Icon(Icons.star),
-                      GestureDetector(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Icon(Icons.account_circle_sharp),
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ProfilePage(
-                                user: GetIt.I.get<UserService>().user,
-                              ),
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        Provider.of<EventsViewModel>(
+          context,
+          listen: false,
+        ).loadAttendingEvents();
+        setState(() {});
+      },
+      builder: (context, state) {
+        return Scaffold(
+          appBar: _selectedIndex == 0
+              ? AppBar(
+                  title: _selectedIndex == 0 ? Text(title) : null,
+                  actions: _selectedIndex == 0
+                      ? [
+                          Text("10"),
+                          Icon(Icons.star),
+                          GestureDetector(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Icon(Icons.account_circle_sharp),
                             ),
-                          );
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ProfilePage(
+                                    user: GetIt.I.get<UserService>().user,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ]
+                      : null,
+                )
+              : null,
+
+          drawer: _selectedIndex == 0
+              ? Drawer(
+                  child: ListView(
+                    padding: EdgeInsets.zero,
+                    children: [
+                      DrawerHeader(
+                        decoration: BoxDecoration(color: Colors.blue),
+                        child: Text('Meet Christ'),
+                      ),
+                      ListTile(
+                        title: Text('Settings'),
+                        onTap: () {
+                          // Navigate to settings page
                         },
                       ),
-                    ]
-                  : null,
-            )
-          : null,
-
-      drawer: _selectedIndex == 0
-          ? Drawer(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  DrawerHeader(
-                    decoration: BoxDecoration(color: Colors.blue),
-                    child: Text('Meet Christ'),
+                      ListTile(title: Text('About'), onTap: () {}),
+                    ],
                   ),
-                  ListTile(
-                    title: Text('Settings'),
-                    onTap: () {
-                      // Navigate to settings page
-                    },
-                  ),
-                  ListTile(title: Text('About'), onTap: () {}),
-                ],
+                )
+              : null,
+          body: SafeArea(child: _getBody()),
+          bottomNavigationBar: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            items: const [
+              BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+              BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chats'),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.search),
+                label: 'Search',
               ),
-            )
-          : null,
-      body: SafeArea(child: _getBody()),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chats'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Community'),
-          BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Prayer'),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-      ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person),
+                label: 'Community',
+              ),
+              BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Prayer'),
+            ],
+            currentIndex: _selectedIndex,
+            onTap: (index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+            },
+          ),
+        );
+      },
     );
   }
 
   Widget _getBody() {
     if (_selectedIndex == 0) {
+      Provider.of<EventsViewModel>(
+        context,
+        listen: false,
+      ).loadAttendingEvents();
       return MeetChristHomeView();
     } else if (_selectedIndex == 1) {
       return ChatListPage();

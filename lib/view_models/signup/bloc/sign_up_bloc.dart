@@ -148,7 +148,6 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
     Emitter<SignupState> emit,
   ) async {
     emit(EmailLoading());
-    await Future.delayed(Duration(seconds: 10));
     var authenticated = authRepository
         .emailIsAvailable(event.email)
         .then((authUser) {

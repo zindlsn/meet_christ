@@ -44,7 +44,7 @@ class EventService {
       _repository.rsvpToEvent(eventUser, attending);
 
   Future<List<Event>> getEventsWithoutGroup(EventsFilter filter) async {
-    var events = await _repository.getEventsWithoutGroup(filter);
+    var events = await _repository.getEventsFiltered(filter);
     for (var event in events) {
       if (event.attendees.any((item) => item.userId == _userService.user.id)) {
         event.meAttending = true;
@@ -82,7 +82,7 @@ abstract class IEventRepository {
   Stream<List<Event>> watchGroupEvents(String groupId);
   Future<void> rsvpToEvent(EventUser eventUser, bool attending);
 
-  Future<List<Event>> getEventsWithoutGroup(EventsFilter filter);
+  Future<List<Event>> getEventsFiltered(EventsFilter filter);
 }
 
 class FirestoreEventRepository implements IEventRepository {
@@ -136,33 +136,11 @@ class FirestoreEventRepository implements IEventRepository {
           ),
         )
         .get();
-    final events = <Event>[];
-    for (var dataElement in snapshot.docs) {
-      var data = dataElement.data();
-      var attendees = await _userRepository.getAllByUserIds(
-        (data["attendeeIds"] as List<dynamic>)
-            .map((item) => item.toString())
-            .toList(),
-      );
-      var organizers = await _userRepository.getAllByUserIds(
-        (data["attendeeIds"] as List<dynamic>)
-            .map((item) => item.toString())
-            .toList(),
-      );
-      var eventUsers = attendees
-          .map((user) => EventUser.attendee(user.id, dataElement.id))
-          .toList();
-      var event = Event.fromDto(
-        attendees: eventUsers,
-        organizers: organizers
-            .map((user) => EventUser.host(user.id, dataElement.id))
-            .toList(),
-        EventDto.fromMap(data, dataElement.id),
-      );
+    final eventFutures = snapshot.docs
+        .map((doc) => _mapDocumentToEvent(doc))
+        .toList();
 
-      events.add(event);
-    }
-    return Future.value(events);
+    return Future.wait(eventFutures);
   }
 
   @override
@@ -233,7 +211,9 @@ class FirestoreEventRepository implements IEventRepository {
     await _firestore.runTransaction((transaction) async {
       final doc = await transaction.get(docRef);
       final attendeeIds = List<String>.from(doc['attendeeIds'] ?? []);
-      final attendees = List<EventUser>.from(EventUser.fromMapList(doc['attendees']) ?? []);
+      final attendees = List<EventUser>.from(
+        EventUser.fromMapList(doc['attendees']) ?? [],
+      );
 
       if (attending) {
         if (!attendeeIds.contains(eventUser.userId)) {
@@ -242,7 +222,7 @@ class FirestoreEventRepository implements IEventRepository {
         }
       } else {
         attendeeIds.remove(eventUser.userId);
-        attendees.remove(eventUser);
+        attendees.removeWhere((e) => e.userId == eventUser.userId);
       }
 
       transaction.update(docRef, {'attendeeIds': attendeeIds});
@@ -253,7 +233,7 @@ class FirestoreEventRepository implements IEventRepository {
   }
 
   @override
-  Future<List<Event>> getEventsWithoutGroup(EventsFilter filter) async {
+  Future<List<Event>> getEventsFiltered(EventsFilter filter) async {
     DateTime? start;
     DateTime? endDate;
     if (filter.startDate != null) {
@@ -271,13 +251,18 @@ class FirestoreEventRepository implements IEventRepository {
         filter.endDate!.month,
         filter.endDate!.day,
       ).add(const Duration(days: 1));
+    } else {
+      endDate ??= DateTime(
+        filter.startDate!.year,
+        filter.startDate!.month,
+        filter.startDate!.day,
+      ).add(const Duration(days: 1));
     }
 
     final snapshot = await _firestore
         .collection('events')
         .where('groupId', isEqualTo: null)
         .where("startDate", isGreaterThanOrEqualTo: start)
-        .where("startDate", isLessThanOrEqualTo: endDate)
         .get();
 
     final eventFutures = snapshot.docs
@@ -289,25 +274,21 @@ class FirestoreEventRepository implements IEventRepository {
 
   Future<Event> _mapDocumentToEvent(DocumentSnapshot doc) async {
     // Fetch all attendees in parallel
-    final attendeeIds = List<String>.from(doc['attendeeIds'] ?? []);
-    final attendees = await Future.wait(
-      attendeeIds.map((id) => _userRepository.getById(id)),
+    final List<String> attendeeIds = List<String>.from(
+      doc['attendeeIds'] ?? [""],
+    );
+    final attendees = List<EventUser>.from(
+      EventUser.fromMapList(doc['attendees']) ?? [],
     );
 
-    // Fetch all organizers in parallel
-    final organizerIds = List<String>.from(doc['organizerIds'] ?? []);
-    final organizers = await Future.wait(
-      organizerIds.map((id) => _userRepository.getById(id)),
+    final organizers = List<EventUser>.from(
+      EventUser.fromMapList(doc['organizers']) ?? [],
     );
 
     return Event.fromDto(
       EventDto.fromMap(doc.data()! as Map<String, dynamic>, doc.id),
-      attendees: attendees
-          .map((item) => EventUser.attendee(item!.id, doc.id))
-          .toList(),
-      organizers: organizers
-          .map((item) => EventUser.host(item!.id, doc.id))
-          .toList(),
+      attendees: attendees,
+      organizers: organizers,
     );
   }
 }

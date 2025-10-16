@@ -95,7 +95,13 @@ class AuthRepository implements IAuthRepository {
             email: userCredentials.email.trim(),
             password: userCredentials.password.trim(),
           );
-      await auth.currentUser?.sendEmailVerification();
+      if (auth.currentUser == null) {
+        throw FirebaseAuthException(
+          code: 'unknown-error',
+          message: 'User is null after signup',
+        );
+      }
+      await auth.currentUser!.sendEmailVerification();
       User? user = userCredential.user;
       if (user == null) {
         throw FirebaseAuthException(
@@ -121,7 +127,7 @@ class AuthRepository implements IAuthRepository {
 
   @override
   Future<void> logout() async {
-   // await FirebaseAuth.instance.signOut();
+    // await FirebaseAuth.instance.signOut();
   }
 
   @override
@@ -157,7 +163,7 @@ class AuthRepository implements IAuthRepository {
   Future<bool> emailIsAvailable(String email) async {
     String password = "thisIsFakePassword123!${Uuid().v4()}";
     try {
-      var credentials = await FirebaseAuth.instance
+      await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
       await FirebaseAuth.instance.currentUser?.delete();
       return true;
@@ -265,7 +271,6 @@ class AuthRepository implements IAuthRepository {
       rethrow;
     }
   }
-
 }
 
 class BackendAuthFactory {

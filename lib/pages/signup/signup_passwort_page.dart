@@ -14,8 +14,10 @@ class _SignupPasswordPageState extends State<SignupPasswordPage> {
   final TextEditingController _passwordController = TextEditingController();
   @override
   Widget build(BuildContext context) {
-        _passwordController.text =
-        context.watch<SignupBloc>().state.password ?? '';
+    _passwordController.text =
+        context.watch<SignupBloc>().state.password.isEmpty
+        ? 'Jesus10001.'
+        : context.watch<SignupBloc>().state.password;
     return Scaffold(
       appBar: AppBar(title: Text("Create account")),
       body: Padding(
@@ -24,7 +26,7 @@ class _SignupPasswordPageState extends State<SignupPasswordPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.only(bottom:8.0),
+              padding: const EdgeInsets.only(bottom: 8.0),
               child: Text(
                 "Choose a password",
                 style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
@@ -60,7 +62,9 @@ class _SignupPasswordPageState extends State<SignupPasswordPage> {
               child: Center(
                 child: ElevatedButton(
                   onPressed: () {
-                    context.read<SignupBloc>().add(SignupPasswordUpdated(_passwordController.text));
+                    context.read<SignupBloc>().add(
+                      SignupPasswordUpdated(_passwordController.text),
+                    );
                     Navigator.push(
                       context,
                       MaterialPageRoute(

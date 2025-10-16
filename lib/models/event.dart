@@ -143,10 +143,7 @@ class EventDto {
       organizers: organizers,
     );
 
-    event.me = getCurrentUser(
-      event,
-      GetIt.I.get<UserService>(),
-    );
+    event.me = getCurrentUser(event, GetIt.I.get<UserService>());
 
     return event;
   }
@@ -199,12 +196,10 @@ class Event {
     if (organizers != null) this.organizers = organizers;
     me =
         attendees?.firstWhereOrNull(
-          (attendee) =>
-              attendee.userId == GetIt.I.get<UserService>().user.id,
+          (attendee) => attendee.userId == GetIt.I.get<UserService>().user.id,
         ) ??
         organizers?.firstWhereOrNull(
-          (organizer) =>
-              organizer.userId == GetIt.I.get<UserService>().user.id,
+          (organizer) => organizer.userId == GetIt.I.get<UserService>().user.id,
         );
   }
 
@@ -248,6 +243,10 @@ class Event {
     if (!attendees.any((a) => a.userId == attendee.userId)) {
       attendees.add(attendee);
     }
+  }
+
+  void removeAttendee(EventUser attendee) {
+    attendees.removeWhere((a) => a.userId == attendee.userId);
   }
 
   void addHost(EventUser host) {
