@@ -5,6 +5,7 @@ import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/pages/auth/auth.dart';
 import 'package:meet_christ/pages/profile/change_mailaddress_page.dart';
 import 'package:meet_christ/view_models/auth/bloc/auth_bloc.dart';
+import 'package:meet_christ/view_models/login/bloc/login_bloc.dart';
 import 'package:meet_christ/view_models/profile/bloc/profile_bloc.dart';
 import 'package:meet_christ/view_models/profile_view_model.dart';
 import 'package:provider/provider.dart';
@@ -131,7 +132,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           const SizedBox(height: 8),
                           TextButton(
                             onPressed: () async {
-                              await model.logout();
                               context.read<AuthBloc>().add(UserLoggedOut(null));
                               setState(() {
                                 Navigator.pushReplacement(

@@ -9,6 +9,8 @@ class UserModel {
   final UserStatus status;
   final bool isAnonym;
   final DateTime? birthday;
+  final List<String> eventPermissions;
+  final List<String> commentPermissions;
 
   UserModel({
     required this.id,
@@ -19,6 +21,8 @@ class UserModel {
     this.status = UserStatus.active,
     this.isAnonym = false,
     this.birthday,
+    this.eventPermissions = const [],
+    this.commentPermissions = const [],
   });
 
   set(String id) => UserModel(
@@ -31,8 +35,36 @@ class UserModel {
     birthday: birthday,
   );
 
-  factory UserModel.fromMap(Map<String, dynamic> map, String documentId) {
+  /// copywith
+  static UserModel copyWith({
+    required UserModel user,
+    String? id,
+    String? firstname,
+    String? lastname,
+    String? email,
+    String? profilePictureUrl,
+    UserStatus? status,
+    bool? isAnonym,
+    DateTime? birthday,
+    List<String>? eventPermissions,
+    List<String>? commentPermissions,
+  }) {
     return UserModel(
+      id: id ?? user.id,
+      firstname: firstname ?? user.firstname,
+      lastname: lastname ?? user.lastname,
+      email: email ?? user.email,
+      profilePictureUrl: profilePictureUrl ?? user.profilePictureUrl,
+      status: status ?? user.status,
+      isAnonym: isAnonym ?? user.isAnonym,
+      birthday: birthday ?? user.birthday,
+      eventPermissions: eventPermissions ?? user.eventPermissions,
+      commentPermissions: commentPermissions ?? user.commentPermissions,
+    );
+  }
+
+  factory UserModel.fromMap(Map<String, dynamic> map, String documentId) {
+    var user = UserModel(
       id: documentId,
       firstname: map['firstname'] ?? '',
       email: map['email'] ?? '',
@@ -41,7 +73,15 @@ class UserModel {
       status: UserStatus.values[map['status'] ?? 0],
       isAnonym: map['isAnonym'] ?? false,
       birthday: (map['birthday'] as Timestamp?)?.toDate(),
+      eventPermissions: List<String>.from(map['eventPermissions'] ?? []),
+      commentPermissions: List<String>.from(map['commentPermissions'] ?? []),
     );
+
+    if (user.isAnonym) {
+      user = UserModel.copyWith(user: user, eventPermissions: []);
+    }
+
+    return user;
   }
 
   Map<String, dynamic> toMap() {
@@ -101,7 +141,7 @@ class EventUser {
     role: Roles.organizer,
     status: '',
     eventPermissions: EventPermissions.all,
-    commentPermissions: CommentPermissions.all,
+    commentPermissions: EventCommentPermissions.all,
     attendingStatus: AttendingStatus.attending,
   );
 
@@ -112,7 +152,7 @@ class EventUser {
     role: Roles.attendee,
     status: '',
     eventPermissions: [],
-    commentPermissions: [CommentPermissions.canAdd],
+    commentPermissions: [EventCommentPermissions.canAdd],
     attendingStatus: AttendingStatus.attending,
   );
 
@@ -218,7 +258,7 @@ class EventUserDto {
       eventId: user.eventId,
       role: user.role,
       status: user.status,
-      canComment: user.commentPermissions.contains(CommentPermissions.canAdd),
+      canComment: user.commentPermissions.contains(EventCommentPermissions.canAdd),
       eventPermissions: user.eventPermissions,
       commentPermissions: user.commentPermissions,
       photoUrl: user.photoUrl,
@@ -256,16 +296,24 @@ class EventPermissions {
   static const String canView = "can_view";
   static const String canAddMembers = "can_add_members";
   static const String canDeleteMembers = "can_delete_members";
+  static const String canAttend = "can_attend";
 
-  static const List<String> all = [canEdit, canDelete, canInvite, canView];
+  static const List<String> all = [
+    canEdit,
+    canDelete,
+    canInvite,
+    canView,
+    canAttend,
+  ];
 }
 
-class CommentPermissions {
+class EventCommentPermissions {
   static const String canAdd = "can_add";
   static const String canDelete = "can_delete";
   static const String canEdit = "can_edit";
+  static const String canView = "can_view";
 
-  static const List<String> all = [canAdd, canDelete, canEdit];
+  static const List<String> all = [canAdd, canDelete, canEdit, canView];
 }
 
 class Roles {

@@ -29,6 +29,9 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     on<LoginRequested>(_onLoginRequested);
     on<LoginInit>(_onLoginInit);
     on<UpdateLoginFields>(_onUpdateLoginFields);
+    on<LogoutRequested>((event, emit) async {
+      emit(LoginInitialized(email: "", password: "", rememberMe: false));
+    });
     on<LoginWithoutAccountRequested>((event, emit) async {
       emit(
         LoginInitialized(
@@ -38,7 +41,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
           isLoading: true,
         ),
       );
-      await Future.delayed(const Duration(seconds: 1));
       try {
         final anonymUser = await authRepository.signInAnonymously();
         if (anonymUser.isAnonymous) {
@@ -50,7 +52,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
             isAnonym: true,
           );
           await userService.createUser(user);
-          authBloc.add(UserLoggedIn(anonymUser));
           emit(LoginSuccess(anonymUser));
         } else {
           emit(LoginFailure('Invalid credentials'));
@@ -76,10 +77,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     );
   }
 
-  void _onUpdateLoginFields(
-    UpdateLoginFields event,
-    Emitter<LoginState> emit,
-  ) {
+  void _onUpdateLoginFields(UpdateLoginFields event, Emitter<LoginState> emit) {
     emit(
       LoginInitialized(
         email: event.email,
@@ -139,6 +137,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
           lastname: lastName ?? "",
           isAnonym: false,
           birthday: birthDate,
+          eventPermissions: EventPermissions.all,
         );
 
         await userService.createUser(newUser);
@@ -152,6 +151,11 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         await LocalStorageService.saveData<String>(
           LocalStorageKeys.password,
           event.password,
+        );
+
+        await LocalStorageService.saveData<bool>(
+          LocalStorageKeys.rememberMe,
+          event.rememberMe,
         );
       }
 
@@ -170,7 +174,20 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       LocalStorageKeys.rememberMe,
     );
     if (rememberMe != true) {
-      emit(LoginInitialized(email: "", password: "", rememberMe: false));
+      var email = await localStorageService.getFromDisk<String>(
+        LocalStorageKeys.email,
+      );
+      var password = await localStorageService.getFromDisk<String>(
+        LocalStorageKeys.password,
+      );
+
+      emit(
+        LoginInitialized(
+          email: email ?? "stefan.zindl@outlook.de",
+          password: password ?? "Jesus10001.",
+          rememberMe: false,
+        ),
+      );
       return;
     }
     try {

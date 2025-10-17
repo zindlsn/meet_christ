@@ -3,10 +3,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:maps_launcher/maps_launcher.dart';
+import 'package:meet_christ/main.dart';
 import 'package:meet_christ/models/event.dart';
 import 'package:meet_christ/models/user.dart';
+import 'package:meet_christ/services/user_service.dart';
 import 'package:meet_christ/view_models/event_comments_view_model.dart';
 import 'package:meet_christ/view_models/event_detail_view_model.dart';
 import 'package:meet_christ/widgets/event_card.dart';
@@ -195,10 +198,19 @@ class _EventDetailPageState extends State<EventDetailPage> {
                                 ),
                               ],
                             ),
-                            SizedBox(
-                              height: 500,
-                              child: EventCommentSection(event: model.event),
-                            ),
+                            GetIt.I
+                                    .get<UserService>()
+                                    .user
+                                    .commentPermissions
+                                    .contains(EventCommentPermissions.canView)
+                                ? SizedBox(
+                                    height: 500,
+                                    child: EventCommentSection(
+                                      event: model.event,
+                                    ),
+                                  )
+                                : Container(),
+
                             /*  Container(height: 16, color: Colors.grey[200]),
                             Text("Comments"),
                             TextFormField(
@@ -221,100 +233,104 @@ class _EventDetailPageState extends State<EventDetailPage> {
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(80),
-                          offset: Offset(
-                            0,
-                            -4,
-                          ), // Negative Y-value for top shadow
-                          blurRadius: 12,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    width: double.infinity,
-                    child: !model.isAttending
-                        ? Row(
-                            mainAxisSize: MainAxisSize.max,
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Expanded(child: SizedBox()),
-                              Expanded(
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.zero,
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 24,
-                                      vertical: 16,
-                                    ),
-                                  ),
-                                  onPressed: () async {
-                                    model.setIsAttending(true);
-                                    await context
-                                        .read<EventDetailViewModel>()
-                                        .joinEvent(model.event.id, true);
-                                  },
-                                  child: Text('Join'),
-                                ),
-                              ),
-                            ],
-                          )
-                        : Row(
-                            mainAxisSize: MainAxisSize.max,
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Expanded(child: SizedBox()),
-                              Expanded(
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.zero,
-                                    ),
-                                  ),
-                                  onPressed: () async {
-                                    model.setIsAttending(false);
-                                    final success = await context
-                                        .read<EventDetailViewModel>()
-                                        .joinEvent(model.event.id, false);
-                                    if (!mounted) return;
-                                    if (success) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Left event successfully!',
-                                          ),
-                                        ),
-                                      );
-                                    } else {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Failed to leave event.',
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                  child: Text('Cancle'),
-                                ),
+                GetIt.I.get<UserService>().user.eventPermissions.contains(
+                      EventPermissions.canAttend,
+                    )
+                    ? Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Container(
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withAlpha(80),
+                                offset: Offset(
+                                  0,
+                                  -4,
+                                ), // Negative Y-value for top shadow
+                                blurRadius: 12,
+                                spreadRadius: 2,
                               ),
                             ],
                           ),
-                  ),
-                ),
+                          width: double.infinity,
+                          child: !model.isAttending
+                              ? Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Expanded(child: SizedBox()),
+                                    Expanded(
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          shape: const RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.zero,
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 24,
+                                            vertical: 16,
+                                          ),
+                                        ),
+                                        onPressed: () async {
+                                          model.setIsAttending(true);
+                                          await context
+                                              .read<EventDetailViewModel>()
+                                              .joinEvent(model.event.id, true);
+                                        },
+                                        child: Text('Join'),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Expanded(child: SizedBox()),
+                                    Expanded(
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          shape: const RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.zero,
+                                          ),
+                                        ),
+                                        onPressed: () async {
+                                          model.setIsAttending(false);
+                                          final success = await context
+                                              .read<EventDetailViewModel>()
+                                              .joinEvent(model.event.id, false);
+                                          if (!mounted) return;
+                                          if (success) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  'Left event successfully!',
+                                                ),
+                                              ),
+                                            );
+                                          } else {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  'Failed to leave event.',
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                        child: Text('Cancle'),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      )
+                    : Container(),
               ],
             ),
           ),
@@ -419,7 +435,7 @@ class _EventCommentSectionState extends State<EventCommentSection> {
                     ),
                   ),
                   widget.event.me?.commentPermissions.contains(
-                            CommentPermissions.canAdd,
+                            EventCommentPermissions.canAdd,
                           ) ==
                           true
                       ? TextFormField(
@@ -427,7 +443,6 @@ class _EventCommentSectionState extends State<EventCommentSection> {
                           decoration: InputDecoration(
                             suffixIcon: GestureDetector(
                               onTap: () {
-
                                 setState(() {
                                   _textController.clear();
                                   model.setComment(_textController.text);
@@ -451,32 +466,32 @@ class _EventCommentSectionState extends State<EventCommentSection> {
                           ),
                         )
                       : TextFormField(
-                        controller: _textController,
-                        decoration: InputDecoration(
-                          suffixIcon: GestureDetector(
-                            onTap: () {
-                              model.setComment(_textController.text);
-                              model.saveComment();
-                              Provider.of<EventCommentsViewModel>(
-                                context,
-                                listen: false,
-                              ).loadComments();
-                              setState(() {
-                                _textController.clear();
-                              });
-                            },
-                            child: Icon(Icons.send),
-                          ),
-                          hintText: "Add a comment...!",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: BorderSide(
-                              color: Colors.grey,
-                              width: 1.0,
+                          controller: _textController,
+                          decoration: InputDecoration(
+                            suffixIcon: GestureDetector(
+                              onTap: () {
+                                model.setComment(_textController.text);
+                                model.saveComment();
+                                Provider.of<EventCommentsViewModel>(
+                                  context,
+                                  listen: false,
+                                ).loadComments();
+                                setState(() {
+                                  _textController.clear();
+                                });
+                              },
+                              child: Icon(Icons.send),
+                            ),
+                            hintText: "Add a comment...!",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                              borderSide: BorderSide(
+                                color: Colors.grey,
+                                width: 1.0,
+                              ),
                             ),
                           ),
                         ),
-                      ),
                 ],
               ),
             ),

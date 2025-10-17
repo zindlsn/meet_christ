@@ -26,6 +26,8 @@ class AuthRepository implements IAuthRepository {
     try {
       final FirebaseAuth auth = FirebaseAuth.instance;
 
+      var currentUser = auth.currentUser;
+
       final UserCredential userCredential = await auth
           .signInWithEmailAndPassword(
             email: userCredentials.email,
@@ -60,6 +62,7 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<User> signInAnonymously() async {
     try {
+      //FirebaseAuth.instance.signOut();
       final FirebaseAuth auth = FirebaseAuth.instance;
       var authUser = FirebaseAuth.instance.currentUser;
 

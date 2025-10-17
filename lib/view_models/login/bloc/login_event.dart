@@ -11,6 +11,8 @@ class LoginRequested extends LoginEvent {
   LoginRequested(this.email, this.password, this.rememberMe);
 }
 
+final class LogoutRequested extends LoginEvent {}
+
 class LoginWithoutAccountRequested extends LoginEvent {}
 
 final class UpdateLoginFields extends LoginEvent {

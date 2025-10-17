@@ -13,9 +13,9 @@ final class UserLoggedOut extends AuthEvent {
   UserLoggedOut(this.user);
 }
 
-final class Authenticat extends AuthEvent {
+final class Authenticate extends AuthEvent {
   final UserModel user;
-  Authenticat(this.user);
+  Authenticate(this.user);
 }
 
 final class ResetPasswordRequested extends AuthEvent {

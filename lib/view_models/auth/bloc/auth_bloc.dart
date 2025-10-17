@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -8,7 +9,6 @@ import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/repositories/auth_repository.dart';
 import 'package:meet_christ/services/localstorage_service.dart';
 import 'package:meet_christ/services/user_service.dart';
-import 'package:meet_christ/view_models/login/bloc/login_bloc.dart';
 import 'package:meta/meta.dart';
 
 part 'auth_event.dart';
@@ -17,8 +17,6 @@ part 'auth_state.dart';
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final FirebaseAuth _auth;
   final UserService _userService;
-  late final StreamSubscription<User?> _authSub;
-  final _authRepository = GetIt.I.get<AuthRepository>();
 
   AuthBloc(this._auth, this._userService) : super(AuthInitial()) {
     on<UserLoggedIn>((event, emit) async {
@@ -27,24 +25,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         add(UserLoggedOut(_auth.currentUser));
         emit(Unauthenticated());
       } else {
+        LocalStorageService.saveData<String?>(
+          LocalStorageKeys.loggedInUserId,
+          userData.id,
+        );
         _userService.setLoggedInUser(userData);
-        add(Authenticat(userData));
+        emit(Authenticated(userData));
       }
     });
 
-    on<Authenticat>((event, emit) async {
-      _userService.user = event.user;
-      emit(Authenticated(event.user));
-    });
-
     on<UserLoggedOut>((event, emit) async {
+      LocalStorageService.saveData<String?>(
+        LocalStorageKeys.loggedInUserId,
+        null,
+      );
       _userService.user = UserModel.empty();
       if (_auth.currentUser?.isAnonymous == true) {
         await _userService.deleteUser(_auth.currentUser!.uid);
         await _auth.currentUser?.delete();
       }
       await _auth.signOut();
-      LocalStorageService.saveData<bool?>(LocalStorageKeys.rememberMe, false);
+      LocalStorageService.saveData<bool>(LocalStorageKeys.rememberMe, false);
       emit(Unauthenticated());
     });
     on<ResetPasswordRequested>((event, emit) async {
@@ -57,7 +58,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   @override
   Future<void> close() {
-    _authSub.cancel();
     return super.close();
   }
 }

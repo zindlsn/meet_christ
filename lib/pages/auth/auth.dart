@@ -19,7 +19,6 @@ class JesusLoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      BlocProvider.of<LoginBloc>(context).add(TryAutoLoginRequested());
       if (kIsWeb || kIsWasm) {
         context.read<LoginBloc>().add(
           LoginInit(email: "stefan.zindl@outlook.de", password: "Jesus10001."),
@@ -36,28 +35,38 @@ class JesusLoginScreen extends StatelessWidget {
         listeners: [
           BlocListener<AuthBloc, AuthState>(
             listener: (context, state) {
+              print("Auth State changed: $state");
+
               if (state is Unauthenticated) {
-                Navigator.pushReplacement(
+                BlocProvider.of<LoginBloc>(context).add(
+                  LoginInit(
+                    email: "stefan.zindl@outlook.de",
+                    password: "Jesus10001.",
+                  ),
+                );
+                Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => JesusLoginScreen()),
+                  (route) => false,
                 );
               }
 
               if (state is AutoLoginSuccess || state is Authenticated) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => HomePage()),
-                );
+                if (context.read<LoginBloc>().state is LoginSuccess) {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomePage()),
+                    (route) => false,
+                  );
+                }
               }
             },
           ),
           BlocListener<LoginBloc, LoginState>(
             listener: (context, state) {
+              print("Login State changed: $state");
               if (state is LoginSuccess) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => HomePage()),
-                );
+                context.read<AuthBloc>().add(UserLoggedIn(state.user));
               } else if (state is LoginFailure) {
                 ScaffoldMessenger.of(
                   context,

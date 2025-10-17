@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/pages/event_detail_page.dart';
+import 'package:meet_christ/services/user_service.dart';
 import 'package:meet_christ/view_models/auth/bloc/auth_bloc.dart';
 import 'package:meet_christ/view_models/events_view_model.dart';
 import 'package:provider/provider.dart';
@@ -87,135 +90,169 @@ class _MeetChristHomeViewState extends State<MeetChristHomeView> {
           }
         },
         builder: (context, state) {
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: <Widget>[
-              Text(
-                "Going1",
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  color: Colors.blue.shade600,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              Consumer<EventsViewModel>(
-                builder: (context, model, child) {
-                   model.loadAttendingEvents();
-                  final events = model.attendingEvents;
-                  if (events.isEmpty) {
-                    return const Text("Du nimmst an keinen Events teil.");
-                  }
-
-                  return SizedBox(
-                    height: 200,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: events.length,
-                      itemBuilder: (context, index) {
-                        final event = events[index];
-
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 12.0),
-                          child: SizedBox(
-                            width: MediaQuery.of(context).size.width - 32,
-                            child: Card(
-                              elevation: 3,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Row(
-                                      children: <Widget>[
-                                        const Icon(
-                                          Icons.calendar_today_rounded,
-                                          color: Colors.blue,
-                                          size: 24,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          // You can format event.date as you wish
-                                          "MI, OCT 8 - 18:00",
-                                          style: TextStyle(
-                                            color: Colors.grey.shade600,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      event.title ??
-                                          "Gebetskreis im Gemeindesaal",
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: <Widget>[
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.green.shade100,
-                                            borderRadius: BorderRadius.circular(
-                                              4,
-                                            ),
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6,
-                                            vertical: 2,
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: <Widget>[
-                                              const Icon(
-                                                Icons.check_box,
-                                                color: Colors.green,
-                                                size: 18,
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                "${event.attendees.length ?? 1} nimmt teil",
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Center(
-                                      child: TextButton(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  EventDetailPage(event: event),
-                                            ),
-                                          );
-                                        },
-                                        child: const Text(
-                                          "Details",
-                                          style: TextStyle(color: Colors.blue),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+          return Column(
+            children: [
+              GetIt.I.get<UserService>().user.eventPermissions.contains(
+                    EventPermissions.canAttend,
+                  )
+                  ? Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.all(16),
+                        children: <Widget>[
+                          Text(
+                            "Going",
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              color: Colors.blue.shade600,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        );
-                      },
-                    ),
-                  );
-                },
-              ),
+                          const SizedBox(height: 12),
+
+                          Consumer<EventsViewModel>(
+                            builder: (context, model, child) {
+                              model.loadAttendingEvents();
+                              final events = model.attendingEvents;
+                              if (events.isEmpty) {
+                                return const Text(
+                                  "Du nimmst an keinen Events teil.",
+                                );
+                              }
+
+                              return SizedBox(
+                                height: 200,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: events.length,
+                                  itemBuilder: (context, index) {
+                                    final event = events[index];
+
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        right: 12.0,
+                                      ),
+                                      child: SizedBox(
+                                        width:
+                                            MediaQuery.of(context).size.width -
+                                            32,
+                                        child: Card(
+                                          elevation: 3,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(16),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: <Widget>[
+                                                Row(
+                                                  children: <Widget>[
+                                                    const Icon(
+                                                      Icons
+                                                          .calendar_today_rounded,
+                                                      color: Colors.blue,
+                                                      size: 24,
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    Text(
+                                                      // You can format event.date as you wish
+                                                      "MI, OCT 8 - 18:00",
+                                                      style: TextStyle(
+                                                        color: Colors
+                                                            .grey
+                                                            .shade600,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  event.title ??
+                                                      "Gebetskreis im Gemeindesaal",
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 18,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 6),
+                                                Row(
+                                                  children: <Widget>[
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        color: Colors
+                                                            .green
+                                                            .shade100,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              4,
+                                                            ),
+                                                      ),
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 6,
+                                                            vertical: 2,
+                                                          ),
+                                                      child: Row(
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
+                                                        children: <Widget>[
+                                                          const Icon(
+                                                            Icons.check_box,
+                                                            color: Colors.green,
+                                                            size: 18,
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 4,
+                                                          ),
+                                                          Text(
+                                                            "${event.attendees.length ?? 1} nimmt teil",
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 12),
+                                                Center(
+                                                  child: TextButton(
+                                                    onPressed: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              EventDetailPage(
+                                                                event: event,
+                                                              ),
+                                                        ),
+                                                      );
+                                                    },
+                                                    child: const Text(
+                                                      "Details",
+                                                      style: TextStyle(
+                                                        color: Colors.blue,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    )
+                  : Container(),
 
               const SizedBox(height: 24),
 

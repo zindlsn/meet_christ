@@ -44,11 +44,6 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
-        Provider.of<EventsViewModel>(
-          context,
-          listen: false,
-        ).loadAttendingEvents();
-        setState(() {});
       },
       builder: (context, state) {
         return Scaffold(
