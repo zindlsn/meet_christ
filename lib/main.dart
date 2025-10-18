@@ -7,6 +7,9 @@ import 'package:get_it/get_it.dart';
 import 'package:meet_christ/firebase_options.dart';
 import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/pages/auth/auth.dart';
+import 'package:meet_christ/pages/events_feed.dart';
+import 'package:meet_christ/pages/home.dart';
+import 'package:meet_christ/pages/home/home_page.dart';
 import 'package:meet_christ/repositories/auth_repository.dart';
 import 'package:meet_christ/repositories/events_repository.dart';
 import 'package:meet_christ/repositories/file_repository.dart';
@@ -158,6 +161,7 @@ void main() async {
   GetIt.I.registerFactory<ChatPageBloc>(() => ChatPageBloc());
   GetIt.I.registerFactory<ProfilePageBloc>(() => ProfilePageBloc());
   GetIt.I.registerFactory<ChangeMailBloc>(() => ChangeMailBloc());
+  GetIt.I.registerFactory<EventsBloc>(() => EventsBloc());
 
   /*  var user = await GetIt.I.get<UserService>().login(
       UserCredentials(email: "szindl@posteo.de", password: "Jesus1000."),
@@ -179,6 +183,7 @@ void main() async {
         BlocProvider(create: (context) => GetIt.I.get<ChatPageBloc>()),
         BlocProvider(create: (context) => GetIt.I.get<ProfilePageBloc>()),
         BlocProvider(create: (context) => GetIt.I.get<ChangeMailBloc>()),
+        BlocProvider(create: (context) => GetIt.I.get<EventsBloc>()),
       ],
       child: MultiProvider(
         providers: [

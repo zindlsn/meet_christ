@@ -14,3 +14,4 @@ final class Authenticated extends Equatable implements AuthState {
 }
 
 final class Unauthenticated extends AuthState {}
+

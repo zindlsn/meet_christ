@@ -32,7 +32,7 @@ class _EventCardState extends State<EventCard> {
                     child: Stack(
                       children: [
                         Hero(
-                          tag: 'dash1'+Uuid().v4(),
+                          tag: 'dash1' + Uuid().v4(),
                           child: Image.asset(
                             "assets/images/placeholder_church.png",
                             fit: BoxFit.fill,
@@ -68,6 +68,7 @@ class _EventCardState extends State<EventCard> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
+            Text("Test"),
             Padding(
               padding: const EdgeInsets.only(left: 8.0),
               child: Text(
@@ -148,10 +149,10 @@ String formatDateTime(DateTime dateTime, {bool isLong = false}) {
     'Sonntag',
   ];
   String dayAbbr = "";
-  if(!isLong) {
+  if (!isLong) {
     // Get weekday abbreviation (Note: DateTime.weekday: 1 - Monday, 7 - Sunday)
     dayAbbr = weekdayAbbr[dateTime.weekday - 1];
-  }else{
+  } else {
     dayAbbr = weekdayAbbrLong[dateTime.weekday - 1];
   }
   // Get uppercase month abbreviation

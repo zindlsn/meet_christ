@@ -127,20 +127,17 @@ class FirestoreEventRepository implements IEventRepository {
     final snapshot = await _firestore
         .collection('events')
         .where('attendeeIds', arrayContains: userId)
-        .where(
-          'endDate',
-          isGreaterThanOrEqualTo: DateTime(
-            DateTime.now().year,
-            DateTime.now().month,
-            DateTime.now().day,
-          ),
-        )
+        .where('endDate', isLessThanOrEqualTo: DateTime.now())
         .get();
     final eventFutures = snapshot.docs
         .map((doc) => _mapDocumentToEvent(doc))
         .toList();
+    final events = await Future.wait(eventFutures);
+    var result = <Event>[];
+    result.addAll(events);
+    result.addAll(events);
 
-    return Future.wait(eventFutures);
+    return result;
   }
 
   @override
@@ -258,13 +255,22 @@ class FirestoreEventRepository implements IEventRepository {
         filter.startDate!.day,
       ).add(const Duration(days: 1));
     }
-
-    final snapshot = await _firestore
-        .collection('events')
-        .where('groupId', isEqualTo: null)
-        .where("startDate", isGreaterThanOrEqualTo: start)
-        .get();
-
+    QuerySnapshot<Map<String, dynamic>> snapshot;
+    if (filter.endDate == null) {
+      snapshot = await _firestore
+          .collection('events')
+          .where('groupId', isEqualTo: null)
+          .where("startDate", isGreaterThan: start)
+          .where("startDate", isLessThan: start!.add(Duration(days: 1)))
+          .get();
+    } else {
+      snapshot = await _firestore
+          .collection('events')
+          .where('groupId', isEqualTo: null)
+          .where("startDate", isGreaterThan: start)
+          .where("startDate", isLessThanOrEqualTo: endDate)
+          .get();
+    }
     final eventFutures = snapshot.docs
         .map((doc) => _mapDocumentToEvent(doc))
         .toList();

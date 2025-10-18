@@ -54,7 +54,7 @@ class _NewGroupPageState extends State<NewGroupPage> {
               ).saveCommunity();
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => HomePage(indexTab: 1)),
+                MaterialPageRoute(builder: (context) => HomePage()),
               );
             },
           ),

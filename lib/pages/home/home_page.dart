@@ -2,12 +2,230 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:meet_christ/models/event.dart';
 import 'package:meet_christ/models/user.dart';
 import 'package:meet_christ/pages/event_detail_page.dart';
+import 'package:meet_christ/services/event_service.dart';
 import 'package:meet_christ/services/user_service.dart';
 import 'package:meet_christ/view_models/auth/bloc/auth_bloc.dart';
 import 'package:meet_christ/view_models/events_view_model.dart';
+import 'package:meet_christ/widgets/event_card.dart';
 import 'package:provider/provider.dart';
+
+// meet_christ_home_bloc.dart
+
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+// Events
+abstract class MeetChristHomeEvent {}
+
+class LoadAttendingEvents extends MeetChristHomeEvent {}
+
+class HideMariaMessage extends MeetChristHomeEvent {}
+
+// States
+abstract class MeetChristHomeState {}
+
+class MeetChristHomeInitial extends MeetChristHomeState {}
+
+class AttendingEventsLoading extends MeetChristHomeState {}
+
+class AttendingEventsLoaded extends MeetChristHomeState {
+  final List<Event> attendingEvents;
+  final bool isMariaMessageVisible;
+
+  AttendingEventsLoaded(
+    this.attendingEvents, {
+    this.isMariaMessageVisible = true,
+  });
+}
+
+class AttendingEventsLoadFailure extends MeetChristHomeState {
+  final String error;
+
+  AttendingEventsLoadFailure(this.error);
+}
+
+// Bloc
+class MeetChristHomeBloc
+    extends Bloc<MeetChristHomeEvent, MeetChristHomeState> {
+  final EventService eventsRepository;
+
+  bool _mariaMessageVisible = true;
+
+  MeetChristHomeBloc(this.eventsRepository) : super(MeetChristHomeInitial()) {
+    on<LoadAttendingEvents>((event, emit) async {
+      emit(AttendingEventsLoading());
+      try {
+        final events = await eventsRepository.getUserEvents(
+          GetIt.I.get<UserService>().user.id,
+        );
+        emit(
+          AttendingEventsLoaded(
+            events,
+            isMariaMessageVisible: _mariaMessageVisible,
+          ),
+        );
+      } catch (e) {
+        emit(AttendingEventsLoadFailure(e.toString()));
+      }
+    });
+
+    on<HideMariaMessage>((event, emit) {
+      _mariaMessageVisible = false;
+      if (state is AttendingEventsLoaded) {
+        emit(
+          AttendingEventsLoaded(
+            (state as AttendingEventsLoaded).attendingEvents,
+            isMariaMessageVisible: false,
+          ),
+        );
+      }
+    });
+  }
+}
+
+class MeetChristHomeView extends StatelessWidget {
+  const MeetChristHomeView({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) =>
+          MeetChristHomeBloc(GetIt.I.get<EventService>())
+            ..add(LoadAttendingEvents()),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8F5FF),
+        body: BlocConsumer<MeetChristHomeBloc, MeetChristHomeState>(
+          listener: (context, state) {
+            // keine Navigation oder sonstige Action hier notwendig
+          },
+          builder: (context, state) {
+            if (state is AttendingEventsLoading) {
+              return Center(child: CircularProgressIndicator());
+            } else if (state is AttendingEventsLoadFailure) {
+              return Center(child: Text("Fehler: ${state.error}"));
+            } else if (state is AttendingEventsLoaded) {
+              final events = state.attendingEvents;
+              final isMariaVisible = state.isMariaMessageVisible;
+
+              return Column(
+                children: [
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        Text(
+                          "Going",
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                color: Colors.blue.shade600,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        const SizedBox(height: 12),
+                        if (events.isEmpty)
+                          const Text("Du nimmst an keinen Events teil.")
+                        else
+                          SizedBox(
+                            height: 150,
+                            width: 400,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: events.length,
+                              primary: false,
+                              shrinkWrap: true,
+                              itemBuilder: (context, index) {
+                                final event = events[index];
+                                return SizedBox(
+                                  width: MediaQuery.of(context).size.width - 32,
+                                  child: GestureDetector(
+                                    onTap: () async {
+                                      await Navigator.push<bool>(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              EventDetailPage(event: event),
+                                        ),
+                                      );
+                                      MeetChristHomeBloc(
+                                        GetIt.I.get<EventService>(),
+                                      )..add(LoadAttendingEvents());
+                                    },
+                                    child: Card(
+                                      elevation: 10,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              formatDateTime(event.startDate),
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.blueGrey,
+                                              ),
+                                            ),
+                                            Text(
+                                              event.title,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 20,
+                                              ),
+                                            ),
+                                            Align(
+                                              alignment: Alignment.bottomLeft,
+                                              child: Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Icon(
+                                                    Icons.check_box_rounded,
+                                                    color: Colors.green,
+                                                  ),
+                                                  Text(
+                                                    event.attendees.length
+                                                        .toString(),
+                                                  ),
+                                                  Text(
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                    ),
+                                                    event.attendees.length == 1
+                                                        ? " nimmt teil"
+                                                        : event
+                                                                  .attendees
+                                                                  .length >
+                                                              1
+                                                        ? " nehmen teil"
+                                                        : " nimmt niemand teil",
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            }
+            return Container(child: Text("Unbekannter Zustand"));
+          },
+        ),
+      ),
+    );
+  }
+}
 
 class MariaBotschaftData extends ChangeNotifier {
   final String _date;
@@ -61,14 +279,14 @@ class MariaBotschaftData extends ChangeNotifier {
   }
 }
 
-class MeetChristHomeView extends StatefulWidget {
-  const MeetChristHomeView({super.key});
+class MeetChristHomeView2 extends StatefulWidget {
+  const MeetChristHomeView2({super.key});
 
   @override
-  State<MeetChristHomeView> createState() => _MeetChristHomeViewState();
+  State<MeetChristHomeView2> createState() => _MeetChristHomeView2State();
 }
 
-class _MeetChristHomeViewState extends State<MeetChristHomeView> {
+class _MeetChristHomeView2State extends State<MeetChristHomeView2> {
   @override
   void initState() {
     super.initState();
@@ -299,7 +517,6 @@ class _MeetChristHomeViewState extends State<MeetChristHomeView> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      const MariaBotschaftMessageCard(), // New widget for the message card
                     ],
                   );
                 },

@@ -170,6 +170,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     TryAutoLoginRequested event,
     Emitter<LoginState> emit,
   ) async {
+    emit(AutologinLoading());
     var rememberMe = await localStorageService.getFromDisk<bool>(
       LocalStorageKeys.rememberMe,
     );
@@ -183,8 +184,8 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
       emit(
         LoginInitialized(
-          email: email ?? "stefan.zindl@outlook.de",
-          password: password ?? "Jesus10001.",
+          email: email ?? "",
+          password: password ?? "",
           rememberMe: false,
         ),
       );

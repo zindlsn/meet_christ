@@ -15,16 +15,126 @@ import 'package:meet_christ/view_models/auth/bloc/auth_bloc.dart';
 import 'package:meet_christ/view_models/events_view_model.dart';
 import 'package:meet_christ/widgets/event_card.dart';
 import 'package:provider/provider.dart';
+// NavigationCubit.dart
 
-class HomePage extends StatefulWidget {
-  final int indexTab;
-  const HomePage({super.key, this.indexTab = 0});
+class NavigationCubit extends Cubit<int> {
+  NavigationCubit(int initialState) : super(initialState);
 
-  @override
-  State<HomePage> createState() => _HomePageState();
+  void selectTab(int index) => emit(index);
 }
 
-class _HomePageState extends State<HomePage> {
+// HomePage.dart
+class HomePage extends StatelessWidget {
+  final int initialIndexTab;
+  const HomePage({Key? key, this.initialIndexTab = 0}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => NavigationCubit(initialIndexTab),
+      child: BlocBuilder<NavigationCubit, int>(
+        builder: (context, selectedIndex) {
+          return Scaffold(
+            appBar: selectedIndex == 0
+                ? AppBar(
+                    title: Text("Meet Christ"),
+                    actions: [
+                      Text("10"),
+                      Icon(Icons.star),
+                      GestureDetector(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Icon(Icons.account_circle_sharp),
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ProfilePage(
+                                user: GetIt.I.get<UserService>().user,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  )
+                : null,
+            drawer: selectedIndex == 0
+                ? Drawer(
+                    child: ListView(
+                      padding: EdgeInsets.zero,
+                      children: [
+                        DrawerHeader(
+                          decoration: BoxDecoration(color: Colors.blue),
+                          child: Text('Meet Christ'),
+                        ),
+                        ListTile(
+                          title: Text('Settings'),
+                          onTap: () {},
+                        ),
+                        ListTile(title: Text('About'), onTap: () {}),
+                      ],
+                    ),
+                  )
+                : null,
+            body: _buildBody(selectedIndex, context),
+            bottomNavigationBar: BottomNavigationBar(
+              type: BottomNavigationBarType.fixed,
+              items: const [
+                BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+                BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chats'),
+                BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
+                BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Community'),
+                BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Prayer'),
+              ],
+              currentIndex: selectedIndex,
+              onTap: (index) => context.read<NavigationCubit>().selectTab(index),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBody(int selectedIndex, BuildContext context) {
+    switch (selectedIndex) {
+      case 0:
+        // Laden durch Bloc oder Cubit ausführen und UI entsprechend anpassen
+        context.read<EventsViewModel>().loadAttendingEvents();
+        return MeetChristHomeView();
+      case 1:
+        return ChatListPage();
+      case 2:
+        return Consumer<EventsViewModel>(
+          builder: (context, model, child) {
+            if (model.isLoading) {
+              return Center(child: CircularProgressIndicator());
+            } else {
+              return EventsPage();
+            }
+          },
+        );
+      case 3:
+        return const CommunitiesPage();
+      case 4:
+        return PrayerHomePage();
+      default:
+        return MyGroupsPage();
+    }
+  }
+}
+
+
+class HomePageOld extends StatefulWidget {
+  final int indexTab;
+  const HomePageOld({super.key, this.indexTab = 0});
+
+  @override
+  State<HomePageOld> createState() => _HomePageOldState();
+}
+
+class _HomePageOldState extends State<HomePageOld> {
   int _selectedIndex = 3;
 
   @override

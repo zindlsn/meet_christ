@@ -26,7 +26,6 @@ class LoginFailure extends LoginState {
   LoginFailure(this.message);
 }
 
-// New state for initialized values
 class LoginInitialized extends LoginState {
   final String email;
   final String password;
@@ -60,3 +59,7 @@ class LoginDataLoaded extends LoginState {
     required this.rememberMe,
   });
 }
+
+final class AutologinLoading extends LoginState {}
+
+final class AutologinSuccess extends LoginState {}

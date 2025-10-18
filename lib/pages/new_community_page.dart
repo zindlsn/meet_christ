@@ -55,7 +55,7 @@ class _NewCommunityPageState extends State<NewCommunityPage> {
               ).saveCommunity();
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => HomePage(indexTab: 1)),
+                MaterialPageRoute(builder: (context) => HomePage()),
               );
             },
           ),
